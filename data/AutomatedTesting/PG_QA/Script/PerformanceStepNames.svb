@@ -1,0 +1,7 @@
+﻿'This file should contain a list of constants that match what is in the expectedsteptimes table in the db
+
+'Enovia Search
+Public c_NameSearchRealTime_SN : c_NameSearchRealTime_SN = "TC: Name Search - Real Time"
+Public c_NameSearchIndexed_SN : c_NameSearchIndexed_SN = "TC: Name Search - Indexed"
+Public c_FullTextSearchIndexed_SN : c_FullTextSearchIndexed_SN = "TC: Full Text Search - Indexed"
+Public c_FindProductDataSearchIndexed_SN : c_FindProductDataSearchIndexed_SN = "TC: Find Product Data Search - Indexed"

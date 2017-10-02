@@ -1,0 +1,368 @@
+﻿'USEUNIT DBLib 
+'USEUNIT GlobalVars
+'USEUNIT WebKeywords
+'USEUNIT WebObjectLib
+'USEUNIT RecordSetLib
+'USEUNIT LogLib
+'USEUNIT OR_Enovia
+'USEUNIT GlobalVars
+'USEUNIT TimeLib
+'USEUNIT EnoviaUtils
+'USEUNIT WindowsUtility
+'USEUNIT FileLib
+'USEUNIT PerformanceLib
+
+g_strBrowserType="iexplore" 
+
+
+'*******************************************************************************************************************************************
+' JVM Probe Steps
+Function Enovia_PerformanceProbe_Main(sEnv)
+
+identifier = GetDateAndId()
+lastJVM = 11
+
+While true
+
+  On Error Resume Next
+  ' Loop through all 11 JVMs
+  For jvm = 1 To lastJVM
+
+    Call CreateEnvironment("JVM Performance Probe", "plmprod", False, identifier & " Performance Probe JVM " & jvm, False, "Performance")
+      
+    ' Choose JVM# and Login
+    If Log_UpdateIsBlocked() = False Then      
+      Call Enovia_LaunchEnovia("plmprod-landing")
+    End If    
+  
+    If Log_UpdateIsBlocked() = False Then
+      Call Enovia_ChooseJVM(jvm)
+    End If
+  
+    If Log_UpdateIsBlocked() = False Then
+      Call Enovia_Login("plmperf1")
+    End If
+    
+    If Log_UpdateIsBlocked() = False Then
+      Call Enovia_clickOK()
+    End If
+  
+    If Log_UpdateIsBlocked() = False Then
+      Call FPD_FTS()
+    End If
+    
+    If Log_UpdateIsBlocked() = False Then
+      Call RTA()
+    End If
+  
+    If Log_UpdateIsBlocked() = False Then
+      Call DSM_InternalReader
+    End If
+  
+    'If Log_UpdateIsBlocked() = False Then
+      'Call SLM
+    'End If
+      
+    Call CloseAllBrowserProcesses()   
+    Call CloseEnvironment()
+      
+  Next
+    jvm = jvm + 1
+Wend              
+End Function
+
+'*******************************************************************************************************************************************
+' Regional Emulations
+Function Main_SingaporeEmulation(sEnv)
+  Call Main_Emulation(sEnv, "Singapore Network Emulation")
+End Function
+
+Function Main_BeijingEmulation(sEnv)
+  Call Main_Emulation(sEnv, "Beijing Network Emulation")
+End Function
+
+Function Main_HuangpuEmulation(sEnv)
+  Call Main_Emulation(sEnv, "Huangpu Network Emulation")
+End Function
+
+Function Main_BrusselsEmulation(sEnv)
+  Call Main_Emulation(sEnv, "Brussels Network Emulation")
+End Function
+
+'*******************************************************************************************************************************************
+' JVM Probe Steps from the Eggplant Network Emulator
+Function Main_Emulation(sEnv,sReg)
+
+While true
+
+  On Error Resume Next
+  identifier = GetDateAndId()
+  jvm = 4
+      
+  Call CreateEnvironment("JVM Performance Probe", "plmprod", False, identifier & " Performance Probe JVM " & jvm, False, "Performance")
+  g_runlog.region = sReg
+      
+  ' Choose JVM5 and Login
+  If Log_UpdateIsBlocked() = False Then      
+    Call Enovia_LaunchEnovia("plmprod-landing")
+  End If    
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_ChooseJVM(jvm)
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_Login("plmperf1")
+  End If
+    
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_clickOK()
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call FPD_FTS()
+  End If
+    
+  If Log_UpdateIsBlocked() = False Then
+    Call RTA()
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call DSM_InternalReader
+  End If
+  
+  'If Log_UpdateIsBlocked() = False Then
+    'Call SLM
+  'End If
+      
+  Call CloseAllBrowserProcesses()   
+  Call CloseEnvironment()     
+Wend       
+       
+End Function
+
+'*******************************************************************************************************************************************
+' JVM Probe Steps to run on JVM5
+Function Main_JVM5(sEnv, sReg)
+  On Error Resume Next
+  identifier = GetDateAndId()
+  jvm = 5
+      
+  Call CreateEnvironment("JVM Performance Probe", "plmprod", False, identifier & " Performance Probe JVM " & jvm, False, "Performance")
+  g_runlog.region = sReg
+      
+  ' Choose JVM5 and Login
+  If Log_UpdateIsBlocked() = False Then      
+    Call Enovia_LaunchEnovia("plmprod-landing")
+  End If    
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_ChooseJVM(jvm)
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_Login("plmperf1")
+  End If
+    
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_clickOK()
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call FPD_FTS()
+  End If
+    
+  If Log_UpdateIsBlocked() = False Then
+    Call RTA()
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call DSM_InternalReader
+  End If
+  
+  'If Log_UpdateIsBlocked() = False Then
+    'Call SLM
+  'End If
+      
+  Call CloseAllBrowserProcesses()   
+  Call CloseEnvironment()     
+       
+End Function
+'*******************************************************************************************************************************************
+' JVM Probe Steps to run on JVM4
+Function Main_JVM4(sEnv)
+  On Error Resume Next
+  identifier = GetDateAndId()
+  jvm = 4
+      
+  Call CreateEnvironment("JVM Performance Probe", sEnv, False, identifier & " Performance Probe JVM " & jvm, False, "Performance")
+      
+  ' Choose JVM5 and Login
+  If Log_UpdateIsBlocked() = False Then      
+    Call Enovia_LaunchEnovia("plmprod-landing")
+  End If    
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_ChooseJVM(jvm)
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_Login("plmperf1")
+  End If
+    
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_clickOK()
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call FPD_FTS()
+  End If
+    
+  If Log_UpdateIsBlocked() = False Then
+    Call RTA()
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call DSM_InternalReader
+  End If
+  
+  'If Log_UpdateIsBlocked() = False Then
+    'Call SLM
+  'End If
+      
+  Call CloseAllBrowserProcesses()   
+  Call CloseEnvironment()     
+       
+End Function
+'*******************************************************************************************************************************************
+' JVM Probe Steps to run on JVM4 Network Emulation
+Function Main_JVM4_NE(sEnv,sReg)
+  On Error Resume Next
+  identifier = GetDateAndId()
+  jvm = 4
+      
+  Call CreateEnvironment("JVM Performance Probe", sEnv, False, identifier & " Performance Probe JVM " & jvm, False, "Performance")
+  g_runlog.region = sReg
+      
+  ' Choose JVM5 and Login
+  If Log_UpdateIsBlocked() = False Then      
+    Call Enovia_LaunchEnovia("plmprod-landing")
+  End If    
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_ChooseJVM(jvm)
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_Login("plmperf1")
+  End If
+    
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_clickOK()
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call FPD_FTS()
+  End If
+    
+  If Log_UpdateIsBlocked() = False Then
+    Call RTA()
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call DSM_InternalReader
+  End If
+  
+  'If Log_UpdateIsBlocked() = False Then
+    'Call SLM
+  'End If
+      
+  Call CloseAllBrowserProcesses()   
+  Call CloseEnvironment()     
+       
+End Function
+'*******************************************************************************************************************************************
+' JVM Probe Steps to run on JVM2 continuously
+Function Main_JVM2()
+  While true
+    On Error Resume Next
+    identifier = GetDateAndId()
+    jvm = 2
+      
+    Call CreateEnvironment("JVM Performance Probe", "plmprod", False, identifier & " Performance Probe JVM " & jvm, False, "Performance")
+    g_runlog.region = sReg
+    ' Choose JVM2 and Login
+    If Log_UpdateIsBlocked() = False Then      
+      Call Enovia_LaunchEnovia("plmprod-landing")
+    End If    
+  
+    If Log_UpdateIsBlocked() = False Then
+      Call Enovia_ChooseJVM(jvm)
+    End If
+  
+    If Log_UpdateIsBlocked() = False Then
+      Call Enovia_Login("plmperf1")
+    End If
+    
+    If Log_UpdateIsBlocked() = False Then
+      Call Enovia_clickOK()
+    End If
+  
+    If Log_UpdateIsBlocked() = False Then
+      Call FPD_FTS()
+    End If
+    
+    If Log_UpdateIsBlocked() = False Then
+      Call RTA()
+    End If
+  
+    If Log_UpdateIsBlocked() = False Then
+      Call DSM_InternalReader
+    End If
+  
+  'If Log_UpdateIsBlocked() = False Then
+    'Call SLM
+  'End If
+
+    Call CloseAllBrowserProcesses()
+    Call CloseEnvironment()
+  Wend 
+End Function      
+'*******************************************************************************************************************************************
+' JVM2 Find Product Data Search, Full Text Search Steps
+Function JVM2_Exalead()
+
+  While true
+    Call CreateEnvironment("Exalead JVM2 Probe", "plmprod", False, "Exalead JVM2 Probe", False, "")
+      
+    ' Choose JVM2 and Login
+    Call Enovia_LaunchEnovia("plmprod-landing")
+    Call Enovia_ChooseJVM(2)
+    Call Enovia_Login("plmperf1")
+    Call Enovia_clickOK()
+          
+    ' Launch Find Product Data Search
+    Call Enovia_ExecuteFindProdDataSearch() 
+    aqPerformance.Start( "Find Product Data Search Window Opened" )
+    Log.Message("before Find Prod")
+    Set objFindSplash = objGetObject(OR_EnoviaSearch_SplashGraphic, g_SearchPageURL, "300000")
+    Log.Message("after Find Prod")     
+    Call LogPerformance("Find Product Data Search Window Opened", False, "")
+    Call ClosePopupWindow()
+      
+    ' Launch Full Text Search 
+    Call Enovia_FullTextSearch()
+    aqPerformance.Start( "Full Text Search Window Opened" )
+    Log.Message("before FT")
+    Set objFindSplash = objGetObject(OR_EnoviaSearch_SplashGraphic, g_SearchPageURL, "300000")
+    Log.Message("after FT")     
+    Call LogPerformance("Full Text Search Window Opened", False, "")
+    Call ClosePopupWindow()
+    
+    Call WriteRunLog(g_runLog)  
+  Wend      
+End Function
+
+Function Test()
+  Call FPD()
+End Function

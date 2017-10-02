@@ -1,0 +1,178 @@
+﻿'USEUNIT DbLib
+'USEUNIT LogLib
+'USEUNIT GlobalVars
+'USEUNIT WebObjectLib
+'USEUNIT OR_Enovia
+
+Function Windows_LaunchBrowser()
+
+  If g_strBrowserType = c_FireFox Then
+    Call Browsers.Item(btFirefox, "", Browsers.pX86).Run("about:Tabs")
+  ElseIf g_strBrowserType = c_IExplorer Then
+    Call Browsers.Item(btIExplorer, "", Browsers.pX86).Run("about:Tabs")
+  ElseIf g__strBrowserType = c_Chrome Then
+    Call Browsers.Item(btChrome, "", Browsers.pX86).Run("about:Tabs")
+  End If
+  
+End Function 
+
+Function Windows_KillProcess(sProcess)
+
+  Set objWMIService = GetObject("winmgmts:" & "{impersonationLevel=impersonate}!\\.\root\cimv2")
+  sTest = "SELECT * FROM Win32_Process WHERE Name = '" & sProcess & "'"
+  Set processList = objWMIService.ExecQuery(sTest)
+  
+  For Each oProcess in processList
+    oProcess.Terminate()
+  Next  
+
+End Function 
+
+Function MaximizeAllWindows()
+
+  On Error Resume Next
+  
+  Windows = Sys.Browser(g_strBrowserType).FindAllChildren("ObjectType", "BrowserWindow")
+  
+  For i = 0 to Ubound(Windows)
+    Windows(i).Maximize
+  Next
+  
+End Function
+
+Function MaximizeByCaption(CaptionTxt)
+  On Error Resume Next
+  
+  Dim arrProps, arrVals
+  
+  arrProps = Array("ObjectType","WndCaption")
+  arrVals = Array("BrowserWindow","*"&CaptionTxt&"*")
+  Windows = Sys.Browser(g_strBrowserType).FindAllChildren(arrProps, arrVals)
+  
+  For i = 0 to Ubound(Windows)
+    Windows(i).Maximize
+  Next
+End Function
+
+' Close All browsers
+Function CloseAllWindows()
+  On Error Resume Next
+  
+  'g_strBrowserType = "iexplore"
+  Windows = Sys.Browser(g_strBrowserType).FindAllChildren("ObjectType", "BrowserWindow")
+  
+  For i = 0 to Ubound(Windows)
+    Windows(i).Close
+  Next
+  
+  ' Terminate browser processes just in case if they are left behind for some magical reason
+  CloseAllBrowserProcesses()
+  
+End Function
+
+' Close Browser window by caption
+Function CloseByCaption(CaptionTxt)
+  On Error Resume Next
+  
+  Dim arrProps, arrVals
+  
+  arrProps = Array("ObjectType","WndCaption")
+  arrVals = Array("BrowserWindow","*"&CaptionTxt&"*")
+  Windows = Sys.Browser(g_strBrowserType).FindAllChildren(arrProps, arrVals)
+  
+  For i = 0 to Ubound(Windows)
+    Windows(i).Close
+  Next
+  
+End Function
+
+Function CloseAllBrowserProcesses()
+  Dim p, isClosed
+  Set p = Sys.FindChild("ProcessName", g_strBrowserType)
+ 
+  While p.Exists
+    p.Close
+    isClosed = p.WaitProperty("Exists", False)
+ 
+    If Not isClosed Then
+      ' Terminates the process
+      p.Terminate
+    End If
+ 
+    Set p = Sys.FindChild("ProcessName", g_strBrowserType)
+  Wend
+ 
+End Function 
+
+'This function handles Alert popups, if the popup does not exist it should return without errors
+Function EnoviaSearch_AlertWindow(AlertMsg)
+
+  On Error Resume Next
+
+  Set objAlert = objGetObject(OR_EnoviaSearch_AlertWnd,"",0)
+  Set objAlertOK = objGetObject(OR_EnoviaSearch_AlertOKBtn,"",0)
+   
+  If AlertMsg <> "" Then
+    If objAlert.Exists and instr(1,objAlert.Message,AlertMsg,1)  Then   'Check if Alert pop up is displayed and the Alert Message has field Name
+      AlertCount = AlertCount+1
+      Delay 1000
+      EnoviaSearch_AlertWindow = True  
+    else
+      EnoviaSearch_AlertWindow = False   
+    End If
+  End If
+  
+  If objAlertOK.Exists Then
+    objAlertOK.Click
+  End If
+  
+  Err.Clear
+  
+End Function
+
+
+Function CloseNewWindow()
+  On Error Resume Next
+  
+  Dim arrProps, arrVals
+  
+  arrProps = Array("ObjectType","Name")
+  arrVals = Array("BrowserWindow","BrowserWindow(1)")
+  Windows = Sys.Browser(g_strBrowserType).FindAllChildren(arrProps, arrVals)
+  log.Message "hh:"&Windows(0).WndCaption
+  
+  Windows(0).Close
+End Function
+
+'Add by Amanda
+Sub ExecCmd(strCmd)
+
+  Dim WshShellObj, WshShellExecObj, out
+   
+  Set WshShellObj = CreateObject("WScript.Shell")
+  Set WshShellExecObj = WshShellObj.Exec("cmd.exe")
+
+   ' Flush the stream
+   out = readTillChar(WshShellExecObj, ">")
+   Log.Message(out)
+
+   ' Send the command and the new line character
+   WshShellExecObj.StdIn.Write(strCmd & VbCrLf)
+   out = readTillChar(WshShellExecObj, ">")
+   Log.Message(out)
+
+End Sub
+
+'Add by Amanda
+Function readTillChar(WshShellExecObj, endChar)
+  Dim out, curChar
+  
+  Do While Not WshShellExecObj.StdOut.AtEndOfStream
+   curChar = WshShellExecObj.StdOut.Read(1)
+   out = out + curChar
+   If (curChar = endChar) Then
+   readTillChar = out
+   Exit Function
+   End If
+  Loop
+End Function

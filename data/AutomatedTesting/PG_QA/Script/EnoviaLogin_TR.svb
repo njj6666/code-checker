@@ -1,0 +1,9 @@
+﻿Function EnoviaLoginCredsOK_TR()
+  'Click Query/SearchIcon
+  'WaitFor Query/ResultText
+End Function 
+
+Function EnoviaLoginRoleOK_TR()
+  'Click Query/SearchIcon
+  'WaitFor Query/ResultText
+End Function 

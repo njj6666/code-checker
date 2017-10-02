@@ -1,0 +1,467 @@
+﻿'USEUNIT TimeLib
+'USEUNIT DatabaseModels
+'USEUNIT GlobalVars
+'USEUNIT DBLib
+
+Function GetRegressionLogInstance
+  Set GetRegressionLogInstance = New RegressionLog
+End Function
+
+Function GetTestCaseInstance
+  Set GetTestCaseInstance = New TestCase
+End Function
+
+Function GetTestCaseStepInstance
+  Set GetTestCaseStepInstance = New TestCaseStep
+End Function
+
+Class RegressionLog
+
+  Private m_name
+  Private m_comments
+  Private m_runDate
+  Private m_runDateEST
+  Private m_region
+  Private m_environment
+  Private m_runSuccess
+  Private m_sSUTMachine
+  Private m_executionMachine
+  Private m_executionUserName
+  Private m_developmentFlag
+  Private m_appVersion
+  Private m_testCases
+  
+  Public Property Let Name(value)
+    m_name = value
+  End Property
+  
+  Public Property Get Name()
+    Name = m_name
+  End Property
+  
+  Public Property Let Comments(value)
+    m_comments = value
+  End Property
+  
+  Public Property Get Comments()
+    Comments = m_comments
+  End Property
+  
+  Public Property Let RunDate(value)
+    m_runDate = value
+  End Property
+  
+  Public Property Get RunDate()
+    RunDate = m_runDate
+  End Property
+  
+  Public Property Let RunDateEST(value)
+    m_runDateEST = value
+  End Property
+  
+  Public Property Get RunDateEST()
+    RunDateEST = m_runDateEST
+  End Property
+  
+  Public Property Let Region(value)
+    m_region = value
+  End Property
+  
+  Public Property Get Region()
+    Region = m_region
+  End Property
+  
+  Public Property Let Environment(value)
+    m_environment = value
+  End Property
+  
+  Public Property Get Environment()
+    Environment = m_environment
+  End Property
+  
+  Public Property Let RunSuccess(value)
+    m_runSuccess = value
+  End Property
+  
+  Public Property Get RunSuccess()
+    RunSuccess = m_runSuccess
+  End Property
+  
+  Public Property Let SUTMachine(value)
+    m_sSUTMachine = value
+  End Property
+  
+  Public Property Get SUTMachine()
+    SUTMachine = m_sSUTMachine
+  End Property
+  
+  Public Property Let ExecutionMachine(value)
+    m_executionMachine = value
+  End Property
+  
+  Public Property Get ExecutionMachine()
+    ExecutionMachine = m_executionMachine
+  End Property
+  
+  Public Property Let ExecutionUserName(value)
+    m_executionUserName = value
+  End Property
+  
+  Public Property Get ExecutionUserName()
+    ExecutionUserName = m_executionUserName
+  End Property
+  
+  Public Property Let DevelopmentFlag(value)
+    m_developmentFlag = value
+  End Property
+  
+  Public Property Get DevelopmentFlag()
+    DevelopmentFlag = m_developmentFlag
+  End Property
+    
+  Public Property Let AppVersion(value)
+    m_appVersion = value
+  End Property
+  
+  Public Property Get AppVersion()
+    AppVersion = m_appVersion
+  End Property
+    
+  Public Function AddTestCase(testCaseId, tc)
+    m_testCases.Add testCaseId, tc
+  End Function
+  
+  Public Function CreateUpdateSQL()
+    Dim sql, tempRunDate, tempRunDateEST, tempRunSuccess, tempDebugFlag
+    
+    tempRunDate = GetSqlDateTimeString(RunDate)
+    tempRunDateEST = GetSqlDateTimeString(RunDateEST)
+    If RunSuccess = true Then
+      tempRunSuccess = "Y"
+    Else
+      tempRunSuccess = "N"
+    End If
+    
+    If DevelopmentFlag = true Then
+      tempDebugFlag = "Y"
+    Else
+      tempDebugFlag = "N"
+    End If
+    
+    sql = "INSERT INTO `performance`.`regruns` (" & _
+          " `name`," & _
+          " `comments`," & _
+          " `runDate`," & _
+          " `Region`," & _
+          " `Environment`," & _
+          " `RunSuccess`," & _
+          " `SUT`," & _
+          " `ExecutionMachine`," & _
+          " `ExecutionUsername`," & _
+          " `DevelopmentFlag`," & _
+          " `appversionID`," & _
+          " `DateEST` )" & _
+          " VALUES (" & _
+          " '"&EscapeSQL(Name)&"'," & _
+          " '"&EscapeSQL(Comments)&"'," & _
+          " '"&tempRunDate&"'," & _
+          " '"&Region&"'," & _
+          " '"&Environment&"'," & _
+          " '"&tempRunSuccess&"'," & _
+          " '"&EscapeSQL(SUTMachine)&"'," & _
+          " '"&EscapeSQL(ExecutionMachine)&"'," & _
+          " '"&EscapeSQL(ExecutionUserName)&"'," & _
+          " '"&tempDebugFlag&"'," & _
+          " '"&AppVersion&"'," & _
+          " '"&tempRunDateEST&"' );"
+                    
+    CreateUpdateSQL = sql          
+  End Function
+  
+  Public Property Get TestCases()
+    Set TestCases = m_testCases
+  End Property
+    
+  Private Sub Class_Initialize()
+    Set m_testCases = CreateObject("Scripting.Dictionary")
+  End Sub
+  
+  Private Sub Class_Terminate()
+    If IsNull(m_testCases) = false Then
+      For Each item In m_testCases.Items()
+        Set item = nothing
+      Next
+    End If
+    Set m_testCases = nothing
+  End Sub
+  
+End Class
+
+' This class contains all the information for a test case
+Class TestCase
+
+  Private m_description
+  Private m_steps
+  Private m_stepCount
+  Private m_almId
+  Private m_name
+  Private m_runDate
+  Private m_runDateEST
+  Private m_success
+  Private m_blocked
+  
+  Public Property Let Description(value)
+    m_description = value
+  End Property
+  
+  Public Property Get Description()
+    Description = m_description
+  End Property
+  
+  Public Property Let AlmId(value)
+    m_almId = value
+  End Property
+  
+  Public Property Get AlmId()
+    AlmId = m_almId
+  End Property
+  
+  Public Property Let Name(value)
+    m_name = value
+  End Property
+  
+  Public Property Get Name()
+    Name = m_name
+  End Property
+  
+  Public Property Let RunDate(value)
+    m_runDate = value
+  End Property
+  
+  Public Property Get RunDate()
+    RunDate = m_runDate
+  End Property
+  
+  Public Property Let RunDateEST(value)
+    m_runDateEST = value
+  End Property
+  
+  Public Property Get RunDateEST()
+    RunDateEST = m_runDateEST
+  End Property
+  
+  Public Property Let Success(value)
+    m_success = value
+  End Property
+  
+  Public Property Get Success()
+    Success = m_success
+  End Property
+  
+  Public Property Let Blocked(value)
+    m_blocked = value
+  End Property
+  
+  Public Property Get Blocked()
+    Blocked = m_blocked
+  End Property
+  
+  Public Function AddStep(sExpectedResult, bPassed, sErrorMsg, bBlocked, sInfo)
+    Set tcStep = GetTestCaseStepInstance
+    tcStep.RunDate = GetCurrentTime()
+    tcStep.RunDateEST = GetCurrentESTTime()  
+    tcStep.Passed = bPassed
+    tcStep.ExpectedResult = sExpectedResult
+    tcStep.ErrorMsg = sErrorMsg    
+    tcStep.IsBlocked = bBlocked
+    tcStep.Info = sInfo
+    m_steps.Add m_stepCount, tcStep
+    m_stepCount = m_stepCount + 1
+  End Function
+  
+  Public Property Get Steps()
+    Set Steps = m_steps
+  End Property
+    
+  Public Property Get StepCount()
+    StepCount = m_stepCount
+  End Property
+  
+  Public Function CreateUpdateSQL(regRunId)
+    Dim sql, tempRunDate, tempRunDateEST, tempRunSuccess, tempDebugFlag
+    
+    tempRunDate = GetSqlDateTimeString(RunDate)
+    tempRunDateEST = GetSqlDateTimeString(RunDateEST)
+    If Success = true Then
+      tempRunSuccess = "Y"
+    Else
+      tempRunSuccess = "N"
+    End If
+    
+    If Blocked = true Then
+      tempBlocked = "Y"
+    Else
+      tempBlocked = "N"
+    End If
+    
+    sql = "INSERT INTO `performance`.`regtestcases` (" & _
+          " `regrunsID`," & _
+          " `ALM_Identifier`," & _
+          " `Name`," & _
+          " `Blocked`," & _
+          " `TestCaseSuccess`," & _
+          " `Comments`," & _
+          " `RunDate`," & _
+          " `DateEST` )" & _
+          " VALUES (" & _
+          " '"&regRunId&"'," & _
+          " '"&AlmId&"'," & _
+          " '"&EscapeSQL(Name)&"'," & _
+          " '"&tempBlocked&"'," & _
+          " '"&tempRunSuccess&"'," & _
+          " '"&EscapeSQL(Description)&"'," & _
+          " '"&tempRunDate&"'," & _
+          " '"&tempRunDateEST&"' );"
+                    
+    CreateUpdateSQL = sql          
+  End Function
+    
+  Private Sub Class_Initialize()
+    Set m_steps = CreateObject("Scripting.Dictionary")
+    m_stepCount = 1
+  End Sub
+  
+  Private Sub Class_Terminate()
+    If IsNull(m_steps) = false Then
+      For Each item In m_steps.Items()
+        Set item = nothing
+      Next
+    End If
+    Set m_steps = nothing
+  End Sub
+  
+End Class
+
+Class TestCaseStep
+
+  Private m_passed
+  Private m_expectedResult
+  Private m_errorMsg
+  Private m_isBlocked
+  Private m_info
+  Private m_runDate
+  Private m_runDateEST
+  
+  Public Property Let Passed(value)
+    m_passed = value
+  End Property
+  
+  Public Property Get Passed()
+    Passed = m_passed
+  End Property
+  
+  Public Property Let ExpectedResult(value)
+    m_expectedResult = value
+  End Property
+  
+  Public Property Get ExpectedResult()
+    ExpectedResult = m_expectedResult
+  End Property
+  
+  Public Property Let ErrorMsg(value)
+    m_errorMsg = value
+  End Property
+  
+  Public Property Get ErrorMsg()
+    ErrorMsg = m_errorMsg
+  End Property
+  
+  Public Property Let Info(value)
+    m_info = value
+  End Property
+  
+  Public Property Get Info()
+    Info = m_info
+  End Property
+  
+  Public Property Let IsBlocked(value)
+    m_isBlocked = value
+  End Property
+  
+  Public Property Get IsBlocked()
+    IsBlocked = m_isBlocked
+  End Property
+  
+  Public Property Let RunDate(value)
+    m_runDate = value
+  End Property
+  
+  Public Property Get RunDate()
+    RunDate = m_runDate
+  End Property
+  
+  Public Property Let RunDateEST(value)
+    m_runDateEST = value
+  End Property
+  
+  Public Property Get RunDateEST()
+    RunDateEST = m_runDateEST
+  End Property
+    
+  Public Function CreateUpdateSQL(testCaseId, nStepNumber, sStepName)
+    Dim sql, tempRunDate, tempRunDateEST, tempRunSuccess
+    
+    tempRunDate = GetSqlDateTimeString(RunDate)
+    tempRunDateEST = GetSqlDateTimeString(RunDateEST)
+    If Passed = true Then
+      tempRunSuccess = "Y"
+    Else
+      tempRunSuccess = "N"
+    End If
+    
+    If IsBlocked = true Then
+      tempBlocked = "Y"
+    Else
+      tempBlocked = "N"
+    End If
+    
+    sql = "INSERT INTO `performance`.`regsteps` (" & _
+          " `regtestcasesID`," & _
+          " `StepNumber`," & _
+          " `Name`," & _
+          " `Blocked`," & _
+          " `RegressionStepSuccess`," & _
+          " `Comments`," & _
+          " `RunDate`," & _
+          " `Info`," & _
+          " `Error`," & _
+          " `DateEST` )" & _
+          " VALUES (" & _
+          " '"&testCaseId&"'," & _
+          " '"&nStepNumber&"'," & _
+          " '"&EscapeSQL(sStepName)&"'," & _
+          " '"&tempBlocked&"'," & _
+          " '"&tempRunSuccess&"'," & _
+          " '"&EscapeSQL(ExpectedResult)&"'," & _
+          " '"&tempRunDate&"'," & _
+          " '"&EscapeSQL(Info)&"'," & _
+          " '"&EscapeSQL(ErrorMsg)&"'," & _
+          " '"&tempRunDateEST&"' );"
+                    
+    CreateUpdateSQL = sql          
+  End Function
+  
+  Private Sub Class_Initialize()
+    m_passed = false
+    m_expectedResult = ""
+    m_errorMsg = ""
+    m_isBlocked = false
+    m_info = ""
+  End Sub
+  
+End Class
+
+
+
+
+

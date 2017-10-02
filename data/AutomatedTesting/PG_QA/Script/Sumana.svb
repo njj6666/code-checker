@@ -1,0 +1,980 @@
+﻿'USEUNIT EnoviaSearch_PopulateSearchModel
+'USEUNIT EnoviaSearchModels
+'USEUNIT OR_Enovia
+'USEUNIT LogLib
+'USEUNIT WindowsUtility
+'USEUNIT EnoviaUtils
+'USEUNIT GlobalVars
+'USEUNIT WebObjectLib
+
+'------------------------------------FullText Search-------------------------------------------------------------
+
+'##################################################################################################################
+'Function Name                : EnoviaFullText_SearchType
+'Description                  : Calls all the functions
+'Arguments                    : NA
+'Return Value                 : Nothing
+'Author                       : Sumana Gottipati
+'Creation Date                : 24-May -2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaFullText_SearchType()
+
+    Set oModelList = EnoviaSearch_CreateDictionaryModel
+    Set oModel = oModelList.Item(2)
+
+  'Call EnoviaFulltext_ExecuteFullTextSearch(oModel)
+  'Call MaximizeAllWindows()    
+  Call EnoviaFullText_ExecuteAll(oModel)
+
+End Function
+'##################################################################################################################
+'Function Name                : EnoviaFulltext_ExecuteFullTextSearch
+'Description                  : Calls all the functions
+'Arguments                    : NA
+'Return Value                 : Nothing
+'Author                       : Sumana Gottipati
+'Creation Date                : 22 - May -2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaFulltext_ExecuteFullTextSearch(oModel)
+
+      Set objsearchType=objGetObject(OR_EnoviaSearch_SearchDrp, "", "")
+      objsearchType.Click()
+      Set objsearchType = Nothing
+  
+      Set objsearchFulltext=objGetObject(OR_EnoviaSearchFullText_SearchDrp, "", "")
+      objsearchFulltext.Click()
+      Set objsearchFulltext = Nothing
+
+End Function
+
+'##################################################################################################################
+'Function Name                : EnoviaFullText_ExecuteAll()
+'Description                  : Performing Operations on Fulltext Search Type
+'Arguments                    : NA
+'Return Value                 : Nothing
+'Author                       : Sumana Gottipati
+'Creation Date                : 23 & 24 - May -2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+  
+Function EnoviaFullText_ExecuteAll(oModel)
+
+'Wait for 5 sec of time for the data window popup
+aqUtils.Delay 5000,"Wait Till FullTextSearch Window appears" 
+   
+  'sPageURL = "https://plmtest.pg.com/enovia/common/emxFullSearch.jsp?"
+   sPageURL = "https://plmtraining.pg.com/enovia/common/emxFullSearch.jsp?"
+    
+      Set objSearchVal = objGetObject(OR_EnoviaSearchFullText_SearchEdt,sPageURL,"")
+      objSearchVal.SetText(oModel.Common.SearchValue)
+      Set objSearchVal = Nothing
+  
+      Set objPageSize = objGetObject(OR_EnoviaSearchFullText_PagesizeEdt,sPageURL,"")
+      objPageSize.SetText(oModel.Common.LimitResults)
+      Set objPageSize = Nothing
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''             
+      Set objType = objGetObject(OR_EnoviaSearchFullText_TypePnl,sPageURL,"")
+      objType.Click()
+      Set objType = Nothing  
+Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")  
+If Not (obj1 is Nothing) Then 
+      Set objTypeInput = objGetObject(OR_EnoviaSearchFullText_TypeEdt,sPageURL,"")
+      objTypeInput.SetText(oModel.Common.sType)
+      Set objTypeInput = Nothing  
+Else 
+      Set objTypeInput = objGetObject(OR_EnoviaSearchFullText_TypeEdt,sPageURL,"")
+      Val1 = objTypeInput.SetText(oModel.Common.sType)
+      Set objTypeInput = Nothing
+      Set objTypeSelect = objGetObject(OR_EnoviaSearchFullText_TypeDrp,sPageURL,"")
+      objTypeSelect.ClickItem(Val1&"regexp:.*")
+      Set objTypeSelect = Nothing
+      Set objTypeSubmit = objGetObject(OR_EnoviaSearchFullText_TypeBtn,sPageURL,"")
+      objTypeSubmit.ClickButton()
+      Set objTypeSubmit = Nothing
+End If   
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''              
+      Set objState = objGetObject(OR_EnoviaSearchFullText_StatePnl,sPageURL,"")
+      objState.Click()
+      Set objState = Nothing
+Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")
+If Not (obj1 is Nothing) Then  
+      Set objStateInput = objGetObject(OR_EnoviaSearchFullText_StateEdt,sPageURL,"")
+      objStateInput.SetText(oModel.Common.State)
+      Set objStateInput = Nothing    
+Else  
+      Set objStateInput = objGetObject(OR_EnoviaSearchFullText_StateEdt,sPageURL,"")
+      Val2 = objStateInput.SetText(oModel.Common.State)
+      Set objStateInput = Nothing
+      Set objSelectState=objGetObject(OR_EnoviaSearchFullText_StateDrp,sPageURL,"")
+      objSelectState.ClickItem(Val2&"regexp:.*")
+      Set objSelectState = Nothing
+      Set objsubmitState = objGetObject(OR_EnoviaSearchFullText_StateBtn,sPageURL,"")
+      objsubmitState.ClickButton()
+      Set objsubmitState = Nothing 
+End If     
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' 
+      Set objSecurity = objGetObject(OR_EnoviaSearchFullText_SecurityPnl,sPageURL,"")
+      objSecurity.Click()
+      Set objSecurity = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then 
+      Set objInputSecurity = objGetObject(OR_EnoviaSearchFullText_SecurityEdt,sPageURL,"")
+      objInputSecurity.SetText(oModel.SecCatClassification)
+      Set objInputSecurity = Nothing
+Else
+      Set objInputSecurity = objGetObject(OR_EnoviaSearchFullText_SecurityEdt,sPageURL,"")
+      Val3 = objInputSecurity.SetText(oModel.SecCatClassification)
+      Set objInputSecurity = Nothing
+      Set objSelectSecurity = objGetObject(OR_EnoviaSearchFullText_SecurityDrp,sPageURL,"")
+      objSelectSecurity.ClickItem(Val3&"regexp:.*")
+      Set objSelectSecurity = Nothing
+      Set objsubmitSecurity = objGetObject(OR_EnoviaSearchFullText_SecurityBtn,sPageURL,"")
+      objsubmitSecurity.ClickButton()
+      Set objsubmitSecurity = Nothing
+ End If
+ 
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''   
+      Set objBusiness = objGetObject(OR_EnoviaSearchFullText_BusinessPnl,sPageURL,"")
+      objBusiness.Click()
+      Set objBusiness = Nothing
+         Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")
+If Not (obj1 is Nothing) Then 
+      Set objBusinessInput = objGetObject(OR_EnoviaSearchFullText_BusinessEdt1,sPageURL,"")
+      objBusinessInput.Keys(oModel.CSSBusinessCat)
+      Set objBusinessInput = Nothing
+Else
+      Set objBusinessInput = objGetObject(OR_EnoviaSearchFullText_BusinessEdt,sPageURL,"")
+      Val4 = objBusinessInput.SetText(oModel.CSSBusinessCat)
+      Set objBusinessInput = Nothing
+      Set objBusinessSelect = objGetObject(OR_EnoviaSearchFullText_BusinessDrp,sPageURL,"")
+      objBusinessSelect.ClickItem(Val4&"regexp:.*")
+      Set objBusinessSelect = Nothing
+      Set objsubmitBusiness = objGetObject(OR_EnoviaSearchFullText_BusinessBtn,sPageURL,"")
+      objsubmitBusiness.ClickButton()
+      Set objsubmitBusiness = Nothing
+End If
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''    
+      Set objPlant = objGetObject(OR_EnoviaSearchFullText_PlantPnl,sPageURL,"")
+      objPlant.Click()
+      Set objPlant = Nothing
+
+  Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")
+If Not (obj1 is Nothing) Then   
+      Set objPlantInput = objGetObject(OR_EnoviaSearchFullText_PlantEdt1,sPageURL,"")
+      objPlantInput.Keys(oModel.Plant)
+      Set objPlantInput = Nothing 
+Else
+      Set objPlantInput = objGetObject(OR_EnoviaSearchFullText_PlantEdt,sPageURL,"")
+      Val5 = objPlantInput.SetText(oModel.Plant)
+      Set objPlantInput = Nothing
+      Set objPlantSelect = objGetObject(OR_EnoviaSearchFullText_PlantDrp,sPageURL,"")
+      objPlantSelect.ClickItem(Val5&"regexp:.*")
+      Set objPlantSelect = Nothing
+      Set objsubmitPlant = objGetObject(OR_EnoviaSearchFullText_PlantBtn,sPageURL,"")
+      objsubmitPlant.ClickButton()
+      Set objsubmitPlant = Nothing
+End If
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''  
+      Set objStandards = objGetObject(OR_EnoviaSearchFullText_StandardsPnl,sPageURL,"")
+      objStandards.Click()
+      Set objStandards = Nothing
+         Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")
+If Not (obj1 is Nothing) Then    
+      Set objStandardsInput = objGetObject(OR_EnoviaSearchFullText_StandardsEdt1,sPageURL,"")
+      objStandardsInput.Keys(oModel.OwningStandardsOffice)
+      Set objStandardsInput = Nothing  
+Else
+      Set objStandardsInput = objGetObject(OR_EnoviaSearchFullText_StandardsEdt,sPageURL,"")
+      Val6 = objStandardsInput.SetText(oModel.OwningStandardsOffice)
+      Set objStandardsInput = Nothing
+      Set objStandardsSelect = objGetObject(OR_EnoviaSearchFullText_StandardsDrp,sPageURL,"")
+      objStandardsSelect.ClickItem(Val6&"regexp:.*")
+      Set objStandardsSelect = Nothing
+      Set objsubmitStandards = objGetObject(OR_EnoviaSearchFullText_StandardsBtn,sPageURL,"")
+      objsubmitStandards.ClickButton()
+      Set objsubmitStandards = Nothing
+ End If
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' 
+      Set objRevision = objGetObject(OR_EnoviaSearchFullText_RevisionPnl,sPageURL,"")
+      objRevision.Click()
+      Set objRevision = Nothing
+      Set objRevisionInput = objGetObject(OR_EnoviaSearchFullText_RevisionEdt,sPageURL,"")
+      objRevisionInput.Keys(oModel.Revision)
+      Set objRevisionInput = Nothing
+      
+    Set obj1 = Nothing  
+    
+End Function 
+'''''''''''''''''''''''''''''''''Find Product Data'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Private g_dblWaitTime 
+'##################################################################################################################
+'Function Name                : EnoviaFindProdData_SearchType
+'Description                  : Calls all the functions
+'Arguments                    : NA
+'Return Value                 : Nothing
+'Author                       : Sumana Gottipati
+'Creation Date                : 24-May -2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaFindProdData_SearchType()
+
+    Set oModelList = EnoviaSearch_CreateDictionaryModel
+    Set oModel = oModelList.Item(3)
+
+  'Call Enovia_ExecuteFindProdDataSearch()
+  'Call MaximizeAllWindows()    
+  'Call EnoviaFindProdData_ExecuteType(oModel)
+  'Call EnoviaFindProdData_ExecuteDate(oModel)
+  Call EnoviaFindProdData_ExecuteClass(oModel)
+
+End Function
+
+'##################################################################################################################
+'Function Name                : EnoviaFindProdData_ExecuteType(oModel)
+'Description                  : Performing Operations on Fulltext Search Type
+'Arguments                    : NA
+'Return Value                 : Nothing
+'Author                       : Sumana Gottipati
+'Creation Date                : 23 & 24 - May -2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+  
+Function EnoviaFindProdData_ExecuteType(oModel)
+       
+    'Wait for 5 sec of time for the data window popup
+aqUtils.Delay 5000,"Wait Till FindProdDataSearch Window appears" 
+
+  'sPageURL = "https://plmtest.pg.com/enovia/common/emxFullSearch.jsp?"
+  sPageURL = "https://plmtraining.pg.com/enovia/common/emxFullSearch.jsp?"
+    
+      Set objSearchVal = objGetObject(OR_EnoviaSearchFindProdData_SearchEdt,sPageURL,"")
+      objSearchVal.SetText(oModel.Common.SearchValue)
+      Set objSearchVal = Nothing
+  
+      Set objPageSize = objGetObject(OR_EnoviaSearchFindProdData_PagesizeEdt,sPageURL,"")
+      objPageSize.SetText(oModel.Common.LimitResults)
+      Set objPageSize = Nothing
+      
+      'Wait for 5 sec of time for the data window popup
+aqUtils.Delay 5000,"Wait Till FindProdDataSearch Window appears"     
+
+      Set objNameNum = objGetObject(OR_EnoviaSearchFindProdData_NameNumberPnl,sPageURL,"")
+      objNameNum.Click()
+      Set objNameNum = Nothing
+      Set objNameNumInput = objGetObject(OR_EnoviaSearchFindProdData_NameNumberEdt,sPageURL,"")
+      objNameNumInput.Keys(oModel.NameOrNumber)
+      Set objNameNumInput = Nothing
+       
+      Set objRevision = objGetObject(OR_EnoviaSearchFindProdData_RevisionEdt,sPageURL,"")
+      objRevision.SetText(oModel.Revision.Revision)
+      Set objRevision = Nothing
+      
+      Set objHighest = objGetObject(OR_EnoviaSearchFindProdData_HighestChk,sPageURL,"")
+      objHighest.ClickChecked(oModel.Revision.Highest)
+      Set objHighest = Nothing
+  
+      Set objState = objGetObject(OR_EnoviaSearchFindProdData_ByStateChk,sPageURL,"")
+      objState.ClickChecked(oModel.Revision.ByState)
+      Set objState = Nothing
+       
+      Set objType = objGetObject(OR_EnoviaSearchFindProdData_TypePnl,sPageURL,"")
+      objType.Click()
+      Set objType = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then
+      Set objTypeInput = objGetObject(OR_EnoviaSearchFindProdData_TypeEdt1,sPageURL,"")
+      objTypeInput.Keys(oModel.Common.sType)
+      Set objTypeInput = Nothing
+Else
+      Set objTypeInput = objGetObject(OR_EnoviaSearchFindProdData_TypeEdt,sPageURL,"")
+      Val1 = objTypeInput.SetText(oModel.Common.sType)
+      Set objTypeInput = Nothing
+      Set objTypeSelect = objGetObject(OR_EnoviaSearchFindProdData_TypeDrp,sPageURL,"")
+      objTypeSelect.ClickItem(Val1&"regexp:.*")
+      Set objTypeSelect = Nothing
+      Set objTypeSubmit = objGetObject(OR_EnoviaSearchFindProdData_TypeBtn,sPageURL,"")
+      objTypeSubmit.ClickButton()
+      Set objTypeSubmit = Nothing
+
+End If
+           
+      Set objSubType = objGetObject(OR_EnoviaSearchFindProdData_SubTypePnl,sPageURL,"")
+      objSubType.Click()
+      Set objSubType = Nothing
+      
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then
+  
+      Set objSubTypeInput = objGetObject(OR_EnoviaSearchFindProdData_SubTypeEdt1,sPageURL,"")
+      objSubTypeInput.Keys(oModel.SpecSubType)
+      Set objSubTypeInput = Nothing
+Else
+
+      Set objSubTypeInput = objGetObject(OR_EnoviaSearchFindProdData_SubTypeEdt,sPageURL,"")
+      Val1 = objSubTypeInput.SetText(oModel.SpecSubType)
+      Set objSubTypeInput = Nothing
+      Set objSubTypeSelect = objGetObject(OR_EnoviaSearchFindProdData_SubTypeDrp,sPageURL,"")
+      objSubTypeSelect.ClickItem(Val1&"regexp:.*")
+      Set objSubTypeSelect = Nothing
+      Set objSubTypeSubmit = objGetObject(OR_EnoviaSearchFindProdData_SubTypeBtn,sPageURL,"")
+      objSubTypeSubmit.ClickButton()
+      Set objSubTypeSubmit = Nothing
+End If
+      
+      Set objPolicy = objGetObject(OR_EnoviaSearchFindProdData_PolicyPnl,sPageURL,"")
+      objPolicy.Click()
+      Set objPolicy = Nothing
+   
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then 
+      Set objPolicyInput = objGetObject(OR_EnoviaSearchFindProdData_SubTypeEdt1,sPageURL,"")
+      objPolicyInput.Keys(oModel.Common.Policy)
+      Set objPolicyInput = Nothing
+Else 
+      Set objPolicyInput = objGetObject(OR_EnoviaSearchFindProdData_PolicyEdt,sPageURL,"")
+      Val2 = objPolicyInput.SetText(oModel.Common.Policy)
+      Set objPolicyInput = Nothing
+      Set objPolicySelect = objGetObject(OR_EnoviaSearchFindProdData_PolicyDrp,sPageURL,"")
+      objPolicySelect.ClickItem(Val2&"regexp:.*")
+      Set objPolicySelect = Nothing
+      Set objPolicySubmit = objGetObject(OR_EnoviaSearchFindProdData_PolicyBtn,sPageURL,"")
+      objPolicySubmit.ClickButton()
+      Set objPolicySubmit = Nothing
+     
+End If     
+        
+      Set objTitle = objGetObject(OR_EnoviaSearchFindProdData_TitlePnl,sPageURL,"")
+      objTitle.Click()
+      Set objTitle = Nothing
+      Set objTitleInput = objGetObject(OR_EnoviaSearchFindProdData_TitleEdt,sPageURL,"")
+      objTitleInput.Keys(oModel.Common.Title)
+      Set objTitleInput = Nothing
+      
+      Set objDesc = objGetObject(OR_EnoviaSearchFindProdData_DescriptionPnl,sPageURL,"")
+      objDesc.Click()
+      Set objDesc = Nothing
+      Set objDescInput = objGetObject(OR_EnoviaSearchFindProdData_DescriptionEdt,sPageURL,"")
+      objDescInput.Keys(oModel.Description2)
+      Set objDescInput = Nothing
+        
+      Set objState = objGetObject(OR_EnoviaSearchFindProdData_StatePnl,sPageURL,"500")
+      objState.Click()
+      Set objState = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then   
+      Set objstateInput = objGetObject(OR_EnoviaSearchFindProdData_SubTypeEdt1,sPageURL,"")
+      objstateInput.Keys(oModel.Common.State)
+      Set objstateInput = Nothing
+Else
+           Set objStateInput = objGetObject(OR_EnoviaSearchFindProdData_StateEdt,sPageURL,"")
+      Val3 = objStateInput.SetText(oModel.Common.State)
+      Set objStateInput = Nothing
+      Set objStateSelect = objGetObject(OR_EnoviaSearchFindProdData_StateDrp,sPageURL,"")
+      objStateSelect.ClickItem(Val3&"regexp:.*")
+      Set objStateSelect = Nothing
+      Set objStateSubmit = objGetObject(OR_EnoviaSearchFindProdData_StateBtn,sPageURL,"")
+      objStateSubmit.ClickButton()
+      Set objStateSubmit = Nothing
+
+End If      
+      
+      Set objSecCatCla = objGetObject(OR_EnoviaSearchFindProdData_SecCatClaPnl,sPageURL,"")
+      objSecCatCla.Click()
+      Set objSecCatCla = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then     
+
+      Set objSecCatClaInput = objGetObject(OR_EnoviaSearchFindProdData_SubTypeEdt1,sPageURL,"")
+      objSecCatClaInput.Keys(oModel.SecCatClassification)
+      Set objSecCatClaInput = Nothing
+Else
+      Set objSecCatClaInput = objGetObject(OR_EnoviaSearchFindProdData_SecCatClaEdt,sPageURL,"")
+      Val4 = objSecCatClaInput.SetText(oModel.SecCatClassification)
+      Set objSecCatClaInput = Nothing
+      Set objSecCatClaSelect = objGetObject(OR_EnoviaSearchFindProdData_SecCatClaDrp,sPageURL,"")
+      objSecCatClaSelect.ClickItem(Val4&"regexp:.*")
+      Set objSecCatClaSelect = Nothing
+      Set objSecCatClaSubmit = objGetObject(OR_EnoviaSearchFindProdData_SecCatClaBtn,sPageURL,"")
+      objSecCatClaSubmit.ClickButton()
+      Set objSecCatClaSubmit = Nothing
+
+End If      
+           
+      Set objOrganization = objGetObject(OR_EnoviaSearchFindProdData_OrganizationPnl,sPageURL,"")
+      objOrganization.Click()
+      Set objOrganization = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then
+      Set objOrganizationInput = objGetObject(OR_EnoviaSearchFindProdData_SubTypeEdt1,sPageURL,"")
+      objOrganizationInput.Keys(oModel.Organization)
+      Set objOrganizationInput = Nothing
+Else
+      Set objOrganizationInput = objGetObject(OR_EnoviaSearchFindProdData_OrganizationEdt,sPageURL,"")
+      Val5 = objOrganizationInput.SetText(oModel.Organization)
+      Set objOrganizationInput = Nothing
+      Set objOrganizationSelect = objGetObject(OR_EnoviaSearchFindProdData_OrganizationDrp,sPageURL,"")
+      objOrganizationSelect.ClickItem(Val5&"regexp:.*")
+      Set objOrganizationSelect = Nothing
+      Set objOrganizationSubmit = objGetObject(OR_EnoviaSearchFindProdData_OrganizationBtn,sPageURL,"")
+      objOrganizationSubmit.ClickButton()
+      Set objOrganizationSubmit = Nothing
+
+End If 
+  
+      Set objSegment = objGetObject(OR_EnoviaSearchFindProdData_SegmentPnl,sPageURL,"")
+      objSegment.Click()
+      Set objSegment = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then    
+      Set objSegmentInput = objGetObject(OR_EnoviaSearchFindProdData_SubTypeEdt1,sPageURL,"")
+      objSegmentInput.Keys(oModel.Segment)
+      Set objSegmentInput = Nothing
+Else
+          Set objSegmentInput = objGetObject(OR_EnoviaSearchFindProdData_SegmentEdt,sPageURL,"")
+      Val6 = objSegmentInput.SetText(oModel.Segment)
+      Set objSegmentInput = Nothing
+      Set objSegmentSelect = objGetObject(OR_EnoviaSearchFindProdData_SegmentDrp,sPageURL,"")
+      objSegmentSelect.ClickItem(Val6&"regexp:.*")
+      Set objSegmentSelect = Nothing
+      Set objSegmentSubmit = objGetObject(OR_EnoviaSearchFindProdData_SegmentBtn,sPageURL,"")
+      objSegmentSubmit.ClickButton()
+      Set objSegmentSubmit = Nothing
+
+End If 
+      
+      Set objCssBusCat = objGetObject(OR_EnoviaSearchFindProdData_CssBusCatPnl,sPageURL,"")
+      objCssBusCat.Click()
+      Set objCssBusCat = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then      
+      Set objCssBusCatInput = objGetObject(OR_EnoviaSearchFindProdData_SubTypeEdt1,sPageURL,"")
+      objCssBusCatInput.Keys(oModel.CSSBusinessCategory)
+      Set objCssBusCatInput = Nothing
+Else
+
+      Set objCssBusCatInput = objGetObject(OR_EnoviaSearchFindProdData_CssBusCatEdt,sPageURL,"")
+      Val7 = objCssBusCatInput.SetText(oModel.PlantsAuth)
+      Set objCssBusCatInput = Nothing
+      Set objCssBusCatSelect = objGetObject(OR_EnoviaSearchFindProdData_CssBusCatDrp,sPageURL,"")
+      objCssBusCatSelect.ClickItem(Val7&"regexp:.*")
+      Set objCssBusCatSelect = Nothing
+      Set objCssBusCatSubmit = objGetObject(OR_EnoviaSearchFindProdData_CssBusCatBtn,sPageURL,"")
+      objCssBusCatSubmit.ClickButton()
+      Set objCssBusCatSubmit = Nothing
+
+End If 
+          
+      Set objPlantAut = objGetObject(OR_EnoviaSearchFindProdData_PlantAutPnl,sPageURL,"")
+      objPlantAut.Click()
+      Set objPlantAut = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then      
+      Set objPlantAutInput = objGetObject(OR_EnoviaSearchFindProdData_SubTypeEdt1,sPageURL,"")
+      objPlantAutInput.Keys(oModel.PlantsAuth)
+      Set objPlantAutInput = Nothing
+Else
+  
+      Set objPlantAutInput = objGetObject(OR_EnoviaSearchFindProdData_PlantAutEdt,sPageURL,"")
+      Val8 = objPlantAutInput.SetText(oModel.PlantsAuth)
+      Set objPlantAutInput = Nothing
+      Set objPlantAutSelect = objGetObject(OR_EnoviaSearchFindProdData_PlantAutDrp,sPageURL,"")
+      objPlantAutSelect.ClickItem(Val8&"regexp:.*")
+      Set objPlantAutSelect = Nothing
+      Set objPlantAutSubmit = objGetObject(OR_EnoviaSearchFindProdData_PlantAutBtn,sPageURL,"")
+      objPlantAutSubmit.ClickButton()
+      Set objPlantAutSubmit = Nothing
+End If 
+
+      Set objPlantAutToUse = objGetObject(OR_EnoviaSearchFindProdData_PlantAutUsePnl,sPageURL,"")
+      objPlantAutToUse.Click()
+      Set objPlantAutToUse = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then  
+      Set objPlantAutToUseInput = objGetObject(OR_EnoviaSearchFindProdData_SubTypeEdt1,sPageURL,"")
+      objPlantAutToUseInput.Keys(oModel.PlantsAuthToUse)
+      Set objPlantAutToUseInput = Nothing    
+
+Else
+      Set objPlantAutToUseInput = objGetObject(OR_EnoviaSearchFindProdData_PlantAutUseEdt,sPageURL,"")
+      Val9 = objPlantAutToUseInput.SetText(oModel.PlantsAuthToUse)
+      Set objPlantAutToUseInput = Nothing
+      Set objPlantAutToUseSelect = objGetObject(OR_EnoviaSearchFindProdData_PlantAutUseDrp,sPageURL,"")
+      objPlantAutToUseSelect.ClickItem(Val9&"regexp:.*")
+      Set objPlantAutToUseSelect = Nothing
+      Set objPlantAutToUseSubmit = objGetObject(OR_EnoviaSearchFindProdData_PlantAutUseBtn,sPageURL,"")
+      objPlantAutToUseSubmit.ClickButton()
+      Set objPlantAutToUseSubmit = Nothing
+End If 
+      
+      Set objPlantAutToProduce = objGetObject(OR_EnoviaSearchFindProdData_PlantAutProdPnl,sPageURL,"")
+      objPlantAutToProduce.Click()
+      Set objPlantAutToProduce = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then  
+      Set objPlantAutToProduce = objGetObject(OR_EnoviaSearchFindProdData_SubTypeEdt1,sPageURL,"")
+      objPlantAutToProduce.Keys(oModel.PlantsAuthToProd)
+      Set objPlantAutToProduce = Nothing  
+Else
+  
+      Set objPlantAutToProduceInput = objGetObject(OR_EnoviaSearchFindProdData_PlantAutProdEdt,sPageURL,"")
+      Val10 = objPlantAutToProduceInput.SetText(oModel.PlantsAuthToProd)
+      Set objPlantAutToProduceInput = Nothing
+      Set objPlantAutToProduceSelect = objGetObject(OR_EnoviaSearchFindProdData_PlantAutProdDrp,sPageURL,"")
+      objPlantAutToProduceSelect.ClickItem(Val10&"regexp:.*")
+      Set objPlantAutToProduceSelect = Nothing
+      Set objPlantAutToProduceSubmit = objGetObject(OR_EnoviaSearchFindProdData_PlantAutProdBtn,sPageURL,"")
+      objPlantAutToProduceSubmit.ClickButton()
+      Set objPlantAutToProduceSubmit = Nothing
+End If 
+      
+      Set objPlantActive = objGetObject(OR_EnoviaSearchFindProdData_PlantActPnl,sPageURL,"")
+      objPlantActive.Click()
+      Set objPlantActive = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then  
+      Set objPlantActiveInput = objGetObject(OR_EnoviaSearchFindProdData_SubTypeEdt1,sPageURL,"")
+      objPlantActiveInput.Keys(oModel.PlantsActivated)
+      Set objPlantActiveInput = Nothing    
+Else
+      Set objPlantActiveInput = objGetObject(OR_EnoviaSearchFindProdData_PlantActEdt,sPageURL,"")
+      Val11 = objPlantActiveInput.SetText(oModel.PlantsActivated)
+      Set objPlantActiveInput = Nothing
+      Set objPlantActiveSelect = objGetObject(OR_EnoviaSearchFindProdData_PlantActDrp,sPageURL,"")
+      objPlantActiveSelect.ClickItem(Val11&"regexp:.*")
+      Set objPlantActiveSelect = Nothing
+      Set objPlantActiveSubmit = objGetObject(OR_EnoviaSearchFindProdData_PlantActBtn,sPageURL,"")
+      objPlantActiveSubmit.ClickButton()
+      Set objPlantActiveSubmit = Nothing
+End If 
+
+
+      Set objSuppName = objGetObject(OR_EnoviaSearchFindProdData_SuppNamePnl,sPageURL,"")
+      objSuppName.Click()
+      Set objSuppName = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then   
+      Set objSuppNameInput = objGetObject(OR_EnoviaSearchFindProdData_SubTypeEdt1,sPageURL,"")
+      objSuppNameInput.Keys(oModel.SupplierName)
+      Set objSuppNameInput = Nothing  
+Else
+
+      Set objSuppNameInput = objGetObject(OR_EnoviaSearchFindProdData_SuppNameEdt,sPageURL,"")
+      Val12 = objSuppNameInput.SetText(oModel.SupplierName)
+      Set objSuppNameInput = Nothing
+      Set objSuppNameSelect = objGetObject(OR_EnoviaSearchFindProdData_SuppNameDrp,sPageURL,"")
+      objSuppNameSelect.ClickItem(Val12&"regexp:.*")
+      Set objSuppNameSelect = Nothing
+      Set objSuppNameSubmit = objGetObject(OR_EnoviaSearchFindProdData_SuppNameBtn,sPageURL,"")
+      objSuppNameSubmit.ClickButton()
+      Set objSuppNameSubmit = Nothing
+End If 
+               
+      Set objOriginator = objGetObject(OR_EnoviaSearchFindProdData_OrgNamePnl,sPageURL,"")
+      objOriginator.Click()
+      Set objOriginator = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then  
+      Set objOriginatorInput = objGetObject(OR_EnoviaSearchFindProdData_SubTypeEdt1,sPageURL,"")
+      objOriginatorInput.Keys(oModel.Originator)
+      Set objOriginatorInput = Nothing   
+Else
+     Set objOriginatorInput = objGetObject(OR_EnoviaSearchFindProdData_OrgNameEdt,sPageURL,"")
+      Val13 = objOriginatorInput.SetText(oModel.Originator)
+      Set objOriginatorInput = Nothing
+      Set objOriginatorInputSelect = objGetObject(OR_EnoviaSearchFindProdData_OrgNameDrp,sPageURL,"")
+      objOriginatorInputSelect.ClickItem(Val13&"regexp:.*")
+      Set objOriginatorInputSelect = Nothing
+      Set objOriginatorInputSubmit = objGetObject(OR_EnoviaSearchFindProdData_OrgNameBtn,sPageURL,"")
+      objOriginatorInputSubmit.ClickButton()
+      Set objOriginatorInputSubmit = Nothing
+End If 
+      
+      Set objOrigCoOwner = objGetObject(OR_EnoviaSearchFindProdData_OrgCoOwnPnl,sPageURL,"")
+      objOrigCoOwner.Click()
+      Set objOrigCoOwner = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then  
+       Set objOrigCoOwnerInput = objGetObject(OR_EnoviaSearchFindProdData_ClassEdt1,sPageURL,"")
+       objOrigCoOwnerInput.Keys(oModel.OriginatorOrCoOwner)
+       Set objOrigCoOwnerInput = Nothing   
+Else
+      Set objOrigCoOwnerInput = objGetObject(OR_EnoviaSearchFindProdData_OrgCoOwnEdt,sPageURL,"")
+      Val14 = objOrigCoOwnerInput.SetText(oModel.OriginatorOrCoOwner)
+      Set objOrigCoOwnerInput = Nothing
+      Set objOrigCoOwnerSelect = objGetObject(OR_EnoviaSearchFindProdData_OrgCoOwnDrp,sPageURL,"")
+      objOrigCoOwnerSelect.ClickItem(Val14&"regexp:.*")
+      Set objOrigCoOwnerSelect = Nothing
+      Set objOrigCoOwnerSubmit = objGetObject(OR_EnoviaSearchFindProdData_OrgCoOwnBtn,sPageURL,"")
+      objOrigCoOwnerSubmit.ClickButton()
+      Set objOrigCoOwnerSubmit = Nothing
+End If
+
+
+      Set objMatGrp = objGetObject(OR_EnoviaSearchFindProdData_MatGrpPnl,sPageURL,"")
+      objMatGrp.Click()
+      Set objMatGrp = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then   
+       Set objMatGrpInput = objGetObject(OR_EnoviaSearchFindProdData_MatGrpEdt1,sPageURL,"")
+       objMatGrpInput.Keys(oModel.MaterialGroup)
+       Set objMatGrpInput = Nothing  
+Else
+      Set objMatGrpInput = objGetObject(OR_EnoviaSearchFindProdData_MatGrpEdt,sPageURL,"")
+      Val15 = objMatGrpInput.SetText(oModel.MaterialGroup)
+      Set objMatGrpInput = Nothing
+      Set objMatGrpSelect = objGetObject(OR_EnoviaSearchFindProdData_MatGrpDrp,sPageURL,"")
+      objMatGrpSelect.ClickItem(Val15&"regexp:.*")
+      Set objMatGrpSelect = Nothing
+      Set objMatGrpSubmit = objGetObject(OR_EnoviaSearchFindProdData_MatGrpBtn,sPageURL,"")
+      objMatGrpSubmit.ClickButton()
+      Set objMatGrpSubmit = Nothing
+End If        
+            
+      Set objManStat = objGetObject(OR_EnoviaSearchFindProdData_MfgStatPnl,sPageURL,"")
+      objManStat.Click()
+      Set objManStat = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then 
+       Set objManStatInput = objGetObject(OR_EnoviaSearchFindProdData_MfgStatEdt1,sPageURL,"")
+       objManStatInput.Keys(oModel.ManufacturingStatus)
+       Set objManStatInput = Nothing   
+Else
+      Set objManStatInput = objGetObject(OR_EnoviaSearchFindProdData_MfgStatEdt,sPageURL,"")
+      Val16 = objManStatInput.SetText(oModel.ManufacturingStatus)
+      Set objManStatInput = Nothing
+      Set objManStatSelect = objGetObject(OR_EnoviaSearchFindProdData_MfgStatDrp,sPageURL,"")
+      objManStatSelect.ClickItem(Val16&"regexp:.*")
+      Set objManStatSelect = Nothing
+      Set objManStatSubmit = objGetObject(OR_EnoviaSearchFindProdData_MfgStatBtn,sPageURL,"")
+      objManStatSubmit.ClickButton()
+      Set objManStatSubmit = Nothing
+End If   
+      
+     End Function
+'##################################################################################################################
+'Function Name                : EnoviaFindProdData_ExecuteDate(oModel)
+'Description                  : Performing Operations on Fulltext Search Type
+'Arguments                    : NA
+'Return Value                 : Nothing
+'Author                       : Sumana Gottipati
+'Creation Date                : 23 & 24 - May -2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+  
+
+
+
+
+
+'##################################################################################################################
+'Function Name                : EnoviaFindProdData_ExecuteClass(oModel)
+'Description                  : Performing Operations on Fulltext Search Type
+'Arguments                    : NA
+'Return Value                 : Nothing
+'Author                       : Sumana Gottipati
+'Creation Date                : 23 & 24 - May -2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+  
+
+Function EnoviaFindProdData_ExecuteClass(oModel)   
+
+    'Wait for 5 sec of time for the data window popup
+aqUtils.Delay 5000,"Wait Till FindProdDataSearch Window appears" 
+
+  'sPageURL = "https://plmtest.pg.com/enovia/common/emxFullSearch.jsp?"
+  sPageURL = "https://plmtraining.pg.com/enovia/common/emxFullSearch.jsp?"
+        
+     Set objClass = objGetObject(OR_EnoviaSearchFindProdData_ClassPnl,sPageURL,"")
+      objClass.Click()
+      Set objClass = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then    
+       Set objClassInput = objGetObject(OR_EnoviaSearchFindProdData_ClassEdt1,sPageURL,"")
+       objClassInput.Keys(oModel.SClass)
+       Set objClassInput = Nothing
+Else
+
+      Set objClassInput = objGetObject(OR_EnoviaSearchFindProdData_ClassEdt,sPageURL,"")
+      Val17 = objClassInput.SetText(oModel.SClass)
+      Set objClassInput = Nothing
+      Set objClassSelect = objGetObject(OR_EnoviaSearchFindProdData_ClassDrp,sPageURL,"")
+      objClassSelect.ClickItem(Val17&"regexp:.*")
+      Set objClassSelect = Nothing
+      Set objClassSubmit = objGetObject(OR_EnoviaSearchFindProdData_ClassBtn,sPageURL,"")
+      objClassSubmit.ClickButton()
+      Set objClassSubmit = Nothing
+
+End If     
+      
+      Set objSubClass = objGetObject(OR_EnoviaSearchFindProdData_SubClassPnl,sPageURL,"")
+      objSubClass.Click()
+      Set objSubClass = Nothing
+      
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then    
+    Set objSubClassInput = objGetObject(OR_EnoviaSearchFindProdData_SubClassEdt1,sPageURL,"")
+      objSubClassInput.Keys(oModel.SubClass)
+      Set objSubClassInput = Nothing
+
+Else
+            Set objSubClassInput = objGetObject(OR_EnoviaSearchFindProdData_SubClassEdt,sPageURL,"")
+      Val18 = objSubClassInput.SetText(oModel.SubClass)
+      Set objSubClassInput = Nothing
+      Set objSubClassSelect = objGetObject(OR_EnoviaSearchFindProdData_SubClassDrp,sPageURL,"")
+      objSubClassSelect.ClickItem(Val18&"regexp:.*")
+      Set objSubClassSelect = Nothing
+      Set objSubClassSubmit = objGetObject(OR_EnoviaSearchFindProdData_SubClassBtn,sPageURL,"")
+      objSubClassSubmit.ClickButton()
+      Set objSubClassSubmit = Nothing
+  
+End If      
+                  
+      Set objRepFunc = objGetObject(OR_EnoviaSearchFindProdData_RepFuncPnl,sPageURL,"")
+      objRepFunc.Click()
+      Set objRepFunc = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then 
+      Set objRepFuncInput = objGetObject(OR_EnoviaSearchFindProdData_RepFuncEdt1,sPageURL,"")
+      objRepFuncInput.Keys(oModel.ReportedFunction)
+      Set objRepFuncInput = Nothing     
+Else
+      Set objRepFuncInput = objGetObject(OR_EnoviaSearchFindProdData_RepFuncEdt,sPageURL,"")
+      Val19 = objRepFuncInput.SetText(oModel.ReportedFunction)
+      Set objRepFuncInput = Nothing
+      Set objRepFuncSelect = objGetObject(OR_EnoviaSearchFindProdData_RepFuncDrp,sPageURL,"")
+      objRepFuncSelect.ClickItem(Val19&"regexp:.*")
+      Set objRepFuncSelect = Nothing
+      Set objRepFuncSubmit = objGetObject(OR_EnoviaSearchFindProdData_RepFuncBtn,sPageURL,"")
+      objRepFuncSubmit.ClickButton()
+      Set objRepFuncSubmit = Nothing
+
+End If        
+      
+      Set objPacMatTyp = objGetObject(OR_EnoviaSearchFindProdData_PacMatTypPnl,sPageURL,"")
+      objPacMatTyp.Click()
+      Set objPacMatTyp = Nothing
+ Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then  
+      Set objLocDescInput = objGetObject(OR_EnoviaSearchFindProdData_PacMatTypEdt1,sPageURL,"")
+      objLocDescInput.Keys(oModel.PackagingMaterialType)
+      Set objLocDescInput = Nothing
+ Else     
+      Set objPacMatTypInput = objGetObject(OR_EnoviaSearchFindProdData_PacMatTypEdt,sPageURL,"")
+      Val20 = objPacMatTypInput.SetText(oModel.PackagingMaterialType)
+      Set objPacMatTypInput = Nothing
+      Set objPacMatTypSelect = objGetObject(OR_EnoviaSearchFindProdData_PacMatTypDrp,sPageURL,"")
+      objPacMatTypSelect.ClickItem(Val20&"regexp:.*")
+      Set objPacMatTypSelect = Nothing
+      Set objPacMatTypSubmit = objGetObject(OR_EnoviaSearchFindProdData_PacMatTypBtn,sPageURL,"")
+      objPacMatTypSubmit.ClickButton()
+      Set objPacMatTypSubmit = Nothing
+End If      
+
+      Set objLocDesc = objGetObject(OR_EnoviaSearchFindProdData_TitlePnl,sPageURL,"")
+      objLocDesc.Click()
+      Set objLocDesc = Nothing
+      Set objLocDescInput = objGetObject(OR_EnoviaSearchFindProdData_TitleEdt,sPageURL,"")
+      objLocDescInput.Keys(oModel.LocalDescription)
+      Set objLocDescInput = Nothing
+      
+      Set objOthName = objGetObject(OR_EnoviaSearchFindProdData_TitlePnl,sPageURL,"")
+      objOthName.Click()
+      Set objOthName = Nothing
+      Set objOthNameInput = objGetObject(OR_EnoviaSearchFindProdData_TitleEdt,sPageURL,"")
+      objOthNameInput.Keys(oModel.OtherNames)
+      Set objOthNameInput = Nothing
+      
+      Set objIsIntermediate = objGetObject(OR_EnoviaSearchFindProdData_IsIntermedPnl,sPageURL,"")
+      objIsIntermediate.Click()
+      Set objIsIntermediate = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then 
+      Set objIsInterInput = objGetObject(OR_EnoviaSearchFindProdData_ATSTypeEdt1,sPageURL,"")
+      objIsInterInput.Keys(oModel.IsIntermediate)
+      Set objIsInterInput = Nothing
+    
+Else
+     Set objIsInterInput = objGetObject(OR_EnoviaSearchFindProdData_IsIntermedEdt,sPageURL,"")
+      Val21 = objIsInterInput.SetText(oModel.IsIntermediate)
+      Set objIsInterInput = Nothing
+      Set objIsInterSelect = objGetObject(OR_EnoviaSearchFindProdData_IsIntermedDrp,sPageURL,"")
+      objIsInterSelect.ClickItem(Val21&"regexp:.*")
+      Set objIsInterSelect = Nothing
+      Set objIsInterSubmit = objGetObject(OR_EnoviaSearchFindProdData_IsIntermedBtn,sPageURL,"")
+      objIsInterSubmit.ClickButton()
+      Set objIsInterSubmit = Nothing
+
+End If       
+         
+     
+      Set objATS = objGetObject(OR_EnoviaSearchFindProdData_ATSTypePnl,sPageURL,"")
+      objATS.Click()
+      Set objATS = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then  
+      Set objATSInput = objGetObject(OR_EnoviaSearchFindProdData_ATSTypeEdt1,sPageURL,"")
+      objATSInput.Keys(oModel.ATSImpactedType)
+      Set objATSInput = Nothing   
+ Else
+       Set objATSInput = objGetObject(OR_EnoviaSearchFindProdData_ATSTypeEdt,sPageURL,"")
+      Val22 = objATSInput.SetText(oModel.ATSImpactedType)
+      Set objATSInput = Nothing
+      Set objATSSelect = objGetObject(OR_EnoviaSearchFindProdData_ATSTypeDrp,sPageURL,"")
+      objATSSelect.ClickItem(Val22&"regexp:.*")
+      Set objATSSelect = Nothing
+      Set objATSSubmit = objGetObject(OR_EnoviaSearchFindProdData_ATSTypeBtn,sPageURL,"")
+      objATSSubmit.ClickButton()
+      Set objATSSubmit = Nothing
+End If  
+
+            
+      Set objIsATS = objGetObject(OR_EnoviaSearchFindProdData_IsATSPnl,sPageURL,"")
+      objIsATS.Click()
+      Set objIsATS = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then 
+      Set objIsATSInput = objGetObject(OR_EnoviaSearchFindProdData_ProjSecGrpPDEdt1,sPageURL,"")
+      objIsATSInput.Keys(oModel.IsATS)
+      Set objIsATSInput = Nothing
+
+Else
+      Set objIsATSInput = objGetObject(OR_EnoviaSearchFindProdData_IsATSEdt,sPageURL,"")
+      Val23 = objIsInput.SetText(oModel.IsATS)
+      Set objIsATSInput = Nothing
+      Set objIsATSSelect = objGetObject(OR_EnoviaSearchFindProdData_IsATSDrp,sPageURL,"")
+      objIsATSSelect.ClickItem(Val23&"regexp:.*")
+      Set objIsATSSelect = Nothing
+      Set objIsATSSubmit = objGetObject(OR_EnoviaSearchFindProdData_IsATSBtn,sPageURL,"")
+      objIsATSSubmit.ClickButton()
+      Set objIsATSSubmit = Nothing
+End If      
+  
+      Set objHasATS = objGetObject(OR_EnoviaSearchFindProdData_HasATSPnl,sPageURL,"")
+      objHasATS.Click()
+      Set objHasATS = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then
+      Set objHasATSInput = objGetObject(OR_EnoviaSearchFindProdData_ProjSecGrpPDEdt1,sPageURL,"")
+      objHasATSInput.Keys(oModel.HasATS)
+      Set objHasATSInput = Nothing 
+   
+Else
+      Set objHasATSInput = objGetObject(OR_EnoviaSearchFindProdData_HasATSEdt,sPageURL,"")
+      Val24 = objHasATSInput.SetText(oModel.HasATS)
+      Set objHasATSInput = Nothing
+      Set objHasATSSelect = objGetObject(OR_EnoviaSearchFindProdData_HasATSDrp,sPageURL,"")
+      objHasATSSelect.ClickItem(Val24&"regexp:.*")
+      Set objHasATSSelect = Nothing
+      Set objHasATSSubmit = objGetObject(OR_EnoviaSearchFindProdData_HasATSBtn,sPageURL,"")
+      objHasATSSubmit.ClickButton()
+      Set objHasATSSubmit = Nothing 
+
+End If      
+      
+
+      Set objArtwrkConn = objGetObject(OR_EnoviaSearchFindProdData_ArtWorkConnPnl,sPageURL,"")
+      objArtwrkConn.Click()
+      Set objArtwrkConn = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then  
+      Set objArtwrkConnInput = objGetObject(OR_EnoviaSearchFindProdData_ProjSecGrpPDEdt1,sPageURL,"")
+      objArtwrkConnInput.Keys(oModel.ArtworkConnected)
+      Set objArtwrkConnInput = Nothing  
+
+Else
+      Set objArtwrkConnInput = objGetObject(OR_EnoviaSearchFindProdData_ArtWorkConnEdt,sPageURL,"")
+      Val25 = objArtwrkConnInput.SetText(oModel.ArtworkConnected)
+      Set objArtwrkConnInput = Nothing
+      Set objArtwrkConnSelect = objGetObject(OR_EnoviaSearchFindProdData_ArtWorkConnDrp,sPageURL,"")
+      objArtwrkConnSelect.ClickItem(Val25&"regexp:.*")
+      Set objArtwrkConnSelect = Nothing
+      Set objArtwrkConnSubmit = objGetObject(OR_EnoviaSearchFindProdData_ArtWorkConnBtn,sPageURL,"")
+      objArtwrkConnSubmit.ClickButton()
+      Set objArtwrkConnSubmit = Nothing
+
+End If      
+      
+
+      Set objBrand = objGetObject(OR_EnoviaSearchFindProdData_BrandPnl,sPageURL,"")
+      objBrand.Click()
+      Set objBrand = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then  
+      Set objBrandInput = objGetObject(OR_EnoviaSearchFindProdData_ProjSecGrpPDEdt1,sPageURL,"")
+      objBrandInput.Keys(oModel.Brand)
+      Set objBrandInput = Nothing    
+Else
+      Set objBrandInput = objGetObject(OR_EnoviaSearchFindProdData_BrandEdt,sPageURL,"")
+      Val26 = objBrandInput.SetText(oModel.Brand)
+      Set objBrandInput = Nothing
+      Set objBrandSelect = objGetObject(OR_EnoviaSearchFindProdData_BrandDrp,sPageURL,"")
+      objBrandSelect.ClickItem(Val26&"regexp:.*")
+      Set objBrandSelect = Nothing
+      Set objBrandSubmit = objGetObject(OR_EnoviaSearchFindProdData_BrandBtn,sPageURL,"")
+      objBrandSubmit.ClickButton()
+      Set objBrandSubmit = Nothing
+End If 
+
+      Set objPrjSecGrp = objGetObject(OR_EnoviaSearchFindProdData_ProjSecGrpPDPnl,sPageURL,"")
+      objPrjSecGrp.Click()
+      Set objobjPrjSecGrp = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then    
+      Set objPrjSecGrpInput = objGetObject(OR_EnoviaSearchFindProdData_ProjSecGrpPDEdt1,sPageURL,"")
+      objPrjSecGrpInput.Keys(oModel.ProjectSecurityGroup)
+      Set objPrjSecGrpInput = Nothing 
+
+Else
+      Set objPrjSecGrpInput = objGetObject(OR_EnoviaSearchFindProdData_ProjSecGrpPDEdt,sPageURL,"")
+      Val27 = objPrjSecGrpInput.SetText(oModel.ProjectSecurityGroup)
+      Set objPrjSecGrpInput = Nothing
+      Set objPrjSecGrpSelect = objGetObject(OR_EnoviaSearchFindProdData_ProjSecGrpPDDrp,sPageURL,"")
+      objPrjSecGrpSelect.ClickItem(Val27&"regexp:.*")
+      Set objPrjSecGrpSelect = Nothing
+      Set objPrjSecGrpSubmit = objGetObject(OR_EnoviaSearchFindProdData_ProjSecGrpPDBtn,sPageURL,"")
+      objPrjSecGrpSubmit.ClickButton()
+      Set objPrjSecGrpSubmit = Nothing
+End If      
+      
+      Set objOwnStndOff = objGetObject(OR_EnoviaSearchFindProdData_OwnStaOffPnl,sPageURL,"")
+      objOwnStndOff.Click()
+      Set objOwnStndOff = Nothing
+   Set obj1 = objGetObject(OR_EnoviaSearchFullTextArea_Type1,sPageURL,"")           
+If Not (obj1 is Nothing) Then   
+      Set objOwnStndOffInput = objGetObject(OR_EnoviaSearchFindProdData_SubTypeEdt1,sPageURL,"")
+      objOwnStndOffInput.Keys(oModel.OwningStandardsOffice)
+      Set objOwnStndOffInput = Nothing   
+
+Else
+      Set objOwnStndOffInput = objGetObject(OR_EnoviaSearchFindProdData_OwnStaOffEdt,sPageURL,"")
+      Val28 = objOwnStndOffInput.SetText(oModel.OwningStandardsOffice)
+      Set objOwnStndOffInput = Nothing
+      Set objOwnStndOffSelect = objGetObject(OR_EnoviaSearchFindProdData_OwnStaOffDrp,sPageURL,"")
+      objOwnStndOffSelect.ClickItem(Val28&"regexp:.*")
+      Set objOwnStndOffSelect = Nothing
+      Set objOwnStndOffSubmit = objGetObject(OR_EnoviaSearchFindProdData_OwnStaOffBtn,sPageURL,"")
+      objOwnStndOffSubmit.ClickButton()
+      Set objOwnStndOffSubmit = Nothing
+End If 
+  
+End Function  

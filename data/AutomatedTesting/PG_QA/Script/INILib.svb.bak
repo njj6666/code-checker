@@ -1,0 +1,47 @@
+﻿'##################################################################################################################
+'Script/Function/Sub Name     : ReadFromINI
+'Description                  : Read A Value for a Specified Key from the Output INI File
+'Arguments                    : m_strSection: The section from which the Key value are to be read.
+'                             : m_strKey: The Key name to read from the section
+'Return Value                 : String: The string for the Spevcified Key
+'Author                       : Pramod Rao
+'Creation Date                : 20-April-2016
+'Special Conditions           : NA
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function ReadFromINI(m_strSection, m_strKey)
+
+  Dim objINI, strRetVal
+  
+  Set objINI = Storages.INI(g_strOutputFilePath)
+  strRetVal = objINI.GetSubSection(m_strSection).GetOption(m_strKey, "INVALID")
+  
+  ReadFromINI = strRetVal
+  
+End Function
+
+'##################################################################################################################
+'Script/Function/Sub Name     : WriteToINI
+'Description                  : Write A Key/Value Pair to the Output INI File
+'Arguments                    : m_strSection: The section whcih needs to be created.
+'                             : m_strKey: The Key name to be written
+'                             : m_strValue: The value for the Key to be written
+'Return Value                 : String: The string for the Spevcified Key
+'Author                       : Pramod Rao
+'Creation Date                : 20-April-2016
+'Special Conditions           : NA
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function WriteToINI(m_strSection, m_strKey, m_strValue)
+  On Error Resume Next
+
+  Dim objINI, objSection
+
+  Set objINI = Storages.INI(g_strOutputFilePath)
+  Set objSection = objINI.GetSubSection(m_strSection)
+  objSection.SetOption m_strKey, m_strValue
+  objINI.Save
+
+End Function

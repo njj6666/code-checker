@@ -1,0 +1,33 @@
+﻿'USEUNIT EnoviaUtils
+'USEUNIT LogLib
+'USEUNIT S5006_Create_FPP_and_CUP
+'USEUNIT S5001S_Create_MPMP_in_ArtiosCAD
+'USEUNIT WindowsUtility
+'USEUNIT S5004_Create_MCOP_and_MIP
+
+'Create a new FPP, and add five sub parts to FPP, the sub parts is CUP/IP/PMP/PAP/FAB
+Sub EnoviaDSM_S05BP_OB_Brush_Packaging( sEnv, sUser )
+  On Error Resume Next    
+  Call CreateEnvironment("DSM E2E Set5 Oral B Brush Packaging Regression", sEnv, false, "DSM E2E Set5 Oral B Brush Packaging Regression", false, "Regression")
+  
+  'Execute test case DSM_Set5_001
+  Call EnoviaDSM_S05001_CreateArtiosMPMP(sEnv,sUser)
+  
+  'Execute test case DSM_Set5_001
+  Call EnoviaDSM_S05004_CreateMIPandMCOP("dsotest27")
+
+  'Execute test case DSM_Set5_006
+  'Call EnoviaDSM_S05006_CreateFPPandCUP(sEnv, sUser)
+  
+  'Execute test case DSM_Set5_007
+  'Call EnoviaDSM_Set5_007_AddCUP()
+  
+  Log.PopLogFolder 
+  Call CloseAllBrowserProcesses()  
+  Call CloseEnvironment()
+  
+  If Err.Number <> 0 Then
+    Log.Message Err.Description
+  End If
+
+End Sub

@@ -1,0 +1,164 @@
+﻿'USEUNIT GlobalVars	
+'USEUNIT LogLib	
+'USEUNIT OR_Enovia	
+'USEUNIT WindowsUtility	
+'USEUNIT EnoviaUtils	
+'USEUNIT WebObjectLib
+'USEUNIT GlobalVars	
+'USEUNIT EnoviaSearch_PopulateSearchModel
+                                                
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC16_Steps
+'Description                  : TC-16_GS/FTS/FPD_Toolbar Delete your Saved Search - Delete your Saved Search Results
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC16_Steps()	
+	
+	  Call LogStep("EnoviaSearch_PeripheralTC16_Step1", "A dropdown with various commands(Like-Named Search, My Favourite Searches, Full Text Search..etc) should appear","")
+	  Call LogStep("EnoviaSearch_PeripheralTC16_Step2", "A new Search window should pop up","")
+	  Call LogStep("EnoviaSearch_PeripheralTC16_Step3", "A Message from the Webpage dialogue box should appear which says Are you sure you want to delete Test1(name of the saved search)","")
+	  Call LogStep("EnoviaSearch_PeripheralTC16_Step4", "The Saved Search (Test1) should be deleted from the Search Window.","")
+	  Call LogStep("EnoviaSearch_PeripheralTC16_Step5", "You should not be able to see the Saved Search(Test1) that you deleted.","")
+
+	  Call LogTestCase("Save your Specific Search Results", "TC-16_GS/FTS/FPD_Toolbar Delete your Saved Search","47708")
+	
+End Function	
+	
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC16_Step1
+'Description                  : To Delete your Saved Search, In the Global Search Bar, Click on the dropdown beside the textbox(default value:Named Search)
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC16_Step1()	
+
+    'Create object for delete saved name
+    Set objDeleteSaved = objGetObject(OR_EnoviaSearch_TC19_DeleteSavedName,"","")
+    objDeleteSaved.Click()
+    Set objDeleteSaved=nothing
+                                       
+    'Create object for FavoriteSearches label
+    Set objFavoriteSearches = objGetObject(OR_EnoviaSearch_TC19_FavoriteSearches,"","")
+    objFavoriteSearches.Click()
+    Set objFavoriteSearches = nothing 
+    
+    aqutils.Delay 10000,"Refresh the screen"
+    
+End Function	
+	                                             
+                                                      
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC16_Step2
+'Description                  : Click on the 'My Favourite Search' Command
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+'		
+Function EnoviaSearch_PeripheralTC16_Step2()	
+  
+    'Create object for delete label         
+    Set objDeleteSavedRecord = objGetObject(OR_EnoviaSearch_TC16_DeleteSavedRecordName,g_DeleteSavedNamePage_URL,4000)
+    If objDeleteSavedRecord.VisibleOnScreen = False Then
+       Call Err.raise (65028,"EnoviaSearch_PeripheralTC16_Step2","Delete page NOT opened")
+    End If
+    Set objDeleteSavedRecord = nothing 
+    
+End Function	
+	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC16_Step3
+'Description                  : Select the Radio Button against the Saved Search you want to delete, and click on the Delete button in that row
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC16_Step3()	
+                                                  
+   	'Create object for delete label 
+    Set objDeleteSavedRecord = objGetObject(OR_EnoviaSearch_TC16_SelectRadioButton,g_DeleteSavedNamePage_URL,4000)
+    objDeleteSavedRecord.Click()
+    Set objDeleteSavedRecord = nothing
+                                        
+    'Create object for Delete Button
+    Set objDeleteBtn=objGetObject(OR_EnoviaSearch_TC16_DeleteSavedRecordName,g_DeleteSavedNamePage_URL,4000)
+    objDeleteBtn.Click()
+    Set objDeleteBtn=nothing
+    
+    'Calling Alert Function
+     Call EnoviaSearch_AlertWindow("")                                           
+                          
+End Function	
+	
+		
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC16_Step4
+'Description                  : Click on OK
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC16_Step4()	
+    
+    Call EnoviaSearch_AlertWindow("")  
+    
+    sys.Refresh
+    aqutils.Delay 5000,"Waiting for page refresh."
+                                              
+End Function	
+	                                             
+	                                                         
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC16_Step5
+'Description                  : Close the Window, In your Search Results page, Click on the Saved Queries Button 
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+		
+Function EnoviaSearch_PeripheralTC16_Step5()	
+    
+    'Create object to check if record is deleted
+    Set objDeleteSavedRecord = objGetObject(OR_EnoviaSearch_TC16_DeleteSavedRecordName,g_DeleteSavedNamePage_URL,4000)
+    If Not(objDeleteSavedRecord is Nothing) Then
+        If objDeleteSavedRecord.VisibleOnScreen = True Then
+          Call Err.raise (65029,"EnoviaSearch_PeripheralTC16_Step5","Deletion is not successful")
+        End if
+    End If
+    Set objDeleteSavedRecord=nothing
+                                                                                          
+End Function	
+                                                                

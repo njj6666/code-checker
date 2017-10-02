@@ -1,0 +1,447 @@
+﻿'USEUNIT GlobalVars	
+'USEUNIT LogLib	
+'USEUNIT OR_Enovia	
+'USEUNIT WindowsUtility	
+'USEUNIT EnoviaUtils	
+'USEUNIT WebObjectLib	
+'USEUNIT EnoviaSearch_PopulateSearchModel
+'USEUNIT EnoviaSearch_Utility
+
+Function EnoviaSearch_PeripheralTC4_Steps()	
+	
+	Call LogStep("EnoviaSearch_PeripheralTC4_Step1", "The Object(s) should be displayed in the Search Results Window.","")
+	Call LogStep("EnoviaSearch_PeripheralTC4_Step2", "The Object(s) should get selected and the Delete Button on the Toolbar gets activated. ","")
+	Call LogStep("EnoviaSearch_PeripheralTC4_Step3", "A Message from the Webpage dialogue box should appear which says You have chosen to delete the objects in the current view. To continue with deletion, Click OK. To Cancel deletion, Click Cancel.","")
+	Call LogStep("EnoviaSearch_PeripheralTC4_Step4", "The Object(s) gets deleted from the Database and you can no longer search for the Object(s).","")
+	Call LogStep("EnoviaSearch_PeripheralTC4_Step5", "The Object(s) should be displayed in the Search Results Window.","")
+	Call LogStep("EnoviaSearch_PeripheralTC4_Step6", "The Object(s) should get selected and the Delete Button on the Toolbar gets activated. ","")
+	Call LogStep("EnoviaSearch_PeripheralTC4_Step7", "A Select Collection Window should open","")
+	Call LogStep("EnoviaSearch_PeripheralTC4_Step8", "The Checkbox beside the Textbox should get selected and data is entered ","")
+	Call LogStep("EnoviaSearch_PeripheralTC4_Step9", "The checkbox should be selected","")
+	Call LogStep("EnoviaSearch_PeripheralTC4_Step10", "A Message from the Webpage dialogue box should appear which says Selected Item(s) have been added to collection/collections.","")
+	Call LogStep("EnoviaSearch_PeripheralTC4_Step11", "Dialog box should close","")
+	Call LogStep("EnoviaSearch_PeripheralTC4_Step12", "The Home page should be displayed","")
+	Call LogStep("EnoviaSearch_PeripheralTC4_Step13", "The Collections Page should display with all the set of Collections","")
+	Call LogStep("EnoviaSearch_PeripheralTC4_Step14", "All the selected Object(s) (from Step-7) should be displayed in the Items Category.","")
+	Call LogTestCase("Delete your Search Objects/Add your Search Objects to Collections", "TC-04_Named Search_Toolbar Delete/Add To Collections","47696")
+	
+End Function	
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC4_Step1
+'Description                  : Searches for a record
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC4_Step1()	
+     
+    'Create object for CollectionLink
+    Set objCollectionLink = objGetObject(OR_EnoviaSearch_TC20_CollectionLink,"",3000)
+    objCollectionLink.Click()
+    Set objCollectionLink = nothing	
+    Delay 2000
+    'Creat object for Selection
+    Set objDeletIcon = objGetObject(OR_EnoviaSearch_TC19_SelectCollectionName,"",3000)
+    If (objDeletIcon is Nothing)=False   Then
+      If objDeletIcon.VisibleOnScreen = True then
+        objDeletIcon.Click()
+        Set objDeletIcon = nothing
+        'Creat object for DeletIcon
+        Set objDeletIcons = objGetObject(OR_EnoviaSearch_TC18_DeletIcon,"",3000)
+        objDeletIcons.Click()
+        Set objDeletIcons = nothing
+    
+        'Creat object for DeletIcon
+'        Set objSelectRadioButton = objGetObject(OR_EnoviaSearch_TC20_CollectionNameDelete,g_CollectionDeletePage_URL,3000)
+'        objSelectRadioButton.Click()
+'        Set objSelectRadioButton = nothing 
+    
+        'Creat object for Done Button
+        Set objDoneButton = objGetObject(OR_EnoviaSearch_TC19_DoneButton,g_CollectionDeletePage_URL,3000)
+        objDoneButton.Click()
+        Set objDoneButton = nothing
+      End If
+    End If
+    
+    'Code To search a Record
+    sProdData = aqDateTime.GetYear(sDateTime) & aqDateTime.GetMonth(sDateTime) & aqDateTime.GetDay(sDateTime) & aqDateTime.GetHours(sDateTime) & aqDateTime.GetMinutes(sDateTime) & aqDateTime.GetSeconds(sDateTime)
+    SearchRecord =  EnoviaSearch_CreateProdData(sProdData)
+    Call Enovia_SearchStuff(SearchRecord)
+    
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC4_Step2
+'Description                  : Select the record to be deleted and delete button get enabled
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC4_Step2()	
+
+    'Switching to Real time mode
+    Sys.Refresh
+    'Create object of Switch Query Button 
+    Set objSwitchQueryButton = objGetObject(OR_EnoviaSearch_SwitchQueryButton,"",3000)
+    If objSwitchQueryButton.title = "Switch to RealTime Search" Then
+      objSwitchQueryButton.Click () 
+      Sys.Refresh
+      objSwitchQueryButton.Refresh
+      Call objSwitchQueryButton.WaitProperty("title","Switch to Indexed Search",10000) 
+      If objSwitchQueryButton.title = "Switch to RealTime Search" Then
+        Call Err.raise(64987,"EnoviaSearch_PeripheralTC3_Step1","Real Time Search not changed to Indexed Search")
+      End If
+    End If
+    Set objSwitchQueryButton = Nothing
+    
+    'create object for search button
+    Set SearchButton = objGetObject(OR_EnoviaSearch_TC17_Search,"",3000)
+    SearchButton.click()
+    aqUtils.Delay 10000,"Waiting for the page refresh after search."
+    
+    'Create object for selecting a record
+     Set objSelectRecord = objGetObject(OR_EnoviaSearch_TC18_SelectRecord,"",3000)
+     objSelectRecord.Click()
+     Set objSelectRecord = nothing 
+     
+     'Create object for delete image
+     Set objDeleteRecord = objGetObject(OR_EnoviaSearch_TC18_DeletIcon,"","")
+     If objDeleteRecord.Exists = False Then
+      Call Err.raise(64988,"EnoviaSearch_PeripheralTC4_Step2","Delete button is enabled is not enabled")
+     End If
+     Set objDeleteRecord = nothing
+      
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC4_Step3
+'Description                  : Delete the record and check the warning message appears
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC4_Step3()	
+    
+    Sys.Refresh
+    'Create object for delete image
+    Set objDeleteTable = objGetObject(OR_EnoviaSearch_TC18_DeleteTable,"","")
+    Set objDeleteRecord = objDeleteTable.FindChild("idStr","AEFGenericDelete",5,True)
+    objDeleteRecord.Click()
+    Set objDeleteRecord = nothing 
+    
+    'Call EnoviaSearch_AlertConfirmation ("You have chosen to delete the selectedobjects in the current viewTo continue with the deletion, click OK.To cancel deletion, click Cancel.")
+     
+     	
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC4_Step4
+'Description                  : Click ok in alert window
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC4_Step4()	
+    
+    'Code to check the alert message and click on ok
+    Call EnoviaSearch_AlertWindow("")
+    
+End Function	
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC4_Step5
+'Description                  : Searches for a record
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC4_Step5()
+	
+    'Searches "CUP-00002411" in the application
+    SearchCollection = EnoviaSearch_ReadTestCasesData("TC-04_Named Search_Toolbar Delete/Add To Collections","Search")
+    Call Enovia_SearchStuff(SearchCollection)
+    
+    'Switching to Real time mode
+    Sys.Refresh
+    'Create object of Switch Query Button 
+    Set objSwitchQueryButton = objGetObject(OR_EnoviaSearch_SwitchQueryButton,"",3000)
+    If objSwitchQueryButton.title = "Switch to RealTime Search" Then
+      objSwitchQueryButton.Click () 
+      Sys.Refresh
+      objSwitchQueryButton.Refresh
+      Call objSwitchQueryButton.WaitProperty("title","Switch to Indexed Search",10000) 
+      If objSwitchQueryButton.title = "Switch to RealTime Search" Then
+        Call Err.raise(64989,"EnoviaSearch_PeripheralTC4_Step5","Real Time Search not changed to Indexed Search")
+      End If
+    End If
+    Set objSwitchQueryButton = Nothing
+    
+    'create object for search button
+    Set SearchButton = objGetObject(OR_EnoviaSearch_TC17_Search,"",3000)
+    SearchButton.click()
+    aqUtils.Delay 10000,"Waiting for the page refresh after search."
+    
+    'Get the EnoviaNameSearch_HandlingAlertWindow function to handle Alert Box Window
+     Call EnoviaSearch_AlertWindow("")        
+    
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC4_Step6
+'Description                  : Select a record
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC4_Step6()	
+   
+     'Create object for selecting a record
+     Set objSelectRecord = objGetObject(OR_EnoviaSearch_TC18_SelectRecord,"",3000)
+     objSelectRecord.Click()
+     Set objSelectRecord = nothing
+     	
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC4_Step7
+'Description                  : Collection page opens
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC4_Step7()	
+
+   'Creat object for Add collection
+   Set objAddCollection = objGetObject(OR_EnoviaSearch_TC20_AddCollection,"",3000)
+   objAddCollection.Click()
+   Set objAddCollection = nothing
+     
+   'Creat object for New/Add to Collections label
+   Set objAddTOCollectionLabel = objGetObject(OR_EnoviaSearch_TC20_NewCollection,"",3000)
+   objAddTOCollectionLabel.Click()
+   Set objAddTOCollectionLabel = nothing
+     
+   'Create object for collection name
+   Set objCollectionName = objGetObject(OR_EnoviaSearch_TC20_CollectionName,g_CollectionPage_URL,3000)
+   If objCollectionName.VisibleOnScreen = False Then
+    Call Err.raise(64990,"EnoviaSearch_PeripheralTC4_Step7","A Select Collection Window not opened")
+   End If
+   Set objCollectionName = nothing 
+      
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC4_Step8
+'Description                  : Enter collection name and description
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC4_Step8()
+
+   'Creat object for CollectionsName 
+   Set objCollectionName = objGetObject(OR_EnoviaSearch_TC20_CollectionName,g_CollectionPage_URL,3000)
+   objCollectionName.Click()
+   Set objCollectionName = nothing 
+     
+   'SendKeys to press backspace
+   Set oWshell = CreateObject("WScript.Shell") 
+   'Delay need to be added befor pressing the backspace
+   aqUtils.Delay 5000,"Need Delay befor pressing the backspace."
+   oWshell.SendKeys "{BACKSPACE}" 
+   Set oWshell = Nothing 
+                  
+   'Creat object for CollectionsName
+   Set objCollectionNames = objGetObject(OR_EnoviaSearch_TC20_CollectionName,g_CollectionPage_URL,"")
+   NameOfCollection = EnoviaSearch_ReadTestCasesData("TC-04_Named Search_Toolbar Delete/Add To Collections","CollectionName")
+   objCollectionNames.SetText(NameOfCollection)
+   Set objCollectionNames = nothing 
+     
+   'Creat object for CollectionDescription
+   Set objCollectiondescripion = objGetObject(OR_EnoviaSearch_TC20_CollectionDescription,g_CollectionPage_URL,"")
+   DesOfCollection = EnoviaSearch_ReadTestCasesData("TC-04_Named Search_Toolbar Delete/Add To Collections","CollectionDescription")
+   objCollectiondescripion.Click()
+   objCollectiondescripion.Keys(DesOfCollection)
+   Set objCollectiondescripion = nothing 
+      
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC4_Step9
+'Description                  : Select Clipboard
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC4_Step9()	
+    
+     'Creat object for selecting All check boxes
+     Set objCheckboxForClipboard = objGetObject(OR_EnoviaSearch_TC20_CheckboxForClipboard,g_CollectionPage_URL,3000)
+     objCheckboxForClipboard.Click()
+     Set objCheckboxForClipboard = nothing 
+     
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC4_Step10
+'Description                  : Click on done button and check the alert message
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC4_Step10()	
+     
+     'Creat object for Done Button
+     Set objDoneButton = objGetObject(OR_EnoviaSearch_TC19_DoneButton,g_CollectionPage_URL,"")
+     objDoneButton.Click()	
+     Set objDoneButton = nothing 
+     
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC4_Step11
+'Description                  : Click on Ok in alert window
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC4_Step11()	
+     
+    'Code to handle alert message .
+     Call EnoviaSearch_AlertWindow("")
+    
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC4_Step12
+'Description                  : Launch the application
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC4_Step12()	
+      
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+  
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC4_Step13
+'Description                  : Select collection link
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC4_Step13()	
+    
+    'Creat object for CollectionLink
+    Set objCollectionLink = objGetObject(OR_EnoviaSearch_TC20_CollectionLink,"","")
+    objCollectionLink.Click()
+    Set objCollectionLink = nothing
+    
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC4_Step1
+'Description                  : Selected object should appear in page
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC4_Step14()	
+
+    'Creat object for Selection
+    Set objDeletIcon = objGetObject(OR_EnoviaSearch_TC19_SelectCollectionName,"",3000)
+    objDeletIcon.Click()
+    Set objDeletIcon = nothing
+    
+    'Creat object for DeletIcon
+    Set objDeletIcons = objGetObject(OR_EnoviaSearch_TC18_DeletIcon,"",3000)
+    objDeletIcons.Click()
+    Set objDeletIcons = nothing
+    
+    'Creat object for DeletIcon
+'    Set objSelectRadioButton = objGetObject(OR_EnoviaSearch_TC20_CollectionNameDelete,g_CollectionDeletePage_URL,3000)
+'    objSelectRadioButton.Click()
+'    Set objSelectRadioButton = nothing 
+    
+    'Creat object for Done Button
+    Set objDoneButton = objGetObject(OR_EnoviaSearch_TC19_DoneButton,g_CollectionDeletePage_URL,3000)
+    objDoneButton.Click()
+    Set objDoneButton = nothing 
+     
+End Function	
+
+

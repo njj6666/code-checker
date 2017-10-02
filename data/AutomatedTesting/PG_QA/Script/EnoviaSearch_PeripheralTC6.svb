@@ -1,0 +1,213 @@
+﻿'USEUNIT GlobalVars	
+'USEUNIT LogLib	
+'USEUNIT OR_Enovia	
+'USEUNIT WindowsUtility	
+'USEUNIT EnoviaUtils	
+'USEUNIT WebObjectLib	
+'USEUNIT EnoviaSearch_PopulateSearchModel
+
+Function EnoviaSearch_PeripheralTC6_Steps()	
+	
+	Call LogStep("EnoviaSearch_PeripheralTC6_Step1", "The Object(s) should be displayed in the Search Results Window.","")
+	Call LogStep("EnoviaSearch_PeripheralTC6_Step2", "Three Dropdowns with Apply and Reset Buttons should appear below the Toolbar","")
+	Call LogStep("EnoviaSearch_PeripheralTC6_Step3", "The filter should selected and displayed on the first Dropdown","")
+	Call LogStep("EnoviaSearch_PeripheralTC6_Step4", "The filter should selected and displayed on the second Dropdown","")
+	Call LogStep("EnoviaSearch_PeripheralTC6_Step5", "The filter should selected and displayed on the Second Dropdown","")
+	Call LogStep("EnoviaSearch_PeripheralTC6_Step6", "The Search Results should get refreshed and the Objects should be grouped in rows in the Order of the First, Second and Third filters ","")
+	
+	Call LogTestCase("Group your Search based on the filters into rows", "TC-06_Named Search_Row Grouping","47698")
+	
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC6_Step1
+'Description                  : Search the data
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+
+Function EnoviaSearch_PeripheralTC6_Step1()	
+ 
+    'Search a record 
+    SearchRecord = EnoviaSearch_ReadTestCasesData("TC-06_Named Search_Row Grouping","Search")
+    Call Enovia_SearchStuff(SearchRecord) 
+    
+   'Switching to Real time mode
+    Sys.Refresh
+    'Create object of Switch Query Button 
+    Set objSwitchQueryButton = objGetObject(OR_EnoviaSearch_SwitchQueryButton,"",3000)
+    If objSwitchQueryButton.title = "Switch to RealTime Search" Then
+      objSwitchQueryButton.Click () 
+      Sys.Refresh
+      objSwitchQueryButton.Refresh
+      Call objSwitchQueryButton.WaitProperty("title","Switch to Indexed Search",7000) 
+      If objSwitchQueryButton.title = "Switch to RealTime Search" Then
+        Call Err.raise(64976,"EnoviaSearch_PeripheralTC5_Step1","Real Time Search not changed to Indexed Search")
+      End If
+    End If
+    Set objSwitchQueryButton = Nothing
+    
+    'create object for search button
+    Set SearchButton = objGetObject(OR_EnoviaSearch_TC17_Search,"",3000)
+    SearchButton.click()
+    aqUtils.Delay 20000,"Waiting for the page refresh after search."
+    
+    'Get the EnoviaNameSearch_HandlingAlertWindow function to handle Alert Box Window
+     Call EnoviaSearch_AlertWindow("")        
+        
+End Function	
+	  
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC6_Step2
+'Description                  : code to click row grouping button and chjeck the fields available
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC6_Step2()	
+ 
+   'Create object of Limit Search buttton
+    Set objRowGroupingButton=objGetObject(OR_EnoviaSearch_TC6_RowGroupingButton,"","")
+    objRowGroupingButton.Click()
+    Set objRowGroupingButton = Nothing
+    
+    'Checks reset,apply,3 textfields
+    Set objRowGroupingButton1=objGetObject(OR_EnoviaSearch_TC6_rowGouping1,"","")
+    Set objRowGroupingButton2=objGetObject(OR_EnoviaSearch_TC6_rowGouping2,"","")
+    Set objRowGroupingButton3=objGetObject(OR_EnoviaSearch_TC6_rowGouping3,"","")
+    Set objRowGroupingApplyButton=objGetObject(OR_EnoviaSearch_TC6_ApplyButton,"","")
+    Set objRowGroupingResetButton=objGetObject(OR_EnoviaSearch_TC6_ResetButton,"","") 
+    
+    If objRowGroupingButton1.VisibleOnScreen = False Then
+      Call Err.Raise(64977,"EnoviaSearch_PeripheralTC6_Step2","First Grouping Dropdown is NOT appeared on screen")
+    End If
+    
+    If objRowGroupingButton2.VisibleOnScreen = False Then
+      Call Err.raise(64978,"EnoviaSearch_PeripheralTC6_Step2","Second Grouping Dropdown is NOT appeared on screen") 
+    End If
+    
+    If objRowGroupingButton3.VisibleOnScreen = False Then
+      Call Err.Raise(64979,"EnoviaSearch_PeripheralTC6_Step2","Third Grouping Dropdown is NOT appeared on screen")
+    End If
+    
+    If objRowGroupingApplyButton.VisibleOnScreen = False Then
+      Call Err.Raise(64980,"EnoviaSearch_PeripheralTC6_Step2","Apply Button is NOT appeared on screen")
+    End If
+    
+    If objRowGroupingResetButton.VisibleOnScreen = False Then
+       Call Err.Raise(64961,"EnoviaSearch_PeripheralTC6_Step2","Reset Button is NOT appeared on screen")
+    End If
+    
+    Set objRowGroupingButton1 = Nothing
+    Set objRowGroupingButton2 = Nothing
+    Set objRowGroupingButton3 = Nothing
+    Set objRowGroupingApplyButton = Nothing
+    Set objRowGroupingResetButton = Nothing
+    
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC6_Step3
+'Description                  : Select values under the First Dropdown
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC6_Step3()	
+  
+  'Create object for rowGouping1
+    Set objRowGroupingButton1=objGetObject(OR_EnoviaSearch_TC6_rowGouping1,"","")
+    objRowGroupingButton1.Clickitem("Name")
+    Set objRowGroupingButton1 = Nothing	
+    
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC6_Step4
+'Description                  : Select values under the second Dropdown
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC6_Step4()	
+  
+  'Create object for rowGouping2
+    Set objRowGroupingButton2=objGetObject(OR_EnoviaSearch_TC6_rowGouping2,"","")
+    objRowGroupingButton2.Clickitem("Type")
+    Set objRowGroupingButton2 = Nothing
+    
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC6_Step5
+'Description                  : Select values under the third Dropdown
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC6_Step5()	
+ 
+  'Create object for rowGouping3
+    Set objRowGroupingButton3=objGetObject(OR_EnoviaSearch_TC6_rowGouping3,"","")
+    objRowGroupingButton3.Clickitem("State")
+    Set objRowGroupingButton3 = Nothing
+    
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC6_Step6
+'Description                  : click apply button
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC6_Step6()	
+  
+  'Create object for apply button
+    Set objRowGroupingApplyButton=objGetObject(OR_EnoviaSearch_TC6_ApplyButton,"","")
+    objRowGroupingApplyButton.Click()
+    Set objRowGroupingApplyButton = Nothing
+     
+    'Reset the grouping rows
+    Set objRowGroupingResetButton=objGetObject(OR_EnoviaSearch_TC6_ResetButton,"","")
+    objRowGroupingResetButton.Click()
+    Set objRowGroupingResetButton = Nothing
+    
+    'close row grouping
+    Set objRowGroupingCloseButton=objGetObject(OR_EnoviaSearch_TC7_RowGroupingClose,"","")
+    Sys.Refresh
+    objRowGroupingCloseButton.Click()
+    Set objRowGroupingCloseButton = Nothing
+    
+End Function	

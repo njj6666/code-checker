@@ -1,0 +1,57 @@
+﻿'USEUNIT DSM_E2EUtility
+'USEUNIT DSM_PDTUtility
+'USEUNIT EnoviaUtils
+'USEUNIT ExcelLib
+'USEUNIT GlobalVars
+'USEUNIT LogLib
+'USEUNIT OR_Enovia
+'USEUNIT WebKeywords
+'USEUNIT WebObjectLib
+
+Sub EnoviaDSM_S04036_S_AddAlternate(strSearchText)
+  Dim objCheck, arrCheckPoint
+  'Input the file in the textbox
+  Call Click(OR_EnoviaSearch_SearchNameEdt,g_SearchPageURL,30000)
+  Call SetTextByProps(OR_EnoviaSearch_SOwnerNameNumberEdt,strSearchText,g_SearchPageURL) 
+  Call Click(OR_EnoviaSearch_SearchBtn,g_SearchPageURL,"")
+  Delay(9000)
+  'Select the first value and click OK
+  ' select first search result
+  Set objSearchNum = objGetObject(OR_Enovia_SearchoutNum,g_SearchPageURL,3000)
+  strSechNum = Trim(objSearchNum.innerText)
+  if (strcomp(strSechNum,"Results: 0") = 0) Then
+     Log.Message "No Result Find"
+  Else
+   'Select the value and click the Add button
+    Call Click(OR_EnoviaSearch_FirstResultChk, g_SearchPageURL,"")
+    Call Click(OR_EnoviaSearch_SubmitBtn, g_SearchPageURL,"")   
+  End if
+  arrCheckPoint = Array("NATIVEWEBOBJECT","idStr","rmbrow-0,0","INPUT")
+  bFlag = VerifyText(arrCheckPoint, "", "", "idStr", "rmbrow-0,0")
+  strStepComm = "Add Data In Alertnate" 
+  If bFlag Then 
+    bPassed = True
+    strStepComm = "Successed: " & strStepComm
+    Log.Event strStepComm
+    else
+    bPassed = False
+    strStepComm = "Failed: " & strStepComm
+    Log.Event strStepComm
+  End If
+  Call LogStepData("Add Data In Alertnate", bPassed, strStepComm, sInfo) 
+  'Clean up
+  Set objSearchNum = nothing
+  Enovia_ClearVariable objCheck
+  Enovia_ClearVariable arrCheckPoint
+  Enovia_ClearVariable bFlag
+  Enovia_ClearVariable strStepComm
+  Enovia_ClearVariable bPassed
+  Delay(3000)
+End Sub 
+
+Sub EnoviaDSM_S04036_S_ClearData()
+' Select the "Check All" check box
+  Call Click(OR_EnoviaSearch_SOwnerChk,g_EnoviaHomePage_URL,"")
+' Click the Remove button
+  Call Click(OR_Enovia_SearchRemovebtn,g_EnoviaHomePage_URL,"")
+End Sub 

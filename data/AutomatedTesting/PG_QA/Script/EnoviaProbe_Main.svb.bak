@@ -1,0 +1,11 @@
+﻿'USE_UNIT PerformanceProbe
+'USEUNIT FileLib
+
+Function Start_EnoviaProbe_Manual()
+  Call Enovia_PerformanceProbe_Main("plmprod")
+End Function
+
+Function Start_EnoviaProbe_Auto()
+  Set oParams = FileLib_GetTestCompleteAutoParams()
+  Call Enovia_PerformanceProbe_Main(oParams.Environment)
+End Function

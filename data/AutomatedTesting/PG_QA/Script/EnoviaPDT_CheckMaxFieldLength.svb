@@ -1,0 +1,275 @@
+﻿'USEUNIT EnoviaPDT_PDTUtils
+'USEUNIT ExcelLib
+'USEUNIT GlobalVars
+'USEUNIT OR_Enovia
+'USEUNIT WebObjectLib
+'USEUNIT LogLib
+
+
+'Description  : Function to Check max length of fields in a given page
+'Inputs       : SheetName - SheetName in excel containing the Fields in the expected order
+'Filename - File Name of the Excel sheet
+'Output       : None               
+'Author       : Santosh  
+
+Function EnoviaPDT_CheckMaxLength(sSheetName,sPartType)
+    On Error Resume Next
+    Dim sColumnName,sColumnValidation,sColumnExpValidation,sFilePath,bRefreshParentFlag,aFieldLen,sExpFieldLen
+    Dim oParent,oPrimOrgLabel,oPrimOrgTextbox,oPrimOrgCell,oValidationDict,aExpField,oFieldArray,oFieldArrayObj,oParentObj
+    sColumnName = "Field" 'Name of column to be searched in the Excel 
+    sColumnValidation = "Validation"  'Name of column to be searched in the Excel     
+    sFilePath = g_pdt_FileLocation&sPartType&".xlsx"  'Part Type excel file path
+    
+    Select Case Ucase(sSheetName) ' Select the Parent Object based on the SheetName
+    Case "CREATE"
+      If sPartType = "Virtual Intermediate" Then
+        'Set oParent = objGetObject(OR_EnoviaPDT_CreateTbl,"","")'Object for Virtual Create tab
+        Log.Warning "The Sheet Name given does not have a Page object assigned" ' Sheet name not match with any page name  
+        Exit Function 
+      else  
+        Set oParent = objGetObject(OR_EnoviaPDT_CreateTbl,g_CreatePage_URL,"")'Object for Create tab
+        iSearchDepth = 1   
+      End If  
+    Case "ATTRIBUTES"
+      Set oParent = objGetObject(OR_EnoviaPDT_CreateTbl,"","") 'Object for attribute tab
+      iSearchDepth = 1 
+    Case "TABLES"        
+      Set oParent = objGetObject(OR_EnoviaPDT_TablesPnl,"","")   'Object for Table tab     
+      iSearchDepth = 6   
+    Case Else
+      Log.Warning "The Sheet Name given does not have a Page object assigned" ' Sheet name not match with any page name  
+      Exit Function    
+    End Select
+         
+    If  Ucase(sSheetName) = "CREATE"  Then
+             sCreatePage_URL = g_CreatePage_URL 'Assign URL to variable
+    Else 
+              sCreatePage_URL = ""
+    End If
+    aFieldArr = Excel_GetColumnValues(sSheetName,sFilePath,sColumnName) 
+    aValidationArr= Excel_GetColumnValues(sSheetName,sFilePath,sColumnValidation)  
+    Set oValidationDict = Excel_CreateDictionaryForInput(sSheetName,sFilePath,sColumnName,"Validation")    'Dictionary object which contains Field Name and its Validation mapping
+    If   Ucase(sSheetName) = "ATTRIBUTES"  Or Ucase(sSheetName) = "TABLES" Then
+            sColumnExpValidation = "Field Validation" 'Name of column to be searched in the Excel                                                          
+    End If  
+    If   Ucase(sSheetName) = "CREATE" Then
+             sColumnExpValidation = "Validation Actual" 'Name of column to be searched in the Excel 
+    End If
+    aExpValidationArr= Excel_GetColumnValues(sSheetName,sFilePath,sColumnExpValidation) 
+      '****************************Validating Max fied for Create and Attribute Sheet**********************************************
+    If  Ucase(sSheetName) = "CREATE"  Or Ucase(sSheetName) = "ATTRIBUTES" Then     
+        oParent.Click 200,150
+        For i = 0 to Ubound(aFieldArr)   
+         If  bRefreshParentFlag = True Then ' Checking Refresh page
+            Set oParent = objGetObject(OR_EnoviaPDT_CreateTbl,"","") 'ReSet Object for attribute tab
+            oParent.Click               
+         End If
+         Set oLabel =oParent.FindChild("contentText",aFieldArr(i),10)
+         if oLabel.Exists then
+            nRowIndex=oLabel.RowIndex 'Row value remains same
+            nColumnIndex=(oLabel.ColumnIndex)+1 'add +1 to Columnindex of a label to get the cell related to it
+            nCount=oParent.Cell(nRowIndex, nColumnIndex).ChildCount
+            if nCount>0 and oValidationDict.Exists(aFieldArr(i)) then 'Child count of a cell should be greater than zero and the value should be exist in dictionary
+                For m=0 to nCount-1
+                  Set oCell=oParent.Cell(nRowIndex, nColumnIndex).Child(m)
+                  if (oCell.ObjectType="Table") then
+                      Set oCell1=oCell.Child((oCell.ChildCount)-1)
+                      ocell_count=oCell1.ChildCount
+                      'To iterate all the childs of a cell
+                      For s=0 to ocell_count-1
+                        Set oCell=oCell1.Child(s)
+                         if not ((oCell.ObjectType="Button") or (oCell.ObjectType="Link"))then
+                             Set oFieldArray=oCell
+                             Exit For
+                         end if
+                      NEXT
+                  else
+                    if not ((oCell.ObjectType="Button") or (oCell.ObjectType="Link"))then' if cell doesn't have table
+                      Set oFieldArray=oCell
+                    end if
+                  end if 
+                NEXT
+            end if
+            If oFieldArray.Enabled = True  Then
+              aFieldLen = Split(aValidationArr(i),";")               
+              aExpField = Split(aExpValidationArr(i)," ")
+              For J = 0 to Ubound(aExpField)-1
+                  If UCase(aExpField(j)) = "MAX" Then
+                         sExpFieldLen = aqstring.Trim(aExpField(j+1))
+                         Exit for   
+                  End If                   
+              Next
+              'validate the Max Length field 
+              bRefreshParentFlag=  EnoviaPDT_SetResetField(oFieldArray,aFieldArr(i),oValidationDict,sCreatePage_URL,sSheetName,aFieldLen(1),sExpFieldLen)
+            Else
+              Log.Warning "Field: "&sFieldName&" - Unable to Measure Max length in application as per spreadsheet"
+            End If
+    	   End If	
+    Next	
+    Set oField = Nothing 'Releasing Object
+    Set oLabel = Nothing 'Releasing Object
+  End If
+   '****************************Validating Max fied for Tables Sheet**********************************************
+  If Ucase(sSheetName) = "TABLES"  Then            
+      Set oParentObj=oParent.FindChild("objectIdentifier","headTable",10)                            
+      For  i = 0 to Ubound(aFieldArr)          
+         Set oFieldArrayObj=oParentObj.FindChild("contentText",aFieldArr(i),10)                                                        
+          If   oValidationDict.Exists(aFieldArr(i))  Then 
+              aFieldLen = Split(aValidationArr(i),";") 
+              aExpField = Split(aExpValidationArr(i)," ")
+              For J = 0 to Ubound(aExpField)-1
+                  If UCase(aExpField(j)) = "MAX" Then
+                          sExpFieldLen = aqstring.Trim(aExpField(j+1))
+                          Exit for   
+                  End If                   
+              Next
+              'validate the Max Length field 
+              Call  EnoviaPDT_SetResetField(oFieldArrayObj,aFieldArr(i),oValidationDict,sCreatePage_URL,sSheetName,aFieldLen(1),sExpFieldLen)
+          End  If             
+      Next
+      Set oFieldArrayObj = Nothing 'Releasing Object
+      Set oParentObj = Nothing 'Releasing Object
+  End If
+  g_isBlocked = False
+  End Function
+  
+  'Description  : Function toValidate max length of fields in a given page
+'Inputs       : SheetName - SheetName in excel containing the Fields in the expected order
+'Filename - File Name of the Excel sheet
+'Output       : None               
+'Author       : Santosh 
+  
+ Function  EnoviaPDT_ValidateResult(bSetReset, sFieldName) 
+   'Checking max length of that Corresponding field	
+    sErrorMessage =""
+   If  bSetReset = True Then ' JR 05/22/2017 Added field name into text. Added logStep call, can uncomment it when not debugging
+    	Log.Message("Field: "&sFieldName&" Max length validated succesfully in application as per spreadsheet")
+          bPassed = True
+   Else
+    	Log.Message("Field: "&sFieldName&" Max length not validated succesfully in application as per spreadsheet")
+          bPassed = False
+          sErrorMessage = "Field: "&sFieldName&" Max length not validated succesfully in application as per spreadsheet"      
+   End If   
+   Call LogStepData(g_pdt_CurrentCategory&"-"&g_pdt_CurrentTab&": -"&"Field: "&sFieldName&" Max length validated succesfully", bPassed, sErrorMessage,"")
+    'doesn't block anything 
+   g_isBlocked = False
+   
+ End Function    
+  
+ 'Description  : Function to Set and Check max length of fields in a given page
+'Inputs       : SheetName - SheetName in excel containing the Fields in the expected order
+'Filename - File Name of the Excel sheet
+'Output       : None               
+'Author       : Santosh 
+  Function EnoviaPDT_SetResetField(oFieldObj,sArrFields,oValidationDict,sCreatePage_URL,sSheetName,sFieldLen,sExpFieldLen)
+      On Error Resume Next
+      If( Ucase(sSheetName) = "CREATE" Or Ucase(sSheetName) = "ATTRIBUTES") And oValidationDict.Exists(sArrFields) Then
+          oFieldObj.Focus 
+          oFieldObj.Click                         
+          oFieldObj.Keys("^a")  
+          oFieldObj.Keys("[Del]")
+          If   oFieldObj. ObjectType="Textbox" Then
+             oFieldObj.value=oValidationDict.item(sArrFields)
+             oFieldObj.Keys("[Tab]")
+          ElseIf oFieldObj.ObjectType="Textarea"   Then 
+'           Entering Values in field                                                          
+            oFieldObj. value = oValidationDict.item(sArrFields)
+            oFieldObj.Keys("[Tab]")   
+          End If                                                      
+          'Validating Text box field
+          If (oFieldObj.ObjectType = "Textbox") And (aqConvert.StrToInt(sFieldLen) > oFieldObj.maxLength) Then 
+              bSetReset = True 
+            'Validating Text Area  field                                                                      
+          ElseIf  oFieldObj.ObjectType = "Textarea"  Then  
+              Set DonBtn =  objGetObject(OR_EnoviaPDT_DoneBtn,sCreatePage_URL,3000)
+                'Clicking DoneBtn
+              If Not (DonBtn Is Nothing) Then
+                  DonBtn.Click
+                  Set DonBtn = Nothing 'Releasing Done Button
+              End If
+              'Checking Alert Window
+              Set objAlert = objGetObject(OR_EnoviaPDT_AlertWnd,"",1000)                                            
+              If  Not (objAlert Is Nothing) Then
+                  bSetReset =   EnoviaPDT_HandlingAlertWindow(aqConvert.StrToInt(sExpFieldLen))
+                  Set objAlert = Nothing 'Releasing object
+                  'Resetting to Actual field value	
+              End If 
+         Else
+              bSetReset = False
+         End If 
+         Call EnoviaPDT_ValidateResult(bSetReset,sArrFields)  'Checking max length of that Corresponding field	
+         Set DonBtn =  objGetObject(OR_EnoviaPDT_DoneBtn,sCreatePage_URL,1000)   
+         If  Not (DonBtn Is Nothing) Then
+            oFieldObj.Focus  
+            oFieldObj.Click 
+            oFieldObj.Keys("^a")                                                         
+            oFieldObj. value = "Test"
+            oFieldObj.Keys("[Tab]")  
+         End If
+         If Ucase(sSheetName) = "ATTRIBUTES"   Then
+           Set DonBtn =  objGetObject(OR_EnoviaPDT_DoneBtn,sCreatePage_URL,5000) 
+           if (DonBtn is Nothing)= True then
+               Set oEditIconBtn = objGetObject(OR_EnoviaTB_EditIconBtn,"",500)  'Searching  EditBtn object
+               If   Not (oEditIconBtn Is Nothing) Then
+                    oEditIconBtn.Click
+                    Set DonBtn =  objGetObject(OR_EnoviaPDT_DoneBtn,sCreatePage_URL,5000)       'Searching  DoneBtn object                              
+                    bRefreshParentFlag = True 'Setting Refreshflag
+                    EnoviaPDT_SetResetField =  bRefreshParentFlag
+                    Set oEditIconBtn = Nothing 'Releasing Edit Button
+                End If 
+           end if                             
+        End If
+        Set DonBtn = Nothing
+     End If
+       '***********************************************************                     
+     If  Ucase(sSheetName) = "TABLES"  And oValidationDict.Exists(sArrFields) Then
+          Set oParent = objGetObject(OR_EnoviaPDT_TablesPnl,"","")
+          Set oSaveBtn = objGetObject(OR_EnoviaPDT_NotesSaveBtn,"","")     'Object for Save button tab
+          Set oResetBtn = objGetObject(OR_EnoviaPDT_NotesResetBtn,"","")        'Object for Reset button  tab 
+          nColumnIndex =(oFieldObj.ColumnIndex)/2
+          'Clicking on Each Coulmn in Table
+          Set oFieldArray=oParent.Find("ColumnIndex",nColumnIndex ,4) 
+          oFieldArray.DblClick
+          'Delay 1000  
+          'Creating Floating object                
+          set oFloatingDivPnl=objGetObject(OR_EnoviaPDT_TablesFloatingDivPnl,"","1000")
+          if (oFloatingDivPnl is Nothing) = False then
+           'Setting Floating formfield object
+                  Set oFloatingPnl=oFloatingDivPnl.FindChild("ObjectIdentifier","formField",5) 
+           Else 
+                Log.Warning "Field: "&oFieldObj&" - Unable to Measure Max length in application as per spreadsheet"           
+          End If 
+          oFloatingPnl.Focus 
+          oFloatingPnl.Click                         
+          oFloatingPnl.Keys("^a")  
+          oFloatingPnl.Keys("[Del]") 
+          'Verifying Field name
+          If  sArrFields = "Plant Testing : Retesting" Or sArrFields = "Lower Specification Limit"Or sArrFields = "Lower Target"Or sArrFields= "Target"Or sArrFields = "Upper Target" Or sArrFields= "Upper Specification Limit" Or sArrFields="Lower Routine Release Limit"Or  sArrFields="Lower Routine Release Limit"Or sArrFields="Upper Routine Release Limit" Then
+             nNo = aqConvert.StrToInt(sFieldLen)
+             For K =  1 To nNo
+                        sTempStr = sTempStr &"3"                                                
+             Next
+             'Entering Values in field'                         
+              oFloatingPnl. value =  sTempStr
+           Else  
+               'Entering Values in field'                 
+             oFloatingPnl. value =  oValidationDict.item(sArrFields)
+           End If
+          'Clicking Save Button
+          oSaveBtn.Click
+          Delay 1000
+          Set oSaveBtn = Nothing  'Releasing Save Button
+          TempStr = ""
+           'Checking Alert Window                          
+          Set objAlert = objGetObject(OR_EnoviaPDT_AlertWnd,"","500")
+          If  Not (objAlert Is Nothing) Then
+          bSetReset =   EnoviaPDT_HandlingAlertWindow(aqConvert.StrToInt(sExpFieldLen))
+          Set objAlert = Nothing 'Releasing Object
+           'Clicking Reset Button
+            oResetBtn.Click  
+            Set oResetBtn = Nothing   'Releasing Reset Button
+          End If    
+          Call EnoviaPDT_ValidateResult(bSetReset,sArrFields)  'Checking max length of that Corresponding field                            
+     End  If 
+  End Function
+  

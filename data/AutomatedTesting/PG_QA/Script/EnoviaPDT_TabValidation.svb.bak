@@ -1,0 +1,197 @@
+﻿'USEUNIT WebObjectLib
+'USEUNIT OR_Enovia
+'USEUNIT ExcelLib
+'USEUNIT GlobalVars
+'USEUNIT Loglib
+'USEUNIT EnoviaPDT_PDTUtils
+'USEUNIT EnoviaPDT_ValidationUtils
+
+' Walks thorugh the tabs that we have filled in previous test cases
+Function EnoviaPDT_ValidatePartTabsData(PartType)
+
+  If g_isBlocked = False Then
+    ' Validate Create and Attributes
+    Log.AppendFolder("Validate tab data")
+    If EnoviaPDT_NavigateTabsAndLinks("","Attributes") Then
+      'Log.AppendFolder("Validate Create/Attributes tab data")
+      Log.AppendFolder("Validate Create tab data") 
+      g_pdt_CurrentCategory = "Create Product Data"
+      g_pdt_CurrentTab = "Create Page"   
+      Call EnoviaPDT_CheckValidationOfTabs("Create", PartType)
+      Log.PopLogFolder
+    
+      Log.AppendFolder("Validate Attributes tab data") 
+      g_pdt_CurrentCategory = EnoviaPDT_GetGcasByPartType(PartType)
+      g_pdt_CurrentTab = "Attributes"   
+      Call EnoviaPDT_CheckValidationOfTabs("Attributes", PartType)
+      Log.PopLogFolder
+    End If
+  
+    ' Validate Notes
+    If EnoviaPDT_CheckCategoryOrTab("Notes") Then
+      If EnoviaPDT_NavigateTabsAndLinks("","Notes") Then
+        Log.AppendFolder("Validate Notes tab data")
+        g_pdt_CurrentCategory = EnoviaPDT_GetGcasByPartType(PartType)
+        g_pdt_CurrentTab = "Notes"   
+        Call EnoviaPDT_CheckValidationOfTabs("Notes", PartType)
+        Log.PopLogFolder
+      End If
+    End If
+    
+    ' Validate Tables
+    If EnoviaPDT_CheckCategoryOrTab("Tables") Then
+      If EnoviaPDT_NavigateTabsAndLinks("","Tables") Then
+        Log.AppendFolder("Validate Tables tab data")
+        g_pdt_CurrentCategory = EnoviaPDT_GetGcasByPartType(PartType)
+        g_pdt_CurrentTab = "Tables"   
+        Call EnoviaPDT_CheckValidationOfTabs("Tables", PartType)
+        Log.PopLogFolder
+      End If
+    End If
+    Log.PopLogFolder
+  End If
+  
+  Call LogTestCase(PartType&" - Validate Creation and Attributes", EnoviaPDT_GetTestCaseID(), EnoviaPDT_GetAlmID(3))
+End Function
+
+'Description  : Function to Check validation of tabs in a given page
+'Inputs       : SheetName - SheetName in excel containing the Fields in the expected order
+               'Filename - File Name of the Excel sheet
+'Output       : None               
+'Author       : Swarna
+
+Sub EnoviaPDT_CheckValidationOfTabs(sSheetName,sFileName)
+  Dim oParentobj,oParentobj1,oLabel,oField
+  Dim i,nColumnIndex,aFields,oInputDict,sFieldsColName,sInputFieldColName,sFilePath,nRowIndex
+  On Error Resume Next
+  sFieldsColName = "Field"
+  sInputFieldColName="Input"
+  if (sFileName="Formulation_process" or sFileName="Formulation_part")and Ucase(sSheetName)="CREATE"then
+    sFileName="Formulation"
+  end if
+  sFilePath = g_pdt_FileLocation&sFileName&".xlsx"
+  
+  Select Case Ucase(sSheetName)
+    Case "CREATE","ATTRIBUTES"
+      Set oParentobj = objGetObject(OR_EnoviaPDT_CreateTbl,"","")'Object for create page
+    Case "TABLES"
+      Set oParentobj = objGetObject(OR_EnoviaPDT_TablesPnl,"","")'Object for Tables tab
+    Case "NOTES"
+      Set oParentobj = objGetObject(OR_EnoviaPDT_NotesPnl,"","")'Object for Notes tab
+    Case Else
+      Log.Warning "Application Page Name given is not Valid"
+      Exit Sub    
+  End Select
+  
+  aFields = Excel_GetColumnValues(sSheetName,sFilePath,sFieldsColName)'To get field names from Spread sheet
+  Set oInputDict = Excel_CreateDictionaryForInput(sSheetName,sFilePath,sFieldsColName,sInputFieldColName)'To get dictionary of field and input values from Spread sheeyt
+  For i = 0 to Ubound(aFields)
+    if Ucase(sSheetName)="TABLES" or Ucase(sSheetName)="NOTES" then'Applicable for script and Notes tabs
+        Set oParentobj1=oParentobj.FindChild("objectIdentifier","headTable",10)
+        Set oLabel=oParentobj1.FindChild("contentText",aFields(i),10)
+         if i=0 then 'Applicable for the first field of a table (No.)
+            Set oField=objGetObject(OR_EnoviaPDT_TablesPnl1,"","")'Applicable only for 1 field i.e. No as it will comes in a different panel
+            Set oField=oField.FindChild("ObjectIdentifier","treeBodyTable",6)
+            nColumnIndex=1
+            Set oField=oField.cell(1,nColumnIndex)
+          else 'Applicable for the remaining fields in Tables tab
+            nColumnIndex=(oLabel.ColumnIndex)/2
+            Set oParentobj1=oParentobj.Findchild("ObjectIdentifier","bodyTable",6)
+            Set oField=oParentobj1.Cell(1,nColumnIndex)
+         end if
+          call ValidationOfField(aFields(i),oInputDict,oField)'Calls the final validation once we have got all the fields and values from application and spread sheet
+    else'Applicable for the tabs other than Tables and Notes
+      Set oLabel=oParentobj.FindChild("contentText",aFields(i),10)'Get all the labels from application bases on the contentText
+      if isObject(oLabel)and oLabel.Exists then'If object found then it will proceed to get the field related to label
+        if oLabel.clientHeight>0 then
+          nRowIndex=oLabel.RowIndex'Takes the rowIndex and columnIndex of a lable and add +1 to column index to get the related field
+          nColumnIndex=(oLabel.ColumnIndex)+1
+          set oField=oParentobj.Cell(nRowIndex, nColumnIndex)
+          call ValidationOfField(aFields(i),oInputDict,oField)'Calls the final validation once we have got all the fields and values from application and spread sheet
+        end if
+      end if
+    end if
+    g_isBlocked = False
+  NEXT
+  'Clean up all the variables   
+  EnoviaPDT_ClearVariable sFieldsColName
+  EnoviaPDT_ClearVariable sInputFieldColName
+  EnoviaPDT_ClearVariable sFilePath
+  EnoviaPDT_ClearVariable oParentobj
+  EnoviaPDT_ClearVariable aFields
+  EnoviaPDT_ClearVariable oParentobj1
+  EnoviaPDT_ClearVariable oLabel
+  EnoviaPDT_ClearVariable oField
+  EnoviaPDT_ClearVariable nColumnIndex
+  EnoviaPDT_ClearVariable oInputDict
+  EnoviaPDT_ClearVariable nRowIndex
+  EnoviaPDT_ClearVariable i
+End Sub 
+
+'Description  : Function to Check validation of data in application and data in spread sheet
+'Inputs       : aFields - Field from Spread sheet
+               'oInputDict-Dictionary values of field name and Input value
+               'oField-Field object from application
+'Output       : None               
+'Author       : Swarna
+
+Sub ValidationOfField(aFields,oInputDict,oField)
+    Dim sErrorMessage,sExpected,bPassed
+    sErrorMessage=""
+    'Compares whether the field is available in application or not
+    if oInputDict.Exists(aFields) then 
+      'If field is found in application it will set sExpected
+        sExpected=aFields&" field has entered value"
+        if aFields="Effective Date" or aFields="Expiration Date"then
+          sExcelValue=FormatDateTime(oInputDict.item(aFields),2)
+          sAppValue=FormatDateTime(oField.contentText,2)
+        elseif aFields="Test Method Name" then
+          arrExcel=Split(oInputDict.item(aFields),"|")
+          arrApp=Split(oField.contentText,"|")
+          nCount=0
+          for i=0 to UBOUND(arrExcel)
+            for j=0 to UBOUND(arrApp)
+              if instr(1,Trim(arrApp(j)),Trim(arrExcel(i)),1)>0 then
+                nCount=nCount+1
+                Exit For
+              end if
+            NEXT
+          NEXT
+          if nCount=UBOUND(arrExcel) then
+            'Set same value for sExcelValue and sAppvalue to mark the true condition  
+             sExcelValue=nCount
+             sAppValue=nCount
+          else   'Set different value for sExcelValue and sAppvalue to mark the false condition
+             sExcelValue=nCount+1
+             sAppValue=nCount
+          end if
+        else
+          sExcelValue=EnoviaPDT_Trimvalue(oInputDict.item(aFields))
+          sAppValue=EnoviaPDT_Trimvalue(oField.contentText)
+        end if
+         if instr(1,sAppValue,sExcelValue,1)>0 then
+           bPassed=True
+           Log.Message(sExpected) 
+          else
+          'If field is not found in application it will set sErrorMessage
+            sErrorMessage = aFields&" field doesn't have entered value"
+            sErrorMessage = sErrorMessage&" "&Err.Description
+            bPassed=False 
+            Log.Warning sErrorMessage
+          end if
+        Call LogStepData(g_pdt_CurrentCategory&"-"&g_pdt_CurrentTab&": "&sExpected, bPassed, sErrorMessage,"") 'Calls LogStepData to store results in DB
+    end if
+  g_isBlocked = False
+  'Clean up the variables   
+  EnoviaPDT_ClearVariable sErrorMessage
+  EnoviaPDT_ClearVariable bPassed
+  EnoviaPDT_ClearVariable sExpected
+End Sub
+
+Sub Test
+  g_strBrowserType = "iexplore"
+  Call CreateEnvironment("Enovia PDT Regression", "plmtest", true, "Enovia PDT Regression", true, "Regression")
+  Call EnoviaPDT_CheckValidationOfTabs("Attributes", "Device Product Part")
+  Call LogTestCase("Tab validation ", 3, "n/a")
+  'Call CloseEnvironment()
+End Sub

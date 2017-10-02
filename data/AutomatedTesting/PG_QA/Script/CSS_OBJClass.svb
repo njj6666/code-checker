@@ -1,0 +1,931 @@
+﻿'USEUNIT ExcelLib
+'USEUNIT GlobalVars
+'USEUNIT WebKeywords
+'USEUNIT WebObjectLib
+'USEUNIT WindowsUtility
+'USEUNIT CSSUtils
+'USEUNIT StringLib
+'USEUNIT TR_EnoviaUtils
+
+
+
+'Get Material Group
+Function MaterialGroup(strType)
+    Dim arrGetObj,objElement
+    Select Case strType
+      Case "MRMS"
+      arrGetObj = arrGetObjInfoFromXL("CSS_General","MRMSMaterialPicklist")
+      Case "IRMS"
+      arrGetObj = arrGetObjInfoFromXL("CSS_General","IRMSMaterialPicklist")
+      Case "ST-FC"
+      Case ""
+      Log.Error "Please select the Type!"
+    End Select
+    Set objElement = objGetObject(arrGetObj,c_CSSGeneral_URL,30000)
+    Set MaterialGroup = objElement 
+    Set objElement=nothing
+END Function
+
+Function MaterialSelect()
+    Dim arrGetObj,objElement   
+    'Get Material Group
+    arrGetObj = arrGetObjInfoFromXL("CSS_General","MaterialSelectBox")
+    Set objElement = objGetObject(arrGetObj,c_CSSSearchGroup_URL,30000)
+    Set MaterialSelect = objElement 
+    Set objElement=nothing
+END Function
+
+'Get Material Group
+Function MaterialSave()
+    Dim arrGetObj,objElement   
+    arrGetObj = arrGetObjInfoFromXL("CSS_General","MaterialOK")
+    Set objElement = objGetObject(arrGetObj,c_CSSSearchGroup_URL,30000)
+    Set MaterialSave = objElement 
+    Set objElement=nothing
+END Function
+
+'Get Description 
+Function GeneralDesc()
+    Dim arrGetObj,objElement   
+    arrGetObj = arrGetObjInfoFromXL("CSS_General","GeneralDescription")
+    Set objElement = objGetObject(arrGetObj,c_CSSGeneral_URL,30000)
+    Set GeneralDesc=objElement
+    Set objElement=nothing   
+End Function 
+
+'Get SAP Description 
+Function GeneralSAPDesc()
+    Dim arrGetObj,objElement  
+    arrGetObj = arrGetObjInfoFromXL("CSS_General","GeneralSAPDescription")
+    Set objElement = objGetObject(arrGetObj,c_CSSGeneral_URL,30000)
+    Set GeneralSAPDesc = objElement
+    Set objElement = nothing
+End Function 
+
+'Get Reason For Change 
+Function GeneralReason()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_General","ReasonForChange")
+    Set objElement = objGetObject(arrGetObj,c_CSSGeneral_URL,30000)
+    Set GeneralReason = objElement
+    Set objElement = nothing
+End Function 
+
+'Get Master 
+Function GeneralMaster()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_General","MasterTextbox")
+    Set objElement = objGetObject(arrGetObj,c_CSSGeneral_URL,30000)
+    Set GeneralMaster = objElement
+    Set objElement = nothing
+END Function
+
+'Get Organization picklist 
+Function OwnershipOrgnization()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_Ownership","OrganizationPick")
+    Set objElement = objGetObject(arrGetObj,c_CSSGeneral_URL,30000)
+    Set OwnershipOrgnization = objElement
+    Set objElement = nothing
+END Function
+
+'Get Organization select list
+Function OwnershipOrgList()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_Ownership","OrgnizationList")
+    Set objElement = objGetObject(arrGetObj,c_CSSSearchGroup_URL,30000)
+    Set OwnershipOrgList = objElement
+    Set objElement = nothing
+END Function
+
+'Get Organization save button
+Function OwnershipOrgSave()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_Ownership","Save")
+    Set objElement = objGetObject(arrGetObj,c_CSSSearchGroup_URL,30000)
+    Set OwnershipOrgSave = objElement
+    Set objElement = nothing
+END Function
+
+'Get Segment picklist
+Function OwnershipSegmentPick()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_Ownership","SegmentPick")
+    Set objElement = objGetObject(arrGetObj,c_CSSGeneral_URL,30000)
+    Set OwnershipSegmentPick = objElement
+    Set objElement = nothing
+END Function
+
+'Get Segment select list
+Function OwnershipSegmentList()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_Ownership","SegmentList1")
+    Set objElement = objGetObject(arrGetObj,c_CSSSearchGroup_URL,30000)   
+    Set OwnershipSegmentList = objElement
+    Set objElement = nothing
+END Function
+
+'Get Segment text box
+Function OwnershipSegmentSearchTextbox()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_Ownership","SegmentTxt")
+    Set objElement = objGetObject(arrGetObj,c_CSSSearchGroup_URL,30000)
+    Set OwnershipSegmentSearchTextbox = objElement
+    Set objElement = nothing
+END Function
+
+'Get Segment search button
+Function OwnershipSegmentSearchBtn()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_Ownership","SegmentSearch")
+    Set objElement = objGetObject(arrGetObj,c_CSSSearchGroup_URL,30000)
+    Set OwnershipSegmentSearchBtn = objElement
+    Set objElement = nothing
+END Function
+
+'Get Segment Add button
+Function OwnershipSegmentAddBtn()
+On Error Resume Next
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_Ownership","AddSeg")
+    Set objElement = objGetObject(arrGetObj,c_CSSSearchGroup_URL,30000)
+    Set OwnershipSegmentAddBtn = objElement 
+    Set objElement = nothing
+END Function
+
+'Get Continue button
+Function CreateContinueButton()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_MainPage","Continue")
+    Set objElement = objGetObject(arrGetObj,c_CSSTSHome_URL,30000)
+    Set CreateContinueButton = objElement
+    Set objElement = nothing
+END Function
+
+'Get Action button
+Function CreateActionBtn()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_General","Action")
+    Set objElement = objGetObject(arrGetObj,c_CSSGeneral_URL,30000)
+    Set CreateActionBtn = objElement
+    Set objElement = nothing
+END Function
+
+'Get Save button
+Function CreateSaveBtn()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_General","Save")
+    Set objElement = objGetObject(arrGetObj,c_CSSGeneral_URL,30000)
+    Set CreateSaveBtn = objElement
+    Set objElement = nothing
+END Function
+
+'Get Save button
+Function NavToOwnership(strType)
+    Dim arrGetObj,objElement
+    Select Case strType
+       Case "MRMS"
+       arrGetObj = arrGetObjInfoFromXL("CSS_General","MRMSOwnership")
+       Case "IRMS"
+       arrGetObj = arrGetObjInfoFromXL("CSS_General","IRMSOwnership")
+       Case "ST-FC"
+       Case ""
+       Log.Error "Please select the type!"
+    End Select
+       
+    Set objElement = objGetObject(arrGetObj,c_CSSGeneral_URL,30000)
+    Set NavToOwnership = objElement
+    Set objElement = nothing
+END Function
+
+'Get Is a Formula checkbox
+Function IsFormula()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_General","IsFormulaCardYes")
+    Set objElement = objGetObject(arrGetObj,c_CSSGeneral_URL,30000)
+    Set IsFormula = objElement
+    Set objElement = nothing
+END Function
+
+'Get GCAS Code
+Function GCASCode()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_General","GCASCode")
+    Set objElement = objGetObject(arrGetObj,c_CSSGeneral_URL,30000)
+    Set GCASCode = objElement
+    Set objElement = nothing
+END Function
+
+'Get CHange Request button
+Function ChangeR()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","ChangeRequest")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000)
+    Set ChangeR = objElement
+    Set objElement = nothing
+END Function
+
+'Get Create CHange request button
+Function CreateQBtn()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","CreateRequset")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000)
+    Set CreateQBtn = objElement
+    Set objElement = nothing
+END Function
+
+'Get GCAS Code Table
+Function GCASTable()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","GCASTable")
+    Set objElement = objGetObject(arrGetObj,c_CSSCreateQuest_URL,30000)
+    Set GCASTable = objElement
+    Set objElement = nothing
+END Function
+
+'Get GBU Select
+Function GBUSelect()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","GBUSelect")
+    Set objElement = objGetObject(arrGetObj,c_CSSCreateQuest_URL,30000)
+    Set GBUSelect = objElement
+    Set objElement = nothing
+END Function
+
+'Get Primary Category
+Function PrimaryCat()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","PrimaryCat")
+    Set objElement = objGetObject(arrGetObj,c_CSSCreateQuest_URL,30000)
+    Set PrimaryCat = objElement
+    Set objElement = nothing
+END Function
+
+'Get Request Description
+Function RequestDESC()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","ResquestDESC")
+    Set objElement = objGetObject(arrGetObj,c_CSSCreateQuest_URL,30000)
+    Set RequestDESC = objElement
+    Set objElement = nothing
+END Function
+
+'Get Request Reason
+Function RequestReason()
+    Dim arrGetObj,objElement
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","QuestReason")
+    Set objElement = objGetObject(arrGetObj,c_CSSCreateQuest_URL,30000)
+    Set RequestReason = objElement
+    Set objElement = nothing
+END Function
+
+'Get Request Reason
+Function OriginatorLink()
+    Dim arrGetObj,objElement  
+    arrGetObj = arrGetObjInfoFromXL("CSS_MainPage","Originator")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000)
+    Set OriginatorLink = objElement
+    Set objElement = nothing
+END Function
+
+'Get Action button of Quest
+Function QuestAction()
+    Dim arrGetObj,objElement  
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","Action")
+    Set objElement = objGetObject(arrGetObj,c_CSSCreateQuest_URL,30000)
+    Set QuestAction = objElement
+    Set objElement = nothing
+END Function
+
+
+'Get Save button of Quest
+Function QuestSave()
+    Dim arrGetObj,objElement  
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","Save")
+    Set objElement = objGetObject(arrGetObj,c_CSSCreateQuest_URL,30000)
+    Set QuestSave = objElement
+    Set objElement = nothing
+END Function
+
+'Get CR#
+Function CRHeader()
+    Dim arrGetObj,objElement  
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","CRNo")
+    Set objElement = objGetObject(arrGetObj,c_CSSMainPage_URL,30000)
+    Set CRHeader = objElement
+    Set objElement = nothing
+END Function
+
+'Get CR Checkbox
+Function CRCheckbox()
+    Dim arrGetObj,objElement  
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","NewCRCheckbox")
+    Set objElement = objGetObject(arrGetObj,c_CSSMainPage_URL,30000)
+    Set CRCheckbox = objElement
+    Set objElement = nothing
+END Function
+
+'Get Action button For Create CR
+Function ActionBtn()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_MainPage","CRAction")
+    Set objElement = objGetObject(arrGetObj,c_CSSMainPage_URL,30000) 
+    Set ActionBtn = objElement
+    Set objElement = nothing
+END Function
+
+'Get Add Approver link
+Function AddAproverLink()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","AddApprover")
+    Set objElement = objGetObject(arrGetObj,c_CSSMainPage_URL,30000) 
+    Set AddAproverLink = objElement
+    Set objElement = nothing
+END Function
+
+'Get Add Approver GBU select box
+Function ApproverGBU()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","ApproverGBU")
+    Set objElement = objGetObject(arrGetObj,c_CSSCreateQuest_URL,30000) 
+    Set ApproverGBU = objElement
+    Set objElement = nothing
+END Function
+
+'Get Add Approver display link
+Function ApproverDisplay()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","DIsplayBtn")
+    Set objElement = objGetObject(arrGetObj,c_CSSCreateQuest_URL,30000) 
+    Set ApproverDisplay = objElement
+    Set objElement = nothing
+END Function
+
+'Get Add Approver listbox
+Function ApproverList()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","ApproverList")
+    Set objElement = objGetObject(arrGetObj,c_CSSCreateQuest_URL,30000) 
+    Set ApproverList = objElement
+    Set objElement = nothing
+END Function
+
+'Get Add Approver Role listbox
+Function ApproverRoleList()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","Role")
+    Set objElement = objGetObject(arrGetObj,c_CSSCreateQuest_URL,30000) 
+    Set ApproverRoleList = objElement
+    Set objElement = nothing
+END Function
+
+
+'Get Add Approver Action button
+Function ApproverActionBtn()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","ApproveAction")
+    Set objElement = objGetObject(arrGetObj,c_CSSCreateQuest_URL,30000) 
+    Set ApproverActionBtn = objElement
+    Set objElement = nothing
+END Function
+
+'Get Add Approver Save button
+Function ApproverSaveBtn()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","ApproveSave")
+    Set objElement = objGetObject(arrGetObj,c_CSSCreateQuest_URL,30000) 
+    Set ApproverSaveBtn = objElement
+    Set objElement = nothing
+END Function
+
+'Get Add Approver Step textbox
+Function ApproverStep()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","Step")
+    Set objElement = objGetObject(arrGetObj,c_CSSCreateQuest_URL,30000) 
+    Set ApproverStep = objElement
+    Set objElement = nothing
+END Function
+
+'Get New CR id
+Function ChangeRId()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","NewCRID")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set ChangeRId = objElement
+    Set objElement = nothing
+END Function
+
+'Get RouteForAPProval link
+Function RouteForAP()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","RouteForAppoval")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set RouteForAP = objElement
+    Set objElement = nothing
+END Function
+
+'Get Text box for message
+Function MessageForApproval()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","MessageForApproval")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set MessageForApproval = objElement
+    Set objElement = nothing
+END Function
+
+'Get OK button of message box
+Function MessageOK()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","MessageOK")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set MessageOK = objElement
+    Set objElement = nothing
+END Function
+
+'Get Change Request status
+Function ChangeRStatus()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","CRStatus")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set ChangeRStatus = objElement
+    Set objElement = nothing
+END Function
+
+'Get Change Request status
+Function CSSLogout()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_MainPage","CSSLogout")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set CSSLogout = objElement
+    Set objElement = nothing
+END Function
+
+'Get Approver menu
+Function ApproveMenu()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","ApproverMenu")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set ApproveMenu = objElement
+    Set objElement = nothing
+END Function
+
+'Get Approver All
+Function ApproveAll()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","ApproverAll")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set ApproveAll = objElement
+    Set objElement = nothing
+END Function
+
+'Get CR Link
+Function CRLink()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","ApproverLink")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set CRLink = objElement
+    Set objElement = nothing
+END Function
+
+'Get Approve button
+Function ApproveBtn()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","ApproveBtn")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set ApproveBtn = objElement
+    Set objElement = nothing
+END Function
+
+'Get Approve button
+Function PasswordBox()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","PasswordBox")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set PasswordBox = objElement
+    Set objElement = nothing
+END Function
+
+'Get Approve button
+Function ApproveOK()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","ApproveOK")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set ApproveOK = objElement
+    Set objElement = nothing
+END Function
+
+'Get Request#
+Function QuestNo()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","QuestNo")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set QuestNo = objElement
+    Set objElement = nothing
+END Function
+
+'Get Approver action button
+Function OneAction()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","OneAction")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set OneAction = objElement
+    Set objElement = nothing
+END Function
+
+'Get Request table
+Function QuestTable()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","QuestTable")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set QuestTable = objElement
+    Set objElement = nothing
+END Function
+
+'Get Approve one result
+Function ApproveOneResult()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","ApproveOneResult")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set ApproveOneResult = objElement
+    Set objElement = nothing
+END Function
+
+'Get CR table
+Function CRListTable()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","CRListTable")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set CRListTable = objElement
+    Set objElement = nothing
+END Function
+
+'Get Send to SO link
+Function SendToSO()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","SendToSO")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set SendToSO = objElement
+    Set objElement = nothing
+END Function
+
+'Get Standard Office link
+Function StandardOffice()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","StandardOffice")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set StandardOffice = objElement
+    Set objElement = nothing
+END Function
+
+'Get Standard Office - Requests
+Function SORequest()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","SORequest")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set SORequest = objElement
+    Set objElement = nothing
+END Function
+
+'Get Standard Office - New
+Function SONew()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","SONew")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set SONew = objElement
+    Set objElement = nothing
+END Function
+
+'Get Standard Office - New - CR#
+Function SOCRNo()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","SOCRNo")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set SOCRNo = objElement
+    Set objElement = nothing
+END Function
+
+
+'Get Standard Office - New - CR table
+Function SOTable()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","SOTable")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set SOTable = objElement
+    Set objElement = nothing
+END Function
+
+'Get Standard Office - Action
+Function SOAction()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","SOAction")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set SOAction = objElement
+    Set objElement = nothing
+END Function
+
+'Get Standard Office - Action - Claimed
+Function SOClaim()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","SOClaim")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set SOClaim = objElement
+    Set objElement = nothing
+END Function
+
+'Get Standard Office - Claimed Result
+Function SORequestMSG()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","SORequestMSG")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set SORequestMSG = objElement
+    Set objElement = nothing
+END Function
+
+
+'Get Standard Office - Claimed List
+Function ClaimedList()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","ClaimedList")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set ClaimedList = objElement
+    Set objElement = nothing
+END Function
+
+'Get Standard Office - Approve
+Function SOApprove()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","SOApprove")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set SOApprove = objElement
+    Set objElement = nothing
+END Function
+
+'Get Copy To Revise
+Function CopyToReviseBtn()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","CopyToRevise")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set CopyToRevise = objElement
+    Set objElement = nothing
+END Function
+
+
+'Get Revise Confirm OK
+Function ReviseConfirmOK()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_Request","ReviseConfirmOK")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set ReviseConfirmOK = objElement
+    Set objElement = nothing
+END Function
+
+'Get Structured checkbox
+Function StructuredCheck()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","StructuredCheck")
+    Set objElement = objGetObject(arrGetObj,c_CSSTSHome_URL,30000) 
+    Set StructuredCheck = objElement
+    Set objElement = nothing
+END Function
+
+
+'Get unStructured checkbox
+Function BrowseFile()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","Browse")
+    Set objElement = objIdentify(arrGetObj,c_CSSQuest_URL,30000) 
+    Set BrowseFile = objElement
+    Set objElement = nothing
+END Function
+
+
+'Get unStructured Description
+Function UNGeneralDESC()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","GeneralDescription")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set UNGeneralDESC = objElement
+    Set objElement = nothing
+END Function
+
+
+'Get unStructured SAP Description
+Function UNSAPDESC()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","GeneralSAPDescription")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set UNSAPDESC = objElement
+    Set objElement = nothing
+END Function
+
+
+'Get unStructured  Orgnization
+Function UNOrgnizationList()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","OrgnizationList")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set UNOrgnizationList = objElement
+    Set objElement = nothing
+END Function
+
+'Get unStructured Segment List
+Function UNSegmentList()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","SegmentList")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set UNSegmentList = objElement
+    Set objElement = nothing
+END Function
+
+'Get unStructured Action button
+Function UNAction()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","Action")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set UNAction = objElement
+    Set objElement = nothing
+END Function
+
+
+'Get unStructured Save button
+Function UNSave()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","Save")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set UNSave = objElement
+    Set objElement = nothing
+END Function
+
+
+'Get unStructured GCAS Code
+Function UNGCASCode()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","GCASCode")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set UNGCASCode = objElement
+    Set objElement = nothing
+END Function
+
+
+'Get unStructured Sharing Org Pick list
+Function UNSharingOrgPick()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","SharingOrgPick")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set UNSharingOrgPick = objElement
+    Set objElement = nothing
+END Function
+
+
+'Get unStructured Project Group list
+Function UNPrjGroupList()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","PrjGroupList")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set UNPrjGroupList = objElement
+    Set objElement = nothing
+END Function
+
+
+'Get unStructured Reference Standard text box
+Function UNRefStandard()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","ReferenceStandard")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set UNRefStandard = objElement
+    Set objElement = nothing
+END Function
+
+'Get unStructured Add Reference button
+Function UNAddRefBTN()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","AddReference")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set UNAddRefBTN = objElement
+    Set objElement = nothing
+END Function
+
+'Get unStructured Expiration Date textbox
+Function UNExpDate()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","ExpirationDate")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set UNExpDate = objElement
+    Set objElement = nothing
+END Function
+
+'Get unStructured Plant Authorized for Use
+Function UNPlantsUse()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","PlantsUse")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set UNPlantsUse = objElement
+    Set objElement = nothing
+END Function
+
+
+'Get unStructured Plant Authorized for Produce
+Function UNPlantsProd()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","PlantsProduce")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set UNPlantsProd = objElement
+    Set objElement = nothing
+END Function
+
+
+'Get unStructured Project Security Group
+Function PrjGrpAdd()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_UNStructured","PrjGrpAdd")
+    Set objElement = objGetObject(arrGetObj,c_CSSQuest_URL,30000) 
+    Set PrjGrpAdd = objElement
+    Set objElement = nothing
+END Function
+
+'Get Edit Excel link
+Function EditExcel()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = Array("WEBOBJECT", "contentText~ObjectType", "Edit Excel~TextNode", "B")
+    Set objElement = objIdentify(arrGetObj,c_CSSMainPage_URL,30000) 
+    Set EditExcel = objElement
+    Set objElement = nothing
+END Function
+
+'Get Edit Excel link
+Function FormulationLink()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = Array("WEBOBJECT", "contentText~ObjectType~ObjectIdentifier", "FIL*~Link~0", "A")
+    Set objElement = objIdentify(arrGetObj,c_CSSMainPage_URL,30000) 
+    Set FormulationLink = objElement
+    Set objElement = nothing
+END Function
+
+'Get Performance specification tab of FC 
+Function PerfSpecs()
+    Dim arrGetObj,objElement   
+    'Get Action
+    arrGetObj = arrGetObjInfoFromXL("CSS_PS","PerfSpecs")
+    Set objElement = objIdentify(arrGetObj,c_CSSMainPage_URL,30000) 
+    Set PerfSpecs = objElement
+    Set objElement = nothing
+END Function

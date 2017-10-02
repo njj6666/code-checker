@@ -1,0 +1,23 @@
+﻿'USEUNIT CSS_CreateTS
+'USEUNIT CSSUtils
+'USEUNIT DSM_E2E_S5_OB_Brush_Packaging
+'USEUNIT GlobalVars
+'USEUNIT OR_CSS
+'USEUNIT S6001_OriginateTAMU_and_PROS_inCSS
+'USEUNIT WebObjectLib
+
+
+Sub Start_DSME2E_Set5_Engine
+  g_strBrowserType = c_IExplorer
+  g_strInputDataFilePath = g_strInputDataFilePath & "5_DSM.xlsx"
+  g_strOutputDataFilePath = g_strOutputDataFilePath & "5_DSM.xlsx"
+  'c_Chrome
+  Call EnoviaDSM_S05BP_OB_Brush_Packaging("plmtest", "dsotest27" )
+End Sub
+
+Sub Start_DSME2E_Set6001
+  g_strBrowserType = c_IExplorer   
+  'c_Chrome
+  Call EnoviaDSM_S06001_OriginateTAMUandPROS("ab7918")
+ 
+End Sub  

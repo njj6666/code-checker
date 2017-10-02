@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE Nodes [
+
+<!ENTITY % NameValue "CDATA">
+<!ENTITY % PropType "(I|S|D|L|H|B)">
+<!ENTITY % VersionValue "CDATA">
+
+<!ELEMENT Prp (#PCDATA)>
+<!ELEMENT Node (Node|Prp)*>
+<!ELEMENT Nodes (Node)+>
+
+<!ATTLIST Nodes version CDATA "1">
+
+<!ATTLIST Node name CDATA #REQUIRED>
+
+<!ATTLIST Prp name CDATA #REQUIRED>
+<!ATTLIST Prp type CDATA #REQUIRED>
+<!ATTLIST Prp value CDATA #REQUIRED>
+]>
+<Nodes version="1">
+	<Node name="root">
+		<Node name="data">
+			<Node name="{22804945-f7ec-4fdf-bdc4-bdca8e18e215}">
+				<Prp name="relpath" type="S" value="\DXC Work\Automation Testing\PLM\2015x.4 Automation Scripts\TC_SIT1\DSMAutomation_Set5\PLM_Automation_New\DSM_E2E_S5_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{23266318-190d-4c4a-9f0e-50bf5838fbae}">
+				<Prp name="relpath" type="S" value="\DXC Work\Automation Testing\PLM\2015x.4 Automation Scripts\TC_SIT1\DSMAutomation_Set5\PLM_Automation_New\DSM_E2E_S5_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{24b6fa0b-0143-461a-9758-aeb9e9a9428b}">
+				<Prp name="default project" type="S" value="{5329476A-B396-4264-B364-258A2B960FB1}"/>
+			</Node>
+			<Node name="{259a387d-2864-40ed-a0ed-64a86f4ba759}">
+				<Prp name="relpath" type="S" value="\DXC Work\Automation Testing\PLM\2015x.4 Automation Scripts\TC_SIT1\VTAutomation\PLM_Automation_New\VT_E2E_Set1_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{296f59e2-10e9-444e-ba60-8dadc4f45585}">
+				<Prp name="relpath" type="S" value="\DXC Work\Automation Testing\PLM\2015x.4 Automation Scripts\TC_SIT1\DSMAutomation_Set4\DSMAutomation_Set4\DSMAutomation\DSM_E2E_Set4_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{2e96c213-29d7-4581-9230-28849ed38dd0}">
+				<Prp name="relpath" type="S" value="\DXC Work\Automation Testing\PLM\2015x.4 Automation Scripts\TC_SIT1\DSMAutomation_Set5\PLM_Automation_New\DSM_E2E_S5_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{488d4506-f535-4ecb-9197-7492ae6b8b5a}">
+				<Prp name="relpath" type="S" value="\DXC Work\Automation Testing\PLM\2015x.4 Automation Scripts\TC_SIT1\VTAutomation\PLM_Automation_New\VT_E2E_Set1_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{5329476a-b396-4264-b364-258a2b960fb1}">
+				<Prp name="relpath" type="S" value="PG_QA\PG_QA.mds.tcLS"/>
+			</Node>
+			<Node name="{5dcfea53-1fb0-41f6-800d-031a99b99729}">
+				<Prp name="relpath" type="S" value="\DXC Work\Automation Testing\PLM\2015x.4 Automation Scripts\TC_SIT1\DSMAutomation_Set4\DSMAutomation_Set4\DSMAutomation\DSM_E2E_Set4_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{75950ff6-caee-4ca0-beca-68541264ee45}">
+				<Prp name="relpath" type="S" value="\DXC Work\Automation Testing\PLM\2015x.4 Automation Scripts\TC_SIT1\DSMAutomation_Set4\DSMAutomation_Set4\DSMAutomation\DSM_E2E_Set4_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{7b21f8b0-ed80-484b-b007-2fc0a3aa17c4}">
+				<Prp name="relpath" type="S" value="..\..\..\..\..\PLM_Automation_New\VT_E2E_Set1_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{820d1853-cf34-4c01-a8b7-b4f6211a6478}">
+				<Prp name="relpath" type="S" value="..\..\..\..\..\PLM_Automation_New\VT_E2E_Set1_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{a07a6112-677c-4d50-b7c3-bd16206af1f1}">
+				<Prp name="relpath" type="S" value="\DXC Work\Automation Testing\PLM\2015x.4 Automation Scripts\TC_SIT1\DSMAutomation_Set4\DSMAutomation_Set4\DSMAutomation\DSM_E2E_Set4_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{a174f74b-747b-4632-b552-6f9d9aba9a86}">
+				<Prp name="relpath" type="S" value="\DXC Work\Automation Testing\PLM\2015x.4 Automation Scripts\TC_SIT1\DSMAutomation_Set4\DSMAutomation_Set4\DSMAutomation\DSM_E2E_Set4_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{a4462e28-30d2-437e-aa8e-ffce76a4a045}">
+				<Prp name="relpath" type="S" value="\DXC Work\Automation Testing\PLM\2015x.4 Automation Scripts\TC_SIT1\VTAutomation\PLM_Automation_New\VT_E2E_Set1_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{bbe9add1-5583-4e0c-a13b-f4808e5bfc50}">
+				<Prp name="relpath" type="S" value="\DXC Work\Automation Testing\PLM\2015x.4 Automation Scripts\TC_SIT1\DSMAutomation_Set5\PLM_Automation_New\DSM_E2E_S5_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{cae41b60-2812-44ae-8d08-b0c65a87a3da}">
+				<Prp name="relpath" type="S" value="\DXC Work\Automation Testing\PLM\2015x.4 Automation Scripts\TC_SIT1\VTAutomation\PLM_Automation_New\VT_E2E_Set1_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{d51017ba-c0cd-4631-b357-cf791334a8f1}">
+				<Prp name="relpath" type="S" value="\DXC Work\Automation Testing\PLM\2015x.4 Automation Scripts\TC_SIT1\VTAutomation\PLM_Automation_New\VT_E2E_Set1_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{d5d7e394-8d3d-42bc-b458-d760ca83a9a4}">
+				<Prp name="relpath" type="S" value="\DXC Work\Automation Testing\PLM\2015x.4 Automation Scripts\TC_SIT1\DSMAutomation_Set5\PLM_Automation_New\DSM_E2E_S5_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="{deb39886-eaaa-4cfe-bb9a-85035dea4117}">
+				<Prp name="relpath" type="S" value="\DXC Work\Automation Testing\PLM\2015x.4 Automation Scripts\TC_SIT1\DSMAutomation_Set4\DSMAutomation_Set4\DSMAutomation\DSM_E2E_Set4_Automation.mds.tcLS"/>
+			</Node>
+			<Node name="envmngrlogs">
+				<Prp name="key" type="S" value="{F5129EB4-5772-45D3-A530-B08FCB6CD849}"/>
+			</Node>
+			<Node name="logs">
+				<Prp name="key" type="S" value="{57E8545B-7B7C-4E9C-BE9E-CB62FC25CA63}"/>
+				<Prp name="relpath" type="S" value="Log"/>
+			</Node>
+			<Node name="variables"/>
+		</Node>
+		<Prp name="signature" type="S" value="{71078212-FAEB-4856-A901-B237C89E6B5C}"/>
+	</Node>
+</Nodes>

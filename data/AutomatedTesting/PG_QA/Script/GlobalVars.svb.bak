@@ -1,0 +1,164 @@
+﻿'USEUNIT TimeLib
+
+' DeskTop Testing
+Public g_strWinProcessType
+
+' Web Testing
+Public g_strBrowserType
+Public g_strURL
+Public g_strEnvironment
+Public g_objTestObject
+Public g_SearchEngineUserName
+Public g_SearchTestCasesUserName
+
+Public g_currentTestCase
+Public g_props
+Public g_regLog
+Public g_runLog
+Public g_isBlocked
+Public g_systemError
+Public g_PDFViews
+
+
+' page URLs
+Public g_SearchPageURL, g_CreatePage_URL, g_CopyPage_URL, g_EnoviaHomePage_URL
+
+g_SearchPageURL   = "https://*.pg.com*/enovia/common/emxFullSearch.jsp"
+g_CreatePage_URL  = "https://*.pg.com*/enovia/common/emxCreate.jsp"
+g_CopyPage_URL    = "https://*.pg.com*/enovia/common/emxNavigatorDialog.jsp"
+g_EnoviaHomePage_URL = "https://*.pg.com*/enovia/common/emxNavigator.jsp"
+g_SavePage_URL = "https://*.pg.com*/enovia/common/emxSearchSaveDialog.jsp"	
+g_SaveAsPage_URL = "https://*.pg.com*/enovia/common/emxSearchSaveAsDialog.jsp"
+g_CollectionPage_URL = "https://*.pg.com*/enovia/common/emxCollectionsSelectCreateDialogFS.jsp"
+g_CollectionDeletePage_URL = "https://*.pg.com*/enovia/common/emxAEFCollectionsDeleteFS.jsp"
+g_ViewPage_URL = "https://*.pg.com*/enovia/common/emxCustomizeTablePopup.jsp"
+g_MultiColumnSort_URL = "https://*.pg.com*/enovia/common/emxMultiColumnSortDialog.jsp"
+g_ErrorReporting_URL = "https://*.pg.com*/enovia/common/emxErrorReportDialog.jsp"
+g_MultiColumnSortDialog_URL="https://*.pg.com*/enovia/common/emxMultiColumnSortDialog.jsp"
+g_DeleteSavedNamePage_URL="https://*.pg.com*/enovia/common/emxSearch.jsp"
+g_CreateProdDataPage_URL ="https://*.pg.com*/enovia/common/emxCreate.jsp"
+g_EnoviaAddRolePage_URL ="https://*.pg.com*/enovia/components/emxCommonFS.jsp"
+g_CheckinDocPage_URL = "https://*.pg.com*/enovia/components/emxCommonDocumentCheckinAppletDialogFS.jsp"
+g_EnoviaHomePagePopUp_URL = "https://*.pg.com/enovia/common/emxNavigator.jsp?isPopup=true"
+g_DocumentCreatPage_URL = "https://*.pg.com/enovia/components/emxCommonDocumentCreateDialogFS.jsp"
+g_ChooseTypePage_URL = "https://*.pg.com/enovia/common/emxTypeChooser.jsp"
+g_EnoviaEBOMSyncPage_URL = "https://*.pg.com/enovia/integrations/MCADEBOMSynchFS.jsp"  'Add by MArvin.This page appears when Sync a data,such as Artios
+g_EnoviaMCADUpdatePage_URL = "https://plmtest.pg.com/enovia/integrations/MCADUpdateWithMessage.jsp"'Add by MArvin.This page appears when Sync a data,after you click submit butt
+'Add by Xiaoji
+'g_EnoviaMainPage_URL = "https://*.pg.com/enovia/common/*.jsp"
+g_EnoviaNameSearchPage_URL = "https://*.pg.com/enovia/common/pg_emxNavigator.jsp"
+' page URLs for CSS
+Public g_CSSHomePage_URL,g_CSSMainPage_URL,g_CSSTSD_URL,g_CSSSave_URL,g_CSSTSHome_URL
+
+'Edit by Xiaoji  modified by lene-2017,09,25
+'g_CSSLogin_URL = "http://*.na.pg.com/"
+g_CSSLogin_URL = "http://*.pg.com/"
+g_CSSGeneral_URL = "http://*.pg.com/*action*"
+g_CSSSearchGroup_URL = "http://*.na.pg.com/CSSFieldSearch.action"
+g_CSSCreateQuest_URL = "http://*.na.pg.com/Edit/*.jsp*"on
+g_CSSApproveMessage_URL = "http://adln9213.na.pg.com/SaveApprovers.action"
+'**************************************************
+'Edit by Sam modified by lene-2017,09,25
+g_CSSView_URL = "http://adln9213.na.pg.com/ViewTab.action?id=*"
+g_CSSSerrchResult_URL = "http://*.pg.com/SearchResult.action?fromWindow=GCAS&GCAS*"
+g_CSSEditPage_URL = "http://*.pg.com/Tab.action?id=*&sNextTab=General"
+g_CSSReferencePage_URL = "http://*.pg.com/Tab.action?id=*&sNextTab=Ref_Docs"
+g_CSSRegulatoryPage_URL = "http://*.pg.com/Tab.action?id=*&sNextTab=Regulatory_Safety"
+g_CSSAddCAS_URL = "http://*.pg.com/Edit/CAS_NumberCSS1.jsp"
+g_CSS_RPhrase_URL = "http://*.pg.com/CSSFieldSearch.action?type=R-Phrase&selecttype=checkbox&viewtype=R Phrase&formname=Modify&searchid=RPhrase"
+g_CSS_LPhrase_URL = "http://*.pg.com/CSSFieldSearch.action?type=S-Phrase&selecttype=checkbox&viewtype=S Phrase&formname=Modify&searchid=SPhrase"
+'add on 1th Sep 2017 modified by lene-2017,09,25
+
+g_CSS_U_ReferencePage_URL = "http://*.pg.com/Tab.action?id=*#refdocs"
+g_CSS_U_DateStatusPage_URL = "http://*.pg.com/Tab.action?id=*#dates"
+g_CSS_U_MaterialPage_URL = "http://*.pg.com/Tab.action?id=*#matclass"
+g_CSS_U_BrandPlantPage_URL = "http://*.pg.com/Tab.action?id=*#brand"
+g_CSS_U_PSRAPage_URL = "http://*.pg.com/Tab.action?id=*#psra"
+g_CSS_U_TopPage_URL = "http://*.pg.com/Tab.action?id=*#top"
+g_CSS_U_ViewPage_URL = "http://*.pg.com/ViewTab.action?id=*"
+'add on 5th Sep 2017 modified by lene-2017,09,25
+g_CSS_GeneralHomeTab_URL = "http://*.pg.com/Tab.action?id=*"
+g_CSS_GeneralTab_URL = "http://*.pg.com/Tab.action?id=*&sNextTab=General"
+g_CSS_ReferenceTab_URL = "http://*.pg.com/Tab.action?id=*&sNextTab=Ref_Docs"
+g_CSS_PlantTab_URL = "http://*.pg.com/Tab.action?id=*&sNextTab=Plants"
+g_CSS_OwnershipTab_URL = "http://*.pg.com/Tab.action?id=*&sNextTab=Ownership"
+g_CSS_SearchSelectList_URL = "http://*.pg.com/CSSFieldSearch.action?"
+'add on 11th Sep 2017 modified by lene-2017,09,25
+g_CSS_Performance_URL = "http://*.pg.com/Tab.action?id=*&sNextTab=Perf_Specs"
+g_CSS_CreateTCHome_URL = "http://*.pg.com/CreateTSHome.action"
+g_CSS_HomePage_URL = "http://*.pg.com/Login.action?action=Login"
+g_CSS_CreatedTS_URL = "http://*.pg.com/TSDraftArea.action"
+
+Public g_WebMail_LoginPage, g_WebMail_Homepage,g_WebMail_NewItemPage
+'Web Email Page URLs
+g_WebMail_LoginPage = "https://webmail.pg.com/owa/auth/logon.aspx?"
+g_WebMail_Homepage = "https://webmail.pg.com/owa/"
+g_WebMail_NewItemPage = "https://webmail.pg.com/owa/?ae=Item&a=New"
+
+g_UserVerificationPage_URL = "https://*.pg.com/enovia/common/emxRoutesFDAUserAuthenticationDialog.jsp"
+
+'**************************************************
+
+'Update on 13th Sep 2017
+Public c_FireFox, c_IExplorer,c_Chrome
+
+c_IExplorer = "iexplore"
+c_FireFox = "firefox"
+c_Chrome = "chrome"
+
+'For PDT
+Public g_pdt_FileLocation, g_pdt_aCategoriesTabs, g_pdt_CurrentCategory, g_pdt_CurrentTab
+g_pdt_FileLocation = aqFileSystem.GetFolderInfo(aqFileSystem.GetCurrentFolder).ParentFolder.ParentFolder.Path&"Files\PDT_2.0\"
+g_pdf_PDFViewTemplatePath = aqFileSystem.GetFolderInfo(aqFileSystem.GetCurrentFolder).ParentFolder.ParentFolder.Path&"Files\PDFView\"
+
+''For PDF Views
+Public g_pdf_PDFViewTemplatePath
+'Public g_pdf_PDFViewTemplateName
+'Public g_pdf_strPartType 
+'Public g_pdf_GcasCode
+'Public g_Pdf_InputExcelpath
+'Public g_Pdf_CurrentPdfViewType
+'Public g_Pdf_CurrentPdfViewTypeFilePath
+'Public g_Pdf_CurrentPDFTable
+'Public g_Pdf_CurrentPDFTestDriver
+'Public g_Pdf_InputExcelSheetNames
+'Public g_Pdf_sheetMainReader
+'Public g_Pdf_sheetAttributesReader
+'Public g_Pdf_sheetLifecycleApprovalPowerviewReader
+'Public g_Pdf_sheetNotesReader
+'Public g_Pdf_sheetOrganizationsReader
+'Public g_Pdf_sheetOwnershipReader
+'Public g_Pdf_sheetMaterialsProducedReader
+'
+g_pdf_PDFViewTemplatePath = aqFileSystem.GetFolderInfo(aqFileSystem.GetCurrentFolder).ParentFolder.ParentFolder.Path&"Files\PDFView\"
+'g_pdf_PDFViewTemplateName = "PDFViews_Input Template.xlsx"
+'For Search
+
+Public g_oModel
+Public g_oModel_FullTextSearch
+Public g_sPDFFilename
+Public g_sProductDataPDFFilename
+
+'Path to save Excel file
+str=Now
+str1=Replace(str,"/",".")
+str2=Replace(str1,":",".") 
+ExcelPath= ProjectSuite.Path&str2
+
+
+'Path to save Excel file
+str=Now
+str1=Replace(str,"/",".")
+str2=Replace(str1,":",".") 
+str3 = str2&"2"
+ExcelPath1= ProjectSuite.Path&str3
+
+Public gProdDataTitle1, gTC4DataVar
+
+
+'Input Data path
+Public g_strInputDataFilePath
+g_strInputDataFilePath = ProjectSuite.Path+"Resources\InputParameter_Set"
+'Output Data path
+Public g_strOutputDataFilePath
+g_strOutputDataFilePath = ProjectSuite.Path+"Resources\OutputParameter_Set"

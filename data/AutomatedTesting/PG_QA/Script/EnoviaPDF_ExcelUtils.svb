@@ -1,0 +1,126 @@
+﻿'USEUNIT EnoviaPDF_Vars
+'USEUNIT EnoviaPDF_Utils
+'USEUNIT LogLib
+'USEUNIT GlobalVars
+'USEUNIT EnoviaUtils
+'USEUNIT WindowsUtility
+'USEUNIT EnoviaPDF_ValidateEngine
+
+Function Excel_ReadExcelSheet (FilePath, SheetName)
+  'On Error Resume Next  
+  Dim objDriver, nColumnCount, arrTempArray(), arrReturnArray(), i
+  Set objDriver = DDT.ExcelDriver(FilePath, SheetName, true)
+  nColumnCount = objDriver.ColumnCount-1
+  i = 0
+  ReDim Preserve arrTempArray(999,nColumnCount)  
+  While Not objDriver.EOF()
+      For j = 0 to nColumnCount
+          arrTempArray(i,j) = objDriver.Value(j)
+      Next
+      i = i+1
+      DDT.CurrentDriver.Next()
+  WEnd
+  DDT.CloseDriver(objDriver.Name)
+  ' Build actual return array
+  ReDim Preserve arrReturnArray(i-1,nColumnCount)  
+  For n = 0 to Ubound(arrReturnArray)      
+      For x = 0 to nColumnCount
+          arrReturnArray(n,x) = arrTempArray(n,x)      
+      Next    
+  Next  
+  Excel_ReadExcelSheet = arrReturnArray
+End Function 
+
+Function PDF_ReadInputexcel()
+  'On Error Resume Next 
+  Log.AppendFolder("Read Input Excel")
+  g_Pdf_sCurrentInputExcelpath = g_sProjectFolderPath&g_Pdf_sCurrentInputExcelpath  
+  Set ObjExcelsheets = Excel_ObjGetAllSheetnames(g_Pdf_sCurrentInputExcelpath)
+  StrExcelSheetNames = Join(ObjExcelsheets.ToArray, ",") & vbCrLf 
+  S_Arraysheet = Split(StrExcelSheetNames,",")
+  g_Pdf_CurrentInputExcelSheetNames = S_Arraysheet 
+  Call  Excel_ReadAndCreateInputSheetDrivers(g_Pdf_CurrentInputExcelSheetNames) 
+  If Err.Number = 0 Then
+    bPassed = True   
+    Log.Message "Input sheet for pattype: "&g_pdf_sCurrentPartType&" read successfully"    
+  Else
+    sErrorMsg = "Failed to load Input data into Enovia" 
+    bPassed  = False
+  End If
+  Call LogStepDatapdf("Read input excel data", bPassed, sErrorMsg, "")
+  Log.PopLogFolder 
+End Function
+
+Function Excel_ObjGetAllSheetnames(strExcelpath)
+Set strArraysheetList = CreateObject("System.Collections.ArrayList")
+Set objExcel = createobject("excel.application")
+    objExcel.Workbooks.Open strExcelpath
+    'objExcel.Application.Visible = True
+    set objsheet = objExcel.Worksheets
+    For Each sheet In objsheet
+    strArraysheetList.add sheet.name
+    Next
+    objExcel.ActiveWorkbook.Close
+    objExcel.Application.Quit
+    Set objsheet = nothing
+    Set objExcel = nothing
+   Set Excel_ObjGetAllSheetnames = strArraysheetList 
+End Function
+
+Function Excel_ReadAndCreateInputSheetDrivers(s_Sheetname)
+  For i=0 to ubound(s_Sheetname)-1  
+      Select case s_Sheetname(i)
+        case "Main"
+          g_Pdf_InputMainSheetReader = Excel_ReadExcelSheet(g_Pdf_sCurrentInputExcelpath,s_Sheetname(i))
+          Log.Message s_Sheetname(i)&" sheet data read Successfully" 
+        Case "Headers" , "Headers"
+          g_Pdf_InputHeadersSheetReader = Excel_ReadExcelSheet(g_Pdf_sCurrentInputExcelpath,s_Sheetname(i))
+          Log.Message s_Sheetname(i)&" sheet data read Successfully" 
+        Case "Attributes"
+          g_Pdf_InputAttributesSheetReader = Excel_ReadExcelSheet(g_Pdf_sCurrentInputExcelpath,s_Sheetname(i))
+          Log.Message s_Sheetname(i)&" sheet data read Successfully"  
+        Case "Lifecycle Approval Powerview"
+          g_Pdf_InputLifecycleApprovalPowerviewSheetReader = Excel_ReadExcelSheet(g_Pdf_sCurrentInputExcelpath,s_Sheetname(i)) 
+          Log.Message s_Sheetname(i)&" sheet data read Successfully" 
+        Case "Notes"
+          g_Pdf_InputNotesSheetReader = Excel_ReadExcelSheet(g_Pdf_sCurrentInputExcelpath,s_Sheetname(i))
+          Log.Message s_Sheetname(i)&" sheet data read Successfully" 
+        Case "Organizations"
+          g_Pdf_InputOrganizationsSheetReader = Excel_ReadExcelSheet(g_Pdf_sCurrentInputExcelpath,s_Sheetname(i))
+          Log.Message s_Sheetname(i)&" sheet data read Successfully" 
+        Case "Ownership"
+          g_Pdf_InputOwnershipSheetReader = Excel_ReadExcelSheet(g_Pdf_sCurrentInputExcelpath,s_Sheetname(i))
+          Log.Message s_Sheetname(i)&" sheet data read Successfully" 
+        Case  "Materials Produced"
+          g_Pdf_InputMaterialsProducedSheetReader = Excel_ReadExcelSheet(g_Pdf_sCurrentInputExcelpath,s_Sheetname(i)) 
+          Log.Message s_Sheetname(i)&" sheet data read Successfully"
+         Case "Performance Characteristics" 
+          g_Pdf_InputPerfCharSheetReader = Excel_ReadExcelSheet(g_Pdf_sCurrentInputExcelpath,s_Sheetname(i))
+          Log.Message s_Sheetname(i)&" sheet data read Successfully"
+         Case "Performance Characteristic" 
+          g_Pdf_InputPerfCharSheetReader = Excel_ReadExcelSheet(g_Pdf_sCurrentInputExcelpath,s_Sheetname(i))
+          Log.Message s_Sheetname(i)&" sheet data read Successfully"       
+        case else
+          Call Err.Raise (64401,"EnoviaPDFViews_ReadInputExcel","Sheet name not found in excel for "&s_Sheetname(i))	       
+      End Select
+  Next
+End Function
+
+'-----Test Area---
+  Sub mytest()
+  sFilename = "D:\Users\balacv\Documents\PDF_Views\to compare\PDF_RawFiles\APMP_APMP-00000445_AllInfoView.pdf"
+  Set ObjPdfToRead = JavaClasses.org_apache_pdfbox_pdmodel.PDDocument.load_3(sFilename)
+'  Set ObjPdfTextstripper = JavaClasses.org_apache_pdfbox_util.PDFTextStripper.newInstance()
+'  ObjPdfTextstripper.setSortByPosition(True)
+'  STextToCompare = ObjPdfTextstripper.getText_2(ObjPdfToRead)
+'  nGHeaderEndlimit = aqString.Contains(STextToCompare, "Attributes", 0, False)
+'  nGHeaderText =  aqString.SubString(STextToCompare, 0, nGHeaderEndlimit)
+'  log.Message nGHeaderText
+'  nEHeaderStartlimit = aqString.Contains(STextToCompare, "Printed", 0, False)
+'  nEHeaderEndlimit = aqString.Contains(STextToCompare, "_____", 0, False) - nEHeaderStartlimit
+'  nEHeaderText =  aqString.SubString(STextToCompare, nEHeaderStartlimit, nEHeaderEndlimit)
+'  log.Message nEHeaderText
+   
+
+  
+  End Sub

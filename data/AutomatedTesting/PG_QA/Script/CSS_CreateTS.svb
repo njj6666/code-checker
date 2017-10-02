@@ -1,0 +1,838 @@
+﻿'USEUNIT ExcelLib
+'USEUNIT GlobalVars
+'USEUNIT WebKeywords
+'USEUNIT WebObjectLib
+'USEUNIT WindowsUtility
+'USEUNIT CSSUtils
+'USEUNIT StringLib
+'USEUNIT TR_EnoviaUtils
+'USEUNIT CSS_OBJClass
+'USEUNIT CSS_SearchTS
+'USEUNIT OR_CSS
+'USEUNIT CSS_Upload
+
+'###################################################################################
+'Function Name                : CSS_ExecuteCopyToCreateNew
+'Description                  : with Opened Product Data, click Copy to Create New to copy a new product data and keep the reference link
+'Assumption                   : The Original Product Data is already opened
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Lene
+'Creation Date                : 2017-09-28
+'Special Conditions           : NA
+'################################################################################### 
+Function CSSTS_ExecuteCopyToCreateNew()
+  On Error Resume Next
+  
+  'click Action button from top menu
+  Set objAction = objGetObject(OR_CSSTSAtt_ActionBtn,"",30000)
+  objAction.Click
+  
+  'click Copy to Create New button under Action Menu
+  Set objCSS_CopyToCreateNew = objGetObject(OR_CSSTSAtt_CopyToCreateNewBtn,"",30000)
+  objCSS_CopyToCreateNew.Click
+  
+  'Click ok to keep links to the Reference Standards
+  Set objConfirm_ok = objGetObject(OR_CSSTSAtt_CopyToCreateNewConfirmBtn,"",30000)
+  objConfirm_ok.Click
+  
+  set objAttrPageCheckPoint = objGetObject(OR_CSSPDTAtt_GeneralDes,"",30000)
+  
+End Function
+
+'###################################################################################
+'Function Name                : CSSTS_CompleteCopytoCreateNew
+'Description                  : Fill the attribute with predefined value in the opened Copy to Create New page and save to create new TS
+'Assumption                   : The Copy to Create New page is already opened
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Lene
+'Creation Date                : 2017-09-27
+'Special Conditions           : NA
+'################################################################################### 
+Function CSSTS_CompleteCopytoCreateNew(strPDT)
+   Dim strDesc, strSAPDesc, strReasonForChange,strOrganization,strSegment
+   
+   'Get the predefined attribute Value from input excel
+    strDesc =Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "Description", strPDT)   
+    strSAPDesc = Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "SAP Description", strPDT)       
+    strOrganization=  Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "Organization", strPDT)
+    strSegment = Excel_SearchAttributeInputValue(g_strInputDataFilePath,"CSSPDT","Segment",strPDT)
+   
+   'Set Description
+    Set objDes = objGetObject(OR_CSSTSAtt_GeneralDes,"",30000)
+    objDes.TextContent=strDesc
+    
+   'Set SAP Description
+    Set objSAPDes = objGetObject(OR_CSSTSAtt_GeneralSAPDes,"",30000)
+    objSAPDes.SetText(strSAPDesc)
+    
+    'set the Owing Organization
+   Call CSSCreate_SetOrg(strOrganization)
+   'set the Segment
+   Call CSSCreate_SetSeg(strSegment)
+   'Save to create new Product Data
+   Call CSSCreate_Save()
+   
+   'result check, new create TC should be verified
+   Set objResultCheckpoint = objGetObject(OR_CSSPDTAtt_ResultCheckPointPic,"",30000)
+   
+   'get new TSnumber and write into Excel
+   
+End Function
+
+'##################################################################################################################
+'Function Name                : CSSCreateTS_ChooseStandardType
+'Description                  : After Click create new standard Button, choose standard type and structured type. 
+'                               And then click Action->Create to create Standard with target type.
+'Arguments                    : sStandardType:standard type 
+'                               bIsStructured:structured type
+'Return Value                 : True for created successfully
+'Author                       : Xiaoji Sun 
+'Creation Date                : 30 -Aug- 2017
+'Special Conditions           : NA                                       
+'Revision History             : NA
+'Revision Date                : 28 -sep- 2017
+'Comments                     : modify by lene  
+'##################################################################################################################
+Function CSSCreateTS_ChooseStandardType(sStandardType,bIsStructured)  'as Xiaoji
+  On Error Resume Next
+
+  Dim objTypeList
+  Dim objAction
+  Dim objCreate
+  sStandardType = sStandardType&"*"
+  'Get Type list then select standard type
+  Set objTypeList = objGetObject(OR_CSSCreateTS_StandardTypeSelect,"",30000) 
+  objTypeList.SelectItem(sStandardType)
+  
+  'Choose structured or un-structured type 
+  If bIsStructured = false Then
+    Call Click(OR_CSSCreate_StructuredCheckBox,"","")
+  End If
+  
+  'Clcik Actions>>Create to create standard with the target type
+  Call Click(OR_CSSCreate_TypeSelectActionBtn,"","")
+  Call Click(OR_CSSCreate_TypeSelectActionCreateBtn,"","")
+  
+  If Err.Number = 0 Then
+    CSSCreateTS_ChooseStandardType = True
+  Else
+    CSSCreateTS_ChooseStandardType  = False
+  End If
+
+  'need add checkpoint - Yong
+  
+  set objTypeList = nothing
+
+End Function
+
+'Function ChooseStandardType(str_type)  'as Xiaoji
+'  On Error Resume Next
+'
+'  ' Fetch Application Credentials
+'  Dim arrGetObj,objOriginator,objTechStandLink,objCreateNew,objTypeList,objAction,objCreate,strType
+'  
+'  str_Type = str_type&"*"
+'
+'  'Set objUserID = objGetObject(OR_EnoviaLogin_UserNameEdt,"","")
+' 
+'  'Get Originator 
+'  arrGetObj = arrGetObjInfoFromXL("CSS_MainPage","Originator")
+'  Set objOriginator = objGetObject(arrGetObj,c_CSSMainPage_URL,30000)
+'  objOriginator.Click
+'  'Get Technical Standards link
+'  arrGetObj = arrGetObjInfoFromXL("CSS_MainPage","TechnicalStandards")
+'  Set objTechStandLink = objGetObject(arrGetObj,c_CSSMainPage_URL,30000) 
+'  objTechStandLink.Click
+'  
+'  'Get Create New Standards link
+'  arrGetObj = arrGetObjInfoFromXL("CSS_MainPage","CreateNewStandard")
+'  Set objCreateNew = objGetObject(arrGetObj,c_CSSTSD_URL,30000)
+'  objCreateNew.Click
+'  
+'  'Get Type list
+'  arrGetObj = arrGetObjInfoFromXL("CSS_MainPage","TypeList")
+'  Set objTypeList = objGetObject(arrGetObj,c_CSSTSHome_URL,30000) 
+'  objTypeList.SelectItem(str_Type)
+'  
+'  'Get Action
+'  arrGetObj = arrGetObjInfoFromXL("CSS_MainPage","Action")
+'  Set objAction = objGetObject(arrGetObj,c_CSSTSHome_URL,30000) 
+'  objAction.Click
+'  
+'  arrGetObj = arrGetObjInfoFromXL("CSS_MainPage","CreateLink")
+'  Set objCreate = objGetObject(arrGetObj,c_CSSTSHome_URL,30000) 
+'  objCreate.Click
+'  
+'  If Err.Number = 0 Then
+'    ChooseStandardType = True
+'  Else
+'    ChooseStandardType  = False
+'  End If
+'
+'  Set objTechStandLink = nothing
+'  Set objCreateNew = nothing
+'  set objTypeList = nothing
+'
+'End Function
+
+'##################################################################################################################
+'Function Name                : Input General
+'Description                  : Input general information to create CSS
+'Arguments                    : str_Data:name of new data in Case
+'Return Value                 : NA
+'Author                       : Xiaoji Sun
+'Creation Date                : 30 -Aug- 2017
+'Special Conditions           : NA                                       
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function InputGeneral(str_Data, strSheet)
+    Dim strDesc, strSAPDesc, strMaster, strReason, strMaterial, strOwnOrg, strSegment,strIsFormula, strType
+    'Dim arrGetObj, objDesc,objSAPDesc,objMater,objReason,objMaterial
+    'Get Attribute value for input from excel
+    strDesc = Excel_SearchAttributeInputValue(g_strInputDataFilePath, strSheet, "Description", str_Data)
+    strSAPDesc = Excel_SearchAttributeInputValue(g_strInputDataFilePath, strSheet, "SAPDescription", str_Data)
+    strMaster = Excel_SearchAttributeInputValue(g_strInputDataFilePath, strSheet, "MasterGCAS", str_Data)
+    strReason = Excel_SearchAttributeInputValue(g_strInputDataFilePath, strSheet, "ReasonForChange", str_Data)
+    strMaterial = Excel_SearchAttributeInputValue(g_strInputDataFilePath, strSheet, "MaterialGroup", str_Data)
+    strIsFormula = Excel_SearchAttributeInputValue(g_strInputDataFilePath, strSheet, "IsFormula", str_Data)
+    strType = Excel_SearchAttributeInputValue(g_strInputDataFilePath, strSheet, "Type", str_Data)
+    GeneralDesc.TextContent=strDesc
+    GeneralSAPDesc.SetText(strSAPDesc)    
+    GeneralReason.TextContent=strReason    
+        
+    If strMaster<>"" Then   
+    GeneralMaster.SetText(strMaster)       
+    End If
+    
+    If strIsFormula="Yes" Then
+    IsFormula.Click  
+    End If  
+    Call SelectMaterialGroup(strMaterial,strType)
+    
+End Function 
+
+'##################################################################################################################
+'Function Name                : Input Ownership
+'Description                  : Input ownership information to create CSS
+'Arguments                    : str_Data:name of new data in Case
+'Return Value                 : NA
+'Author                       : Xiaoji Sun
+'Creation Date                : 30 -Aug- 2017
+'Special Conditions           : NA                                       
+'Revision History             : NA
+'Revision Date                : NA
+'Comments                     :modify by lene 28,Sep,2017
+'##################################################################################################################
+Function InputOwnership(StrPDT,strSetName)
+    Dim strOwnOrg
+    Dim strSegment
+    Dim strDesc
+    Dim strSAPDesc
+    Dim strDocument
+     strInputDataFilePath=g_strInputDataFilePath&strSetName&"_DSM.xlsx"    
+'    strOwnOrg = Excel_SearchAttributeInputValue(strInputDataFilePath, "CSSPDT", "OwningOrganization", strPDT)
+'    strSegment = Excel_SearchAttributeInputValue(strInputDataFilePath, "CSSPDT", "Segment", strPDT)
+'    strDesc = Excel_SearchAttributeInputValue(strInputDataFilePath, "CSSPDT", "Description", strPDT)
+'    strSAPDesc = Excel_SearchAttributeInputValue(strInputDataFilePath, "CSSPDT", "SAP Description", strPDT)
+   strDocument = Excel_SearchAttributeInputValue(strInputDataFilePath, "CSSPDT", "Technical standards Document", strPDT)
+   ' Call CSSCreate_SetDes(strDesc)
+   ' Call CSSCreate_SetSAPDes(strSAPDesc)
+   ' Call CSSCreate_SetOrg(strOwnOrg)
+    'Call CSSCreate_SetSeg(strSegment)
+    Call CSS_FilUpload(ProjectSuite.Path&"Resources\UploadFile\"&strDocument)
+   
+END Function
+'Function InputOwnership(Str_Data, strSheet)
+'    Dim strOwnOrg, strSegment, objNav, strType
+'    'Dim arrGetObj, objDesc,objSAPDesc,objMater,objReason,objMaterial
+'    'Get Attribute value for input from excel
+'    strOwnOrg = Excel_SearchAttributeInputValue(g_strInputDataFilePath, strSheet, "OwningOrganization", str_Data)
+'    strSegment = Excel_SearchAttributeInputValue(g_strInputDataFilePath, strSheet, "Segment", str_Data)
+'    strType = Excel_SearchAttributeInputValue(g_strInputDataFilePath, strSheet, "Type", str_Data)
+'    strIsFormula = Excel_SearchAttributeInputValue(g_strInputDataFilePath, strSheet, "IsFormula", str_Data)
+'    Set objNav = NavToOwnership(strType)
+'    objNav.Click
+'    AqUtils.Delay(3000)
+'    SelectOrgnization(strOwnOrg)
+'    AqUtils.Delay(2000)
+'    Call SelectSegment(strSegment,strType,strIsFormula)  
+'END Function
+
+'##################################################################################################################
+'Function Name                : Get GCAS Code
+'Description                  : Get GCAS Code of new create Data
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Xiaoji Sun
+'Modified                     : Lene
+'Creation Date                : 29 -Sep- 2017
+'Special Conditions           : NA                                       
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function GetGCASCode(str_FullType)
+  Dim strGCAS
+  Set objGcasCode=objGetObject(OR_CSSPDT_CodeName,"",30000)
+  strGCAS = GetValue(objGcasCode, "contentText")
+  strGCAS = Replace(strGCAS, str_FullType, "")
+  strGCAS = Replace(strGCAS, "(DOC)", "")
+  GetGCASCode = aqString.Trim(strGCAS,aqString.stAll)
+END Function
+
+'Function GetGCASCode()
+'Dim strGCAS
+'strGCAS = GetValue(GCASCode, "contentText")
+'GetGCASCode = strGCAS
+'END Function
+
+
+Function CopyToRevise(strData,strSheetName)
+CreateActionBtn.Click
+CopyToReviseBtn.Click
+ReviseConfirmOK.Click
+AqUtils.Delay(9000)
+GeneralReason.TextContent = "New"
+strGCAS = GetGCASCode()
+Call Excel_InsertValueIntoSpecifiedCell(g_strOutputDataFilePath, strSheetName, strData, "Value", strGCAS)
+CreateActionBtn.Click
+CreateSaveBtn.Click
+End Function
+
+
+'##################################################################################################################
+'Function Name                : GetTSObjId
+'Description                  : Get TS URL
+'Arguments                    : 
+'Return Value                 : NA
+'Author                       : Xiaoji.Sun
+'Creation Date                : 05 -SEP- 2017
+'Special Conditions           : NA                                       
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function GetTSObjId()
+  Set objPage = Sys.Browser("iexplore").Page("*")
+  GetTSObjId = objPage.URL
+End Function 
+
+
+
+
+
+'##################################################################################################################
+'Function Name                : SearchGCAS
+'Description                  : Input the GCAS in top search box and click Go.
+'Arguments                    : strNum:GCAS number
+'Return Value                 : NA
+'Author                       : Sam He
+'Creation Date                : 30 -Aug- 2017
+'Special Conditions           : NA                                       
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function SearchGCAS(strSearchNum)
+  On Error Resume Next
+  'input the value in search box
+  arrGetObj = arrGetObjInfoFromXL("CSS_EDITIRMS","SearchBox") 
+  Call SetTextByProps(arrGetObj,strSearchNum,c_CSSMainPage_URL)
+  Set searchBox = objGetObject(arrGetObj,c_CSSMainPage_URL,30000)
+  searchBox.Keys("[Enter]")
+  'Select the search item
+  arrGetObj = arrGetObjInfoFromXL("CSS_EDITIRMS","SearchForm")   
+  Set searchForm = objGetObject(arrGetObj,c_CSSSerrchResult_URL,30000)
+  Call searchForm.click(126,145)
+  Set searchBox =nothing
+  Set searchForm =nothing
+End Function 
+
+'##################################################################################################################
+'Function Name                : InputValue_Reference
+'Description                  : Input the required value in the Reference Tab
+'Arguments                    : 
+'Return Value                 : NA
+'Author                       : Sam He
+'Creation Date                : 31 -Aug- 2017
+'Special Conditions           : NA                                       
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function InputValue_Reference()
+  arrGetObj = arrGetObjInfoFromXL("CSS_EDITIRMS","ReferenceTab")  
+  Call Click(arrGetObj,c_CSSEditPage_URL,30000)
+  'Input the search value
+  arrGetObj = arrGetObjInfoFromXL("CSS_EDITIRMS","ReferenceStdTable")   
+  Set ReferenctTable = objGetObject(arrGetObj,C_CSSReferencePage_URL,30000)
+  RowNumber = aqObject.GetPropertyValue(ReferenctTable, "RowCount")'get the table row count
+  ReferenctTable.Cell(RowNumber-1,2).Textbox("documentName").SetText "91006006.001"
+End Function 
+
+'############################################################################################################
+'Function Name                : 
+'Description                  : 
+'Arguments                    : 
+'Return Value                 : NA
+'Author                       : Lene Yu
+'Creation Date                : 26 -Sep- 2017
+'Special Conditions           : NA                                       
+'Revision History             : NA
+'Revision Date                : NA
+'############################################################################################################
+Function CSS_CopyToCreateNew()
+  Set objAction = objGetObject(OR_CSSPDTAtt_ActionBtn,"",30000)
+  objAction.Click
+  Set objCSS_CopyToCreateNew = objGetObject(OR_CSSPDTAtt_CSS_CopyToCreateNew,"",30000)
+  objCSS_CopyToCreateNew.Click
+End Function
+'############################################################################################################
+'Function Name                : 
+'Description                  : 
+'Arguments                    : 
+'Return Value                 : NA
+'Author                       : Lene Yu
+'Creation Date                : 27 -Sep- 2017
+'Special Conditions           : NA                                       
+'Revision History             : NA
+'Revision Date                : NA
+'############################################################################################################
+Function CSS_Confirm_OK()
+  Set objConfirm_ok = objGetObject(OR_CSSPDTCopy_ConfirmBtn,"",30000)
+  objConfirm_ok.Click
+ 
+End Function
+
+'############################################################################################################
+'Function Name                : CSS_ExecuteCreateNewTS
+'Description                  : Execute Homepage->Originator->Technical Standards->Create New Standard to Open create window
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Lene Yu
+'Creation Date                : 28 -Sep- 2017
+'Special Conditions           : NA                                       
+'Revision History             : NA
+'Revision Date                : NA
+'############################################################################################################
+Function CSS_ExecuteCreateNewTS()
+  'click Originator button from Top Menu
+  Set objOriginator = objGetObject(OR_CSSTopMenu_OriginatorDrp,"",30000)
+  objOriginator.Click
+  AqUtils.Delay(2000)
+  'Click Technical Standards Button under Originator Dropdown list
+  Set objTechnicalStandards = objGetObject(OR_CSSTopMenu_OriginalTechnicalStandardsBtn,"",30000)
+  objTechnicalStandards.Click
+  AqUtils.Delay(2000)
+  
+  'click Create New Standards button to launch Create new TS window
+  Set objCreateNewStandards=objGetObject(OR_CSSTS_CreateNewStandardBtn,"",30000)
+  objCreateNewStandards.Click  
+  
+End Function
+
+'*************added in 27 ,Sep ,2017 *******************'
+'*************Lene Yu*********************'
+'###################################################################################
+'Function Name                : CSS_CopyToCreateProductData
+'Description                  : 
+'Assumption                   : The Original Product Data is already opened
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Lene
+'Creation Date                : 2017-09-28
+'Special Conditions           : NA
+'################################################################################### 
+Function CSS_CopyToCreateProductData(strPDT)
+  'get new TSnumber and write into Excel
+   strGcasCode =Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "GCASCODE", strPDT)
+   strGCASCode = GetGCASCode(strGcasCode)
+   Call Excel_InsertValueIntoSpecifiedCell(g_strOutputDataFilePath, "CSSCreatedData", strPDT, "GCASCODE", strGCASCode)
+   
+   'get attribute from excel
+   Dim strDesc, strSAPDesc, strReasonForChange,strOrganization,strSegment
+   strDesc =Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "Description", strPDT)   
+   strSAPDesc = Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "SAP Description", strPDT)       
+   ' strReasonForChange = Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "ReasonForChange", strPDT)
+   strOrganization=  Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "OwningOrganization", strPDT)
+   strSegment = Excel_SearchAttributeInputValue(g_strInputDataFilePath,"CSSPDT","Segment",strPDT)
+   
+   'input attributes
+   Call CSSCreate_SetDes(strDesc)
+   Call CSSCreate_SetSAPDes(strSAPDesc)
+   Call CSSCreate_SetOrg(strOrganization)
+   Call CSSCreate_SetSeg(strSegment)
+   'click save
+   Call CSSCreate_Save() 
+End Function 
+
+
+'###################################################################################
+'Function Name                : CSSCreateTS_CreateUnSTRTS
+'Description                  : Create Unstructured Technical Standard
+'Assumption                   : The Original Product Data is already opened
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Lene
+'Modified                     : Xiaoji
+'Creation Date                : 2017-09-29
+'Special Conditions           : NA
+'################################################################################### 
+Function CSSCreateTS_CreateUnSTRTS(sTechStd)
+  'get new TSnumber and write into Excel
+  sType = Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "GCASCODE", sTechStd)
+  sGCASCode = GetGCASCode(sType)
+  Call Excel_InsertValueIntoSpecifiedCell(g_strOutputDataFilePath, "CSSCreatedData", sTechStd, "GCASCODE", sGCASCode)
+ 
+  'get attribute from excel
+  Dim sDesc, sSAPDesc, sReasonForChange,sOrganization,sSegment,sSubType,sDocument
+  sDesc =Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "Description", sTechStd)   
+  sSAPDesc = Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "SAP Description", sTechStd)       
+  
+  'strReasonForChange = Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "ReasonForChange", sTechStd)
+  sOrganization=  Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "OwningOrganization", sTechStd)
+  sSegment = Excel_SearchAttributeInputValue(g_strInputDataFilePath,"CSSPDT","Segment",sTechStd)
+  
+  'Added by Xiaoji
+  'To determin if Segment Search page need to click Add button
+  sSegmentFlag = Excel_SearchAttributeInputValue(g_strInputDataFilePath,"CSSPDT","hasAddButton",sTechStd)
+  
+  sSubType = Excel_SearchAttributeInputValue(g_strInputDataFilePath,"CSSPDT","SubType",sTechStd)
+  sDocument = Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "Technical standards Document", sTechStd)
+  
+  
+  'Added By Xiaoji 
+  'Optional items but requred by some test cases 
+   sPrjSecurityGroup = Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "ProjectSecurityGroup", sTechStd)
+   strExpDate = Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "EXPDate", sTechStd)
+  
+   sReference = Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "ReferenceStandards", sTechStd)
+   sPlant = Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "Plant", sTechStd)  
+   sSharingOrg = Excel_SearchAttributeInputValue(g_strInputDataFilePath, "CSSPDT", "SharingOrganization", sTechStd)
+
+    
+   'input SAP Description  & Description
+   'Input Description
+   Set objDes = objGetObject(OR_CSSPDTAtt_GeneralDes,"",30000)
+   objDes.TextContent=sDesc
+ 
+   'Input SAP Description
+   Set objSAPDes = objGetObject(OR_CSSPDTAtt_GeneralSAPDes,"",30000)
+   objSAPDes.SetText(sSAPDesc)   
+
+   'Select Owning Organizatiomn
+   Call CSSCreateTS_SetOrg(sOrganization)
+   
+   'Select Segment
+   Call CSSCreateTS_SetSeg(sSegment,sSegmentFlag)
+   
+   'Set Subtype
+   If sSubType <> "" Then
+    Call CSSCreateTS_SelectSubType(sSubType)
+   End If
+   
+   '*********Added By Xiaoji**********
+   'Set Sharing Organization
+   If sSharingOrg <> "" Then
+   Call CSSCreateTS_SetSharingOrg(sSharingOrg)
+   End If
+   
+   'Set Project Security Group
+   If sPrjSecurityGroup <> "" Then
+   Call CSSCreateTS_SetSecurityGroup(sPrjSecurityGroup)
+   End If
+   
+   'Set Reference Standard
+   If sReference <> "" Then
+   Call CSSCreateTS_AddReferenceStandard(sReference)
+   End If
+   
+   'Set Expiration Data
+   If sExpDate <> "" Then
+   Set objExpDate = objGetObject(OR_CSSPDTAtt_EXPDateEdt, "","")
+   objExpDate.SetText(sExpDate)
+   End If
+   
+   'Set Plant
+   If sPlant <> "" Then
+   Call CSSCreateTS_SetPlant(sPlant, "Use")
+   Call CSSCreateTS_SetPlant(sPlant, "Produce")
+   End If
+   
+   'Upload document
+   Call CSS_FilUpload(ProjectSuite.Path&"Resources\UploadFile\"&sDocument)
+   Delay(2000)
+   'Save Unstructured Data
+   Call CSSCreateTS_Save() 
+ 
+End Function 
+
+'Select and fill the owning Organization on the TechnicalStandard Form window
+Function CSSCreate_SetDes(strDesc)
+  Set objDes = objGetObject(OR_CSSPDTAtt_GeneralDes,"",30000)
+  objDes.TextContent=strDesc
+End Function 
+
+Function CSSCreate_SetSAPDes(strSAPDesc)
+  Set objSAPDes = objGetObject(OR_CSSPDTAtt_GeneralSAPDes,"",30000)
+   objSAPDes.SetText(strSAPDesc) 
+End Function 
+
+Function CSSCreate_SetReasonForChange(strReasonForChange)
+  Set objReasonForChange=objGetObject(OR_CSSPDTAtt_ReasonForChange,"",30000)
+  'need to update
+End Function 
+
+Function CSSCreateTS_SetOrg(strOrganization)
+  'click picklist button on the right of Owning Organization - ?Yong comments
+  Set objOrg=objGetObject(OR_CSSPDTAtt_OrgPickEdt,"",30000)
+  Set objOrgTable = objOrg.Parent
+  Set objOrgPick = objOrgTable.FindChild(aPropNames,aPropValues,10)
+  objOrgPick.Click
+  AqUtils.Delay(4000)
+
+  'click the target item
+  Set objOrgPicklist=objGetObject(OR_CSSPDTAtt_OrgPicklistSearchPicklist,g_CSSSearchGroup_URL,30000) 
+  objOrgPicklist.ClickItem strOrganization
+  AqUtils.Delay(1000)
+ 
+  'click the Save button to choose the Organization
+  Set objOrgPicklistSave=objGetObject(OR_CSSPDTAtt_PicklistSearchSave,g_CSSSearchGroup_URL,30000)
+  objOrgPicklistSave.Click
+End Function
+
+
+'###################################################################################
+'Function Name                : CSSCreateTS_SetSeg
+'Description                  : Select and fill the Segment on the TechnicalStandard Form window
+'Assumption                   : The Original Product Data is already opened
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Lene
+'Modified                     : Xiaoji
+'Creation Date                : 2017-09-29
+'Special Conditions           : NA
+'################################################################################### 
+Function CSSCreateTS_SetSeg(sSeg,sSegFlag)
+  'Get Table that contains Picklist and Remove button of Segment
+  Set objSegPicktemp=objGetObject(OR_CSSPDTAtt_SegPickEdt,"",30000)
+  Set objSegTable = objSegPicktemp.Parent
+  Set objSegPick = objSegTable.FindChild(aPropNames,aPropValues,10)
+  
+  'remove none relative items from segment window
+  Set objSeg=objGetObject(OR_CSSPDTAtt_Seg,"",30000)
+  If objSeg.wItemCount > 0 Then
+  objSeg.SelectItem -1, True
+  Set objSegRemove=objSegTable.FindChild(OR_CSSPDTAtt_RemovePropName,OR_CSSPDTAtt_RemovePropValue,10)
+  objSegRemove.Click
+  End If
+  'Commentted by Xiaoji
+'  Set objSegRemove=objGetObject(OR_CSSPDTAtt_SegRemoveBtn,"",30000)
+'  objSegRemove.Click
+
+ 'click picklist to start picklist Values for segment window
+  objSegPick.Click
+  AqUtils.Delay(2000)
+  
+  'click Search button on the picklist Values for segment window
+  Set objSegSearch=objGetObject(OR_CSSPDTAtt_SegPicklistSearch,g_CSSSearchGroup_URL,30000)
+  objSegSearch.Click
+   AqUtils.Delay(2000)
+   
+  'select the target item for segment
+  Set objSegPicklist=objGetObject(OR_CSSPDTAtt_OrgPicklistSearchPicklist,g_CSSSearchGroup_URL,30000)
+  objSegPicklist.ClickItem sSeg&"*"
+  AqUtils.Delay(1000)
+  
+  If (sSegFlag=1) Then
+  'Add the target item into the segment
+  Set objSegPicklistAdd=objGetObject(OR_CSSPDTAtt_SegPicklistSearchAdd,g_CSSSearchGroup_URL,30000)
+  objSegPicklistAdd.Click
+  AqUtils.Delay(1000)
+  End If
+  
+  'save the segment value
+  Set objSegPicklistSave = objGetObject(OR_CSSPDTAtt_PicklistSearchSave,g_CSSSearchGroup_URL,30000)
+  objSegPicklistSave.Click
+  
+End Function
+
+
+'###################################################################################
+'Function Name                : CSSCreateTS_SetPlant
+'Description                  : Select and fill the Plant on the TechnicalStandard Form window
+'Assumption                   : The Original Product Data is already opened
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Xiaoji
+'Modified                     : Xiaoji
+'Creation Date                : 2017-09-29
+'Special Conditions           : NA
+'################################################################################### 
+Function CSSCreateTS_SetPlant(sPlant, sUseOrProd)
+  Select Case sUseOrProd
+    Case "Use"
+      Set objPlantPicktemp=objGetObject(OR_CSSPDTAtt_PlantAuthoToUse,"",30000)
+    Case "Produce"
+      Set objPlantPicktemp=objGetObject(OR_CSSPDTAtt_PlantAuthoToProduce,"",30000)
+  End Select 
+  'Get Plant Table that contains picklist button
+  Set objPlantTable = objPlantPicktemp.Parent
+  
+  'Get Remove button of Plant list
+  Set objPlantRemoveBtn = objPlantTable.FindChild(OR_CSSPDTAtt_RemovePropName,OR_CSSPDTAtt_RemovePropValue,10)
+  'Get Picklist button of Plant list
+  Set objPlantPickLst = objPlantTable.FindChild(OR_CSSPDTAtt_PickListPropName,OR_CSSPDTAtt_PickListPropValue,10)
+
+   
+  'remove none relative items from Plant list, if Exist any
+  Set objPlant=objGetObject(OR_CSSPDTAtt_PlantAuthoToUse,"",30000)
+  'If Plant list contains any item
+  If objPlant.wItemCount > 0 Then  
+  objPlant.SelectItem -1, True
+  'Remove it
+  objPlantRemoveBtn.Click
+  End If
+  
+  'Click to Open Plant Search Window
+  objPlantPickLst.Click
+  AqUtils.Delay(2000)
+  WaitPageLoad(g_CSSSearchGroup_URL)
+  'select the target item for Plant
+  Set objSegPicklist=objGetObject(OR_CSSPDTAtt_OrgPicklistSearchPicklist,g_CSSSearchGroup_URL,30000)
+  objSegPicklist.ClickItem sPlant
+  AqUtils.Delay(1000)
+  'Click Save button on Plant search window
+  Call Click(OR_CSSPDTAtt_PicklistSearchSave,g_CSSSearchGroup_URL,"") 
+End Function
+
+'###################################################################################
+'Function Name                : CSSCreateTS_SetSecurityGroup
+'Description                  : Select and fill the Project Security Group on the TechnicalStandard Form window
+'Assumption                   : The Original Product Data is already opened
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Xiaoji
+'Modified                     : Xiaoji
+'Creation Date                : 2017-09-29
+'Special Conditions           : NA
+'################################################################################### 
+Function CSSCreateTS_SetSecurityGroup(sSecurity)
+'Get Project Security Group List box
+  Set objPrjSecurityGroup=objGetObject(OR_CSSPDTAtt_ProjSecurityGrpList,"",30000)
+
+  'Get Table of Security Group listbox
+  Set objPrjSecurityTemp = objPrjSecurityGroup.Parent
+  Set objPrjSecurityTable = objPrjSecurityTemp.Parent
+  
+  
+  'Get Add Button of Security Group list box
+  Set objSecurityAddBtn = objPrjSecurityTable.FindChild(OR_CSSPDTAtt_AddBtnPropName,OR_CSSPDTAtt_AddBtnPropValue,10)
+  'Get Remove button of Security Group List Box
+  Set objSecurityRemoveBtn = objPrjSecurityTable.FindChild(OR_CSSPDTAtt_RemovePropName,OR_CSSPDTAtt_RemovePropValue,10)
+  
+  'remove none relative items from Security Group list, if Exist any
+  Set objSecurity=objGetObject(OR_CSSPDTAtt_ProjSecurityGrp,"",30000)
+  If objSecurity.wItemCount > 0 Then  
+    objSecurity.SelectItem -1, True
+    objSecurityRemoveBtn.Click
+  End If
+  
+  'select the target item for Security Group
+  objPrjSecurityGroup.ClickItem sSecurity
+  AqUtils.Delay(1000)
+  Call objSecurityAddBtn.Click
+End Function
+
+
+'###################################################################################
+'Function Name                : CSSCreateTS_SetSharingOrg
+'Description                  : Select and fill the Sharing Organization on the TechnicalStandard Form window
+'Assumption                   : The Original Product Data is already opened
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Xiaoji
+'Modified                     : Xiaoji
+'Creation Date                : 2017-09-29
+'Special Conditions           : NA
+'################################################################################### 
+Function CSSCreateTS_SetSharingOrg(sOrg)
+'Get sharing organization List box
+  Set objSharingOrg=objGetObject(OR_CSSPDTAtt_SharingOrgPickList,"",30000)
+
+  'Get Table of sharing organization listbox
+  Set objSharingOrgTable = objSharingOrg.Parent
+  
+  'Get Remove button of sharing organization List Box
+  Set objSharingRemoveBtn = objSharingOrgTable.FindChild(OR_CSSPDTAtt_RemovePropName,OR_CSSPDTAtt_RemovePropValue,10)
+  'Get Picklist button of sharing organization
+  Set objSharingOrgPickLst = objSharingOrgTable.FindChild(OR_CSSPDTAtt_PickListPropName,OR_CSSPDTAtt_PickListPropValue,10)
+
+  'remove none relative items from Sharing Organization Group list, if Exist any
+  If objSharingOrg.wItemCount > 0 Then  
+  objSharingOrg.SelectItem -1, True
+  objSharingRemoveBtn.Click
+  End If
+  
+  'Click picklist button to open Sharing Organization search window
+  objSharingOrgPickLst.Click
+  AqUtils.Delay(2000)
+  WaitPageLoad(g_CSSSearchGroup_URL)
+  
+  'If multiple item need to be selected
+  arrGroup = Split(sOrg, ",")
+  'select the target item for sharing organization
+  Set objSegPicklist=objGetObject(OR_CSSPDTAtt_OrgPicklistSearchPicklist,g_CSSSearchGroup_URL,30000)
+  objSegPicklist.MultiSelect(arrGroup)
+  AqUtils.Delay(3000)
+  
+  'save the Sharing Organization value
+  Set objSegPicklistSave = objGetObject(OR_CSSPDTAtt_PicklistSearchSave,g_CSSSearchGroup_URL,30000)
+  objSegPicklistSave.Click 
+End Function
+
+
+'###################################################################################
+'Function Name                : CSSCreateTS_AddReferenceStandard
+'Description                  : 'Fill Reference STandards with GCAS Code
+'Assumption                   : The Original Product Data is already opened
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Xiaoji
+'Modified                     : Xiaoji
+'Creation Date                : 2017-09-29
+'Special Conditions           : NA
+'################################################################################### 
+Function CSSCreateTS_AddReferenceStandard(sReference)
+'Get Reference Panel
+  Set objReferencePnl=objGetObject(OR_CSSPDTAtt_ReferencePnl,"",30000)
+  'Get Add button of Reference Panel
+  Set objRefenrenceAddBtn = objGetObject(OR_CSSPDTAtt_RefenrenceAddBtn, "", 3000)
+  arrGCASId = Split(sReference, ",")
+  'Fill GCAS code array into Reference Textbox
+  For i=0 to UBound(arrGCASId)
+  'Get Reference Textbox
+  Set objTextbox = objReferencePnl.Table(i).FindChild(OR_CSSPDTAtt_RefenrenceTextPropName,OR_CSSPDTAtt_RefenrenceTextPropValue,10)
+  objTextbox.SetText(arrGCASId(i))
+  'Click Add button after add one GCAS
+  objRefenrenceAddBtn.Click
+  Next
+End Function
+
+
+
+'click save to create new product data
+Function CSSCreateTS_Save()
+'click action button
+  Set objAction = objGetObject(OR_CSSTSAtt_ActionBtn,g_CSSGeneral_URL,30000)
+  objAction.Click
+  objAction.Click
+  'click Save Button from Action dropdownlist
+  Set objSave = objGetObject(OR_CSSTSAtt_SaveBtn,g_CSSGeneral_URL,30000)
+  objSave.Click
+End Function 
+
+
+Function CSSCreateTS_SelectSubType(strSubType)
+  Set objAction = objGetObject(OR_CSSPDTAtt_SubTypeLst,"",30000)
+  objAction.ClickItem strSubType
+End Function 

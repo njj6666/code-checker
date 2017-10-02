@@ -1,0 +1,151 @@
+﻿'USEUNIT DSM_E2EUtility
+'USEUNIT EnoviaUtils
+'USEUNIT ExcelLib
+'USEUNIT GlobalVars
+'USEUNIT LogLib
+'USEUNIT OR_Enovia
+'USEUNIT TimeLib
+'USEUNIT WebKeywords
+'USEUNIT WebObjectLib
+
+'#################################################################################################################
+'Script/Function/Sub Name     : DSM_CreateProductData
+'Description                  : To enter new product data value and submit
+'Arguments                    : arrPDTValue, an array of all options of product data
+'Return Value                 : Null
+'Author                       : Xiong Zhuang
+'Creation Date                : 18 -Sep- 2017
+'Special Conditions           : NA
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function EnoviaDSM_CreateProductData(arrPDTValue)
+  On Error Resume Next
+  '***Create Product Data
+  Dim objCurrentExe
+  Dim arrGetObj
+  '****Set type
+  aqPerformance.Start( "Create Product Data Page Loaded" )
+  Set objCurrentExe = objGetObject(OR_EnoviaPDT_Type,g_CreatePage_URL,30000)
+  Call LogPerformance("Create Product Data Page Loaded", False, "")
+  objCurrentExe.ClickItem(arrPDTValue(0))
+  Delay(5000)
+  '***set stage
+  Set objCurrentExe = objGetObject(OR_EnoviaPDT_Stage,g_CreatePage_URL,30000)
+  objCurrentExe.ClickItem(arrPDTValue(1))
+  '***set title
+  Set objCurrentExe = objGetObject(OR_EnoviaPDT_Title,g_CreatePage_URL,30000)
+  objCurrentExe.Keys(arrPDTValue(2))
+  '***set description
+  Set objCurrentExe = objGetObject(OR_EnoviaPDT_Description,g_CreatePage_URL,30000)
+  objCurrentExe.Keys(arrPDTValue(3))  
+  '****Select Organization
+  Set objCurrentExe = objGetObject(OR_EnoviaPDT_Org,g_CreatePage_URL,30000)  
+  objCurrentExe.ClickButton()
+  Call Enovia_SearchAndSelectByName(arrPDTValue(5))  
+  '***Select Segment
+  Set objCurrentExe = objGetObject(OR_EnoviaPDT_Segment,g_CreatePage_URL,30000)
+  objCurrentExe.Click 
+  objCurrentExe.ClickItem(arrPDTValue(4)) 
+'  '****Change template
+  If arrPDTValue(6) = "" Then
+  Else
+  Set objCurrentExe = objGetObject(OR_EnoviaPDT_ChangTem,g_CreatePage_URL,30000) 
+  objCurrentExe.ClickButton()
+  Call WaitPageLoad(g_SearchPageURL)
+  Call Enovia_SearchAndSelectByName(arrPDTValue(6))
+  End If
+
+  '**********Select CO
+  If arrPDTValue(7) = "" Then
+  Else
+    'arrGetObj = arrGetObjInfoFromXL("DSM_CreationExcutionPage","PDCo")
+    Set objCurrentExe = objGetObject(OR_EnoviaPDT_Co,g_CreatePage_URL,30000) 
+    objCurrentExe.ClickButton()
+    Call WaitPageLoad(g_SearchPageURL)
+    Call Enovia_SearchAndSelectByName(arrPDTValue(7))
+  End If
+'   '****Select Category
+  If arrPDTValue(8) = "" Then
+  Else
+    'arrGetObj = arrGetObjInfoFromXL("DSM_CreationExcutionPage","PDSecurityCate")
+    Set objCurrentExe = objGetObject(OR_EnoviaPDT_SecurityCate,g_CreatePage_URL,30000) 
+    objCurrentExe.ClickButton()
+    Call WaitPageLoad(g_SearchPageURL)
+    Call Enovia_SearchAndSelectByName(arrPDTValue(8))  
+    Call WaitPageLoad(g_CreatePage_URL)
+  End If
+  'Click Done Button
+  aqPerformance.Start( "Create Product Data Done" )
+   Set objCurrentExe = objGetObject(OR_EnoviaPDT_CreateDone,g_CreatePage_URL,30000) 
+  objCurrentExe.Click
+'***Wait Page Load
+  Call WaitPageLoad(g_EnoviaHomePage_URL)
+  Call LogPerformance("Create Product Data Done", False, "")
+'  '***Check new product data
+  Set objCurrentExe = Nothing
+End Function
+
+'#################################################################################################################
+'Script/Function/Sub Name     : EnoviaDSM_EditPDTMultiAttrs
+'Description                  : Edit/Update the multiple attributes for PDT
+'Arguments                    : arrAttrObjs, an array of attribute objects
+'                               strSheetName, excel's sheet name which has stored attribute's value
+'                               strKeyword, key word in excel which can locate the attribute's value
+'                               nAmounts, numeric type, attribute's counts
+'Return Value                 : Null
+'Author                       : Amanda Li
+'Creation Date                : 19 -Sep- 2017
+'Special Conditions           : NA
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function EnoviaDSM_EditPDTMultiAttrs(arrAttrObjs,strSheetName,strKeyword,nAmounts,strUrl) 'modified by rita: add parameter--strUrl,2017/9/29
+  Dim arrAttrValue
+  Call Click(OR_EnoviaPDTAtt_EditAll,strUrl,"")
+  
+  arrAttrValue = Excel_GetBatchValues(g_strInputDataFilePath,strSheetName,strKeyword,nAmounts)
+  For i = 0 To nAmounts -1
+    Call Enovia_EditAttribute(arrAttrObjs(i),arrAttrValue(i),strUrl)
+  Next
+  '****Click Done
+  Call Click(OR_EnoviaPDTAtt_EditDone,strUrl,"")
+  '****Click OK
+  Call Click(OR_EnoviaPDTAtt_OK,strUrl,"")
+End Function 
+
+
+'##################################################################################################################
+'Function Name      : EnoviaDSM_CreatePDTfromHomePage
+'Description        : To click plus icon and sub menu "Create Product Data..." to create a new product data after login Enovia
+'Arguments          : strInputPDT, key words in sheet "PDT" of the excel file "Inputparameter.xls"
+'Return Value       : None
+'Author             : Amanda Li
+'Creation Date      : 20 -Sep- 2017
+'Special Conditions : NA
+'Revision History   : NA
+'Revision Date      : NA
+'##################################################################################################################
+Sub EnoviaDSM_CreatePDTfromHomePage(strInputPDT)
+   On Error Resume Next
+   Dim arrPDTValues, objCurObj
+   
+  '***Click ToolBar Menu "+" and Click Create Product Data
+  aqPerformance.Start( "Execute Create Product Data" )
+  Call Enovia_OpenPlusMenu(OR_EnoviaMenu_ProductSpecificationLnk, OR_EnoviaMenu_CreateProductDataLnk)
+  Call LogPerformance("Execute Create Product Data", False, "")
+  
+  
+ '***Get attribute value from predefined excel as the input
+  arrPDTValues = Excel_SearchPDTValue(g_strInputDataFilePath,strInputPDT)  
+  
+  '***Fill attribute into the create page and click done
+  Call EnoviaDSM_CreateProductData(arrPDTValues)
+
+  'Clean up
+  DSM_ClearVariable objCurObj
+  DSM_ClearVariable arrPDTValues
+  DSM_ClearVariable objPDSpecIcon
+  DSM_ClearVariable objCreatePD
+End Sub 
+

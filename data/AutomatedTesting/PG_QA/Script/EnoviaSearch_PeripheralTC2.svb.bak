@@ -1,0 +1,312 @@
+﻿'USEUNIT GlobalVars	
+'USEUNIT LogLib	
+'USEUNIT OR_Enovia	
+'USEUNIT WindowsUtility	
+'USEUNIT EnoviaUtils	
+'USEUNIT WebObjectLib	
+'USEUNIT EnoviaSearch_PopulateSearchModel
+	                                                                        
+Dim SearchRecord
+                                                                 
+Function EnoviaSearch_PeripheralTC2_Steps()	
+	                                                           
+	  Call LogStep("EnoviaSearch_PeripheralTC2_Step1", "The Object(s) should be displayed in the Search Results Window.","")
+	  Call LogStep("EnoviaSearch_PeripheralTC2_Step2", "A Save Search Window should open","")
+	  Call LogStep("EnoviaSearch_PeripheralTC2_Step3", "The Search results should get saved and should be displayed as a Command in the Saved Queries Button Ex: Test1","")
+	  Call LogStep("EnoviaSearch_PeripheralTC2_Step4", "The Search results page should display your specific results","")
+	  Call LogStep("EnoviaSearch_PeripheralTC2_Step5", "The Search Results page should refresh to the Object(s) that were displayed in Step 2.","")
+	                                                                            
+	  Call LogTestCase("Save your Specific Search Results", "TC-02_Named Search_Toolbar Save","47694")
+	                                                       
+End Function	
+	                                       
+                                                                     
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC2_Step1
+'Description                  : Searches for a record
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+                                                        
+Function EnoviaSearch_PeripheralTC2_Step1()
+
+    'Function to delete already existing saved name
+    Call DeleteSavedname()
+    
+    'Function to search record
+    SearchRecord = EnoviaSearch_ReadTestCasesData("TC-02_Named Search_Toolbar Save","Search")
+    Call Enovia_SearchStuff(SearchRecord)
+    aqUtils.Delay 10000,"Waiting for the Results to load."
+   'Switching to Real time mode
+    Sys.Refresh
+    'Create object of Switch Query Button 
+    Set objSwitchQueryButton = objGetObject(OR_EnoviaSearch_SwitchQueryButton,"",7000)
+    If objSwitchQueryButton.title = "Switch to RealTime Search" Then
+      objSwitchQueryButton.Click () 
+      Sys.Refresh
+      objSwitchQueryButton.Refresh
+      Call objSwitchQueryButton.WaitProperty("title","Switch to Indexed Search",10000) 
+      If objSwitchQueryButton.title = "Switch to RealTime Search" Then
+        Call Err.raise(65005,"EnoviaSearch_PeripheralTC2_Step1","Real Time Search not changed to Indexed Search")
+      End If
+    End If
+    Set objSwitchQueryButton = Nothing
+    
+    'create object for search button
+    Set SearchButton = objGetObject(OR_EnoviaSearch_TC17_Search,"",3000)
+    SearchButton.click()
+        
+    'Get the EnoviaNameSearch_HandlingAlertWindow function to handle Alert Box Window
+    Call EnoviaSearch_AlertWindow("")        
+    
+    aqUtils.Delay 10000,"Waiting for the page refresh after search."
+                                
+End Function	
+	                                                                              
+                                                                      
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC2_Step2
+'Description                  : Code to open a Save page
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+                                               	
+Function EnoviaSearch_PeripheralTC2_Step2()
+                                                                                       
+    'Create object for Save Query button
+    Set objSaveQuery = objGetObject(OR_EnoviaSearch_TC19_SavedQueries,"","")
+    objSaveQuery.Click()
+    Set objSaveQuery=nothing
+    
+    'Create object for save search window
+    Set objSaveRecord = objGetObject(OR_EnoviaSearch_TC19_Save,"","")
+    objSaveRecord.Click()
+    Set objSaveRecord=nothing
+    
+    'Create object for Save name field
+    Set objSaveName = objGetObject(OR_EnoviaSearch_TC19_NameSave,g_SavePage_URL,3000)
+    If objSaveName.VisibleOnScreen = False Then
+      Call Err.raise(65006,"EnoviaSearch_PeripheralTC2_Step2","Save page is not opened")
+    End If
+    Set objSaveName=nothing  
+      
+End Function	
+                                                                            	
+                                                                                                 
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC2_Step3
+'Description                  : Code to open save a record
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+		
+Function EnoviaSearch_PeripheralTC2_Step3()	
+                                                                          
+    'Create object for Save name field
+    NameTOSave = EnoviaSearch_ReadTestCasesData("TC-02_Named Search_Toolbar Save","SaveName")
+    Set objSaveName = objGetObject(OR_EnoviaSearch_TC19_NameSave,g_SavePage_URL,"")
+    objSaveName.SetText(NameTOSave)
+    Set objSaveName=nothing
+                                                                       
+    'Create object for Done button
+    Set objDoneBtn = objGetObject(OR_EnoviaSearch_TC19_DoneButton,g_SavePage_URL,"")
+    objDoneBtn.Click()
+    Set objDoneBtn=nothing
+                                                                  
+    'Create object for Save Query button
+    Set objSaveQuery = objGetObject(OR_EnoviaSearch_TC19_SavedQueries,"","")
+    objSaveQuery.Click()
+    Set objSaveQuery=nothing
+    
+    'Create object for savedname
+    Set objClickedOnSavedRecord = objGetObject(OR_EnoviaSearch_TC19_SavedRecord,"",3000)
+    If objClickedOnSavedRecord.VisibleOnScreen = False Then
+      Call Err.raise(65007,"EnoviaSearch_PeripheralTC2_Step3","savedname is not displayed as a Command in the Saved Queries")
+    End If
+    Set objClickedOnSavedRecord=nothing
+                                                                         
+End Function	
+                                                                  	
+                                                                       
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC2_Step4
+'Description                  : Code to search a record
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	                                                        		
+Function EnoviaSearch_PeripheralTC2_Step4()	
+
+    'Populate data from the testdata sheet                                                        
+    SearchSaveName = EnoviaSearch_ReadTestCasesData("TC-02_Named Search_Toolbar Save","Phrase")
+    
+    Set objsearchValue = objGetObject(OR_EnoviaSearch_SearchValueEdt,"",2000)
+    objsearchValue.SetText(SearchSaveName)
+    Set objsearchValue = Nothing
+    Set objsearchLink = objGetObject(OR_EnoviaSearch_SearchLinkLnk,"",2000)
+    objsearchLink.Click()
+    Set objsearchLink = Nothing
+    
+    aqUtils.Delay 10000,"Waiting for the page search." 
+    
+    'Create object of Switch Query Button 
+    Set objSwitchQueryButton = objGetObject(OR_EnoviaSearch_SwitchQueryButton,"",7000)
+    If objSwitchQueryButton.title = "Switch to RealTime Search" Then
+      objSwitchQueryButton.Click () 
+      Sys.Refresh
+      objSwitchQueryButton.Refresh
+      Call objSwitchQueryButton.WaitProperty("title","Switch to Indexed Search",10000) 
+      If objSwitchQueryButton.title = "Switch to RealTime Search" Then
+        Call Err.raise(63005,"EnoviaSearch_PeripheralTC2_Step4","Real Time Search not changed to Indexed Search")
+      End If
+    End If
+    Set objSwitchQueryButton = Nothing
+    
+    'create object for search button
+    Set SearchButton = objGetObject(OR_EnoviaSearch_TC17_Search,"",7000)
+    SearchButton.click()
+    aqUtils.Delay 10000,"Waiting for the page refresh after search."
+                                                                          
+End Function	
+	                                                               
+                                                                                   
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC2_Step5
+'Description                  : Code to select the saved record
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+                                                               			
+Function EnoviaSearch_PeripheralTC2_Step5()	
+          
+    Dim sValue, objSearch
+                                                                            
+    'Create object for Save Query button
+    Set objSaveQuery = objGetObject(OR_EnoviaSearch_TC19_SavedQueries,"",3000)
+    objSaveQuery.Click()
+    Set objSaveQuery=nothing
+                                                
+    'Create object for savedname
+    Set objClickedOnSavedRecord = objGetObject(OR_EnoviaSearch_TC19_SavedRecord,"",3000)
+    objClickedOnSavedRecord.Click()
+    Set objClickedOnSavedRecord=nothing
+    
+    aqUtils.Delay 10000,"Waiting for the page to refresh." 
+    
+    'Get the EnoviaNameSearch_HandlingAlertWindow function to handle Alert Box Window        
+    Call EnoviaSearch_AlertWindow("")
+    
+    'Path to save Excel file
+    str=Now
+    str1=Replace(str,"/",".")
+    str2=Replace(str1,":",".") 
+    ExcelPath2= ProjectSuite.Path&str2
+    
+    'Fetch the data of column search from excel 
+    SearchRecord = EnoviaSearch_ReadTestCasesData("TC-02_Named Search_Toolbar Save","Search")
+    FinalSearchRecord=split(SearchRecord,"*") 
+    
+    'Create object for toolimage
+    Set objToolImage = objGetObject(OR_EnoviaSearch_TC7_ToolImage,"",3000)
+    objToolImage.Click()
+    Set objToolImage = nothing
+    
+    'Create object for export command
+    Set objExportCommand = objGetObject(OR_EnoviaSearch_TC13_ExportCommand,"",3000)
+    objExportCommand.Click()
+    Set objExportCommand = nothing
+    
+    Sys.Refresh()
+    'Delay needed so that popup appears
+    aqutils.Delay 8000,"Exporting the contents to excel."                                                                                
+   
+    Set s1=Sys.Browser("iexplore").Browserwindow(0)  
+    arrchild = s1.findAll("ObjectIdentifier","Save",5)
+    If ubound(arrchild)  < 0 Then
+      Set s1=Sys.Browser("iexplore").Browserwindow(1) 
+    End If
+                             
+    set frame=s1.findChild("WndClass","Frame Notification Bar",5) 
+    Set objdownbtn=frame.findChild("Name","UIAObject(1)",5) 
+    IF objdownbtn.Exists then                            
+      objdownbtn.Click                                                            
+    End IF
+    Sys.Keys "[Down][Enter]"
+    
+    'we need to give Delay 2000  
+    Delay 2000                                                                  
+    Set objdownbtn = nothing
+                                                   
+    Set objwnd = Sys.Process(g_strBrowserType).window("*","Save As")                          
+    Set objEdit = objwnd.FindChild("WndClass","Edit",5)  
+    
+    'SendKeys to press backspace
+    Set oWshell = CreateObject("WScript.Shell")  
+    'Delay need to be added befor pressing the backspace
+    aqUtils.Delay 5000,"Need delay before pressing the backspace."
+    oWshell.SendKeys "{BACKSPACE}" 
+    Set oWshell = Nothing
+    objEdit.SetText(ExcelPath2)     
+    Set objEdit = nothing
+                                                                                 
+    'objEdit.Keys foldinfo&filename                                                                                            
+    Set objsavebtn = objwnd.FindChild("WndCaption","&Save")                         
+    objsavebtn.Click  
+    Set objsavebtn= nothing
+    Set s1=nothing
+    Set frame=nothing
+    Set objwnd=nothing
+    
+  'Create the Excel Object                                                                                             
+    Set objExcel = createobject("excel.application")
+    Set oWorkbook1= objExcel.Workbooks.Open(ExcelPath2&".csv")                                                                     
+    Set  omysheet1=oWorkbook1.Worksheets(1)
+    iRowCnt = omysheet1.UsedRange.Rows.Count
+    for i = 1 to iRowCnt
+      If Ucase(omysheet1.Cells(i,1).Value) = "LEVEL" Then
+        iColHeadingRow = i
+        Exit For
+      End If
+    Next
+    iColNo_Name = fnGetColumnNumber(omysheet1,"Name",iColHeadingRow)
+    
+    'Code to check the sorting order                                                                              
+    blnSort = True
+    For i = iColHeadingRow+1 to iRowCnt-1
+      str=omysheet1.Cells(i,iColNo_Name).Value
+      if instr(str,FinalSearchRecord(0))=0 Then
+        Call Err.raise(65008,"EnoviaSearch_PeripheralTC2_Step5","savedname is not displayed")
+      End If
+   Next
+   
+   Set objexl = nothing
+   Set omysheet1= nothing
+   Set objSearch=nothing
+                                                                                         
+End Function	                                                              
+                                                                                        

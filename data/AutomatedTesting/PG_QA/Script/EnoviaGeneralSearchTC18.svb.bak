@@ -1,0 +1,58 @@
+﻿'USEUNIT GlobalVars
+'USEUNIT LogLib
+'USEUNIT OR_Enovia
+'USEUNIT WindowsUtility
+'USEUNIT EnoviaUtils
+'USEUNIT WebObjectLib
+
+'TC-18_Named Search_MaxLimit_10000
+Function EnoviaSearch_GeneralTC18_Steps()
+
+  On Error Resume Next
+
+  Call LogStep("EnoviaSearch_GeneralTC18_Step1", "The Object(s) should be displayed in the Search Results Window.")
+  Call LogStep("EnoviaSearch_GeneralTC18_Step2", "The search result can be max to 10000.There is a warning message to show 'Please enter a valid limit query.'")
+
+  Call LogTestCase("Max results to display is 10000", 18, "n/a")
+  
+End Function
+
+Function EnoviaSearch_GeneralTC18_Step1()
+
+  Call Enovia_SearchStuff("CUP*")
+  
+End Function 
+
+Function EnoviaSearch_GeneralTC18_Step2()
+  
+  Call EnoviaSearch_HandlingAlert("Object Find Limit")
+  
+  'Create object of Limit text box
+    Set objLimitNumber = objGetObject(OR_EnoviaSearch_LimitNumber,m_strPageURL,"")
+    objLimitNumber.SetText(LimitNumber)
+    
+    'Create object of Limit Search buttton
+    Set objLimitSearchButton=objGetObject(OR_EnoviaSearch_SearchBtn,m_strPageURL,"")
+    objLimitSearchButton.Click()
+    
+    Call EnoviaSearch_HandlingAlert("Object Find Limit")
+    'Create object to get the rowcount of records displayed
+    Set objLimitRowCount=objGetObject(OR_EnoviaSearch_Rows,"","")
+    Dim rowCountName                                      
+    rowCount = objLimitRowCount.rowCount
+    Log.Message("RowCount = " &rowCount-1)
+    ActualRowCount=rowCount-1
+    If CInt(LimitNumber)=CInt(ActualRowCount) Then
+        Log.Message "Pass"
+        Else
+        Log.Message "Fail"
+    End If
+    Set objLimitNumber = nothing
+    Set objLimitSearchButton = nothing
+    Set objLimitRowCount = nothing
+    
+  
+  'Code to enter limit Number out of range
+  Call Limit_ToBeEnteredOutOfRange("10000")
+
+End Function 

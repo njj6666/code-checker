@@ -1,0 +1,435 @@
+﻿	
+'USEUNIT GlobalVars	
+'USEUNIT LogLib	
+'USEUNIT OR_Enovia	
+'USEUNIT WindowsUtility	
+'USEUNIT EnoviaUtils	
+'USEUNIT WebObjectLib	
+'USEUNIT EnoviaSearch_PopulateSearchModel
+	
+
+Dim sRowGrp3, sRowGrp2,sRowGrp1
+
+
+Function EnoviaSearch_PeripheralTC20_Steps()	
+
+  Call LogStep("EnoviaSearch_PeripheralTC20_Step1", "A new window with Search Refinement Pane and Search Results Pane should pop up","")
+	Call LogStep("EnoviaSearch_PeripheralTC20_Step2", "The Search Results Pane should refresh and all the objects which contain the Name(s)/Phrase(s) that was typed will be displayed. Ex:  All the Objects which contain the Phrase Test in their Specification/Attributes/Docs should be displayed.","")
+	Call LogStep("EnoviaSearch_PeripheralTC20_Step3", "An Excel file containing a list of all your search results should be exported and Downloaded to your Local System.","")
+	Call LogStep("EnoviaSearch_PeripheralTC20_Step4", "A new Sort By window should pop up","")
+	Call LogStep("EnoviaSearch_PeripheralTC20_Step5", "Selected value should be displayed on the textbox beside 1st","")
+	Call LogStep("EnoviaSearch_PeripheralTC20_Step6", "Selected value should be displayed on the textbox beside 2nd","")
+	Call LogStep("EnoviaSearch_PeripheralTC20_Step7", "Selected value should be displayed on the textbox beside 3rd","")
+	Call LogStep("EnoviaSearch_PeripheralTC20_Step8", "The Radio buttons are selected","")
+	Call LogStep("EnoviaSearch_PeripheralTC20_Step9", "The Search Results should be sorted based on the Priority of 1st, 2nd, 3rd","")
+
+	Call LogTestCase("Exporting/Sorting your Search Results", "TC-20_Find Product Data_Toolbar Export/Sort","47712")
+	
+End Function	
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC20	_Step1
+'Description                  : Drop down of various commands appears
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 9-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC20_Step1()	
+         
+    'Create object for delete saved name
+    Set objDeleteSaved = objGetObject(OR_EnoviaSearch_TC19_DeleteSavedName,"","")
+    objDeleteSaved.Click()
+    Set objDeleteSaved = nothing
+    
+    'Create object for Search product spec
+    Set objEnoviaSearchProductSpec = objGetObject(OR_EnoviaSearchProductSpec_SearchDrp,"",3000)
+    If objEnoviaSearchProductSpec.VisibleOnScreen = False Then
+      Call Err.raise(65009,"EnoviaSearch_PeripheralTC20_Step1","A dropdown with various commands is not shown")
+    End If
+    Set objEnoviaSearchProductSpec = nothing
+    
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC20	_Step2
+'Description                  : Find data product page opens
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 9-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+			
+Function EnoviaSearch_PeripheralTC20_Step2()	
+   
+    'create object for EnoviaSearchFindProdData
+    Set objEnoviaSearchFindProdData = objGetObject(OR_EnoviaSearchFindProdData_SearchDrop,"",3000)
+    If objEnoviaSearchFindProdData.VisibleOnScreen = True Then
+      objEnoviaSearchFindProdData.Click()
+    Else    
+      'create object for SearchProductSpec
+      Set objEnoviaSearchProductSpec = objGetObject(OR_EnoviaSearchProductSpec_SearchDrp,"","")
+      objEnoviaSearchProductSpec.Click()
+      objEnoviaSearchFindProdData.Click()
+    End If
+    Set objEnoviaSearchProductSpec = nothing
+    Set objEnoviaSearchFindProdData = nothing
+    
+    'create object for search edit
+    Set objSearchEdtRecord = objGetObject(OR_EnoviaSearchFindProdData_SearchEdt,g_SearchPageURL,3000)
+    If objSearchEdtRecord.Exists = False Then
+      Call Err.raise (65010,"EnoviaSearch_PeripheralTC20_Step2","Fail-FindProdData NOT opened")
+    End If
+    Set objSearchEdtRecord = nothing
+     
+End Function	
+	
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC20	_Step3
+'Description                  : search a record
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 9-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+				
+Function EnoviaSearch_PeripheralTC20_Step3()	
+  
+    'Searches data in the application
+    SearchSaveName = EnoviaSearch_ReadTestCasesData("TC-20_Find Product Data_Toolbar Export/Sort","Search")
+    'Call Enovia_SearchStuff(SearchSaveName)
+    Set objSearchEdtRecord = objGetObject(OR_EnoviaSearchFindProdData_SearchEdt,g_SearchPageURL,3000)
+    objSearchEdtRecord.SetText(SearchSaveName)
+    Set objSearchEdtRecord = nothing
+    
+    'Create object for search refresh command
+    Set objSearchRefreshCmd = objGetObject(OR_EnoviaSearch_SSearchRefreshCmd,g_SearchPageURL,"")
+    objSearchRefreshCmd.Click()
+    Set objSearchRefreshCmd = nothing
+    
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC20	_Step4
+'Description                  : Check the data is exported correctly or not
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 9-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+			
+Function EnoviaSearch_PeripheralTC20_Step4()	
+    
+    Dim rowCountName                                            
+    'Create object to get the rowcount of records displayed
+    Set objLimitRowCount=objGetObject(OR_EnoviaSearch_TC17_Rows,g_SearchPageURL,3000)
+    rowCount = objLimitRowCount.rowCount
+    ApplicationRowCount=rowCount
+    Set objLimitRowCount=nothing
+                                            
+    'Create object for toolimage
+    Set objToolImage = objGetObject(OR_EnoviaSearch_TC7_ToolImage,g_SearchPageURL,3000)
+    objToolImage.Click()
+    Set objToolImage = nothing
+    
+    'Create object for export command
+    Set objExportCommand = objGetObject(OR_EnoviaSearch_TC13_ExportCommand,g_SearchPageURL,3000)
+    objExportCommand.Click()
+    Set objExportCommand = nothing
+    
+    Sys.Refresh()
+    'Delay needed so that popup appears
+    aqutils.Delay 8000,"Exporting the contents to an excel."                                                                                
+   
+    Set s1=Sys.Browser("iexplore").Browserwindow(0)  
+    arrchild = s1.findAll("ObjectIdentifier","Save",5)
+    If ubound(arrchild)  < 0 Then
+      Set s1=Sys.Browser("iexplore").Browserwindow(1) 
+    End If
+                                 
+    set frame=s1.findChild("WndClass","Frame Notification Bar",5) 
+    Set objdownbtn=frame.findChild("Name","UIAObject(1)",5) 
+    IF objdownbtn.Exists then                            
+      objdownbtn.Click                                                            
+    End IF
+    Sys.Keys "[Down][Enter]"
+    
+    'we need to give Delay 2000  
+    Delay 2000                                                                  
+    Set objdownbtn = nothing
+                                                   
+    Set objwnd = Sys.Process(g_strBrowserType).window("*","Save As")                          
+    Set objEdit = objwnd.FindChild("WndClass","Edit",5)  
+    
+    'SendKeys to press backspace
+    Set oWshell = CreateObject("WScript.Shell")  
+    'Delay need to be added befor pressing the backspace
+    aqUtils.Delay 1000,"Need to wait before pressing backspace"   
+    oWshell.SendKeys "{BACKSPACE}" 
+    Set oWshell = Nothing
+
+    objEdit.SetText(ExcelPath1)     
+    Set objEdit = nothing
+                                                                                 
+    'objEdit.Keys foldinfo&filename                                                                                            
+    Set objsavebtn = objwnd.FindChild("WndCaption","&Save")                         
+    objsavebtn.Click  
+    Set objsavebtn= nothing
+    Set s1=nothing
+    Set frame=nothing
+    Set Namevalue=nothing
+    Set objwnd=nothing
+    
+    'Code to get the Excel row count
+    Set objexl  = Createobject("Excel.application")
+    objexl.visible = False
+    set objwkb = objexl.workbooks.open(ExcelPath1&".csv")
+    set objsht = objwkb.sheets(1)
+    ExcelRowCount=objsht.usedrange.rows.count
+    ActualExcelRowCount = ExcelRowCount-3 
+    ExcelRowCount= ActualExcelRowCount
+    objwkb.Close
+    objexl.Quit
+    
+    If ApplicationRowCount <> ExcelRowCount Then
+      Call Err.raise (64991,"EnoviaSearch_PeripheralTC12_Step6","Correct record doesnot appear")
+    End IF   
+    Set objexl = nothing
+    Set objsht= nothing
+
+      
+End Function	
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC20	_Step5
+'Description                  : See special characters
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 9-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+			
+Function EnoviaSearch_PeripheralTC20_Step5()	
+    
+    Set objexl  = Createobject("Excel.application")
+    objexl.visible = False
+    set objwkb = objexl.workbooks.open(ExcelPath1&".csv")
+    set objsht = objwkb.sheets(1)
+    ExcelRowCount=objsht.usedrange.rows.count
+    ExcelColumnCount=objsht.usedrange.columns.count
+    Flage=False
+      
+    For i = 1 to ExcelRowCount
+      If Ucase(objsht.Cells(i,1).Value) = "LEVEL" Then
+        iColHeadingRow = i
+        Exit For
+      End If
+    Next  
+      
+    For i= iColHeadingRow+1 to ExcelRowCount
+      For j=1 to ExcelColumnCount
+        If Instr(objsht.Cells(i,j).Value,"~") > 0 Then
+          Flage=True
+          Exit For     
+        End If
+      Next
+    Next                     
+        
+    If Flage = False Then
+        Call Err.raise (64992,"EnoviaSearch_PeripheralTC20_Step5","Special records are not exported")
+    End If
+      
+End Function	
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC20	_Step6
+'Description                  : open multi column page
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 9-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+			
+Function EnoviaSearch_PeripheralTC20_Step6()	
+  
+    'create object for saving the export
+    Set objToolImage = objGetObject(OR_EnoviaSearch_TC7_ToolImage,g_SearchPageURL,"")
+    objToolImage.Click()
+    Set objToolImage = nothing
+                                                            
+    'create object for multicolumn
+    Set objMultiColumn = objGetObject(OR_EnoviaSearch_TC13_MultiColumn,g_SearchPageURL,"")
+    SearchSaveName = EnoviaSearch_ReadTestCasesData("TC-20_Find Product Data_Toolbar Export/Sort","Search")
+    objMultiColumn.Click()
+    Set objMultiColumn = nothing
+
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC20	_Step7
+'Description                  : Select values under the 1st Dropdown
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 9-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+				
+Function EnoviaSearch_PeripheralTC20_Step7()	
+                                                  
+    'create object for multicolumn
+    Set objMultiFirst = objGetObject(OR_EnoviaSearch_TC13_MultiFirstColumn,g_MultiColumnSortDialog_URL,"")
+    sRowGrp1 = EnoviaSearch_ReadTestCasesData("TC-20_Find Product Data_Toolbar Export/Sort","Group1")
+    objMultiFirst.ClickItem(sRowGrp1)
+    Set objMultiFirst = nothing
+
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC20	_Step8
+'Description                  : Select values under the 2nd Dropdown
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 9-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+				
+Function EnoviaSearch_PeripheralTC20_Step8()	
+                                                  
+    'create object for multicolumn
+    Set objMultiSecond = objGetObject(OR_EnoviaSearch_TC13_MultiSecondColumn,g_MultiColumnSortDialog_URL,"")
+    sRowGrp2 = EnoviaSearch_ReadTestCasesData("TC-20_Find Product Data_Toolbar Export/Sort","Group2")
+    objMultiSecond.ClickItem(sRowGrp2)
+    Set objMultiSecond = nothing
+	
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC20	_Step9
+'Description                  : Select values under the 1st Dropdown
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 9-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+				
+Function EnoviaSearch_PeripheralTC20_Step9()	
+ 
+    'create object for multicolumn
+    Set objMultiThird = objGetObject(OR_EnoviaSearch_TC13_MultiThirdColumn,g_MultiColumnSortDialog_URL,"")
+    sRowGrp3 = EnoviaSearch_ReadTestCasesData("TC-20_Find Product Data_Toolbar Export/Sort","Group3")
+    objMultiThird.ClickItem(sRowGrp3)
+    Set objMultiThird = nothing
+	
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC20	_Step10
+'Description                  : click on done
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 9-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+				
+Function EnoviaSearch_PeripheralTC20_Step10()	
+ 
+    'create object for done button
+    Set objDoneButton = objGetObject(OR_EnoviaSearch_TC19_DoneButton,g_MultiColumnSortDialog_URL,"")
+    objDoneButton.Click()
+    Set objDoneButton = nothing
+	
+End Function	
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC20	_Step11
+'Description                  : check the sorting order
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 9-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+			
+Function EnoviaSearch_PeripheralTC20_Step11()	
+                                         	
+    'Create the Excel Object                                                                                             
+    Set objExcel = createobject("excel.application")
+    Set oWorkbook1= objExcel.Workbooks.Open(ExcelPath1&".csv")                                                                     
+    Set  omysheet1=oWorkbook1.Worksheets(1)
+    iRowCnt = omysheet1.UsedRange.Rows.Count
+    For i = 1 to iRowCnt
+      If Ucase(omysheet1.Cells(i,1).Value) = "LEVEL" Then
+        iColHeadingRow = i
+        Exit For
+      End If
+    Next
+    iColNo_Name = fnGetColumnNumber(omysheet1,sRowGrp1,iColHeadingRow)
+    iColNo_State = fnGetColumnNumber(omysheet1,sRowGrp3,iColHeadingRow)
+    iColNo_Type = fnGetColumnNumber(omysheet1,sRowGrp2,iColHeadingRow)
+    
+    'Code to check the sorting order                                                                              
+    blnSort = True
+    For i = iColHeadingRow+1 to iRowCnt-1
+      For j = i+1 to iRowCnt
+        If strComp(cStr(omysheet1.Cells(i,iColNo_Name).Value),cStr(omysheet1.Cells(j,iColNo_Name).Value)) = -1 Then
+        ElseIf strComp(cStr(omysheet1.Cells(i,iColNo_Name).Value),cStr(omysheet1.Cells(j,iColNo_Name).Value)) = 0 Then
+          If strComp(cStr(omysheet1.Cells(i,iColNo_Type).Value),cStr(omysheet1.Cells(j,iColNo_Type).Value)) = -1 Then
+          ElseIf strComp(cStr(omysheet1.Cells(i,iColNo_Type).Value),cStr(omysheet1.Cells(j,iColNo_Type).Value)) = 0 Then
+            If strComp(cStr(omysheet1.Cells(i,iColNo_State).Value),cStr(omysheet1.Cells(j,iColNo_State).Value)) = -1 Then
+            ElseIf strComp(cStr(omysheet1.Cells(i,iColNo_State).Value),cStr(omysheet1.Cells(j,iColNo_State).Value)) = 0 Then
+            Else
+              blnSort = False   
+            End If
+          Else                                                         
+            blnSort = False
+          End If  
+        Else                                                                     
+          blnSort = False                                             
+        End If                                          
+      Next                                                            
+    Next                                                  
+    If blnSort = False   Then                        
+      Call Err.raise (64993,"EnoviaSearch_PeripheralTC8_Step12","Correct order does not appear")
+    End If                                                       
+    Set objexl = nothing
+    Set omysheet1= nothing
+    
+End Function	
+
+
+
+

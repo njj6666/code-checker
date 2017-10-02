@@ -1,0 +1,169 @@
+﻿'USEUNIT DBLib
+'USEUNIT ExcelLib
+'USEUNIT GlobalVars
+'USEUNIT LogLib
+'USEUNIT WebKeywords
+'USEUNIT WebObjectLib
+'USEUNIT WindowsUtility
+'USEUNIT CSSUtils
+'USEUNIT StringLib
+'USEUNIT TR_EnoviaUtils
+'USEUNIT OR_Enovia
+
+Function NewBtn()
+    Dim arrGetObj,objElement   
+    'Get Material Group
+    arrGetObj = arrGetObjInfoFromXL("PG_Mail","NewBtn")
+    Set objElement = Sys.Browser("iexplore").Page(g_WebMail_Homepage).EvaluateXPath(arrGetObj(1))(0)
+    Set NewBtn = objElement
+    Set objElement=nothing
+END Function
+
+Function ToTxt()
+    Dim arrGetObj,objElement   
+    'Get Material Group
+    arrGetObj = arrGetObjInfoFromXL("PG_Mail","ToTxt")
+    Set objElement = Sys.Browser("iexplore").Page(g_WebMail_NewItemPage).QuerySelector(arrGetObj(1))
+    Set ToTxt = objElement 
+    Set objElement=nothing
+END Function
+
+Function SubTxt()
+    Dim arrGetObj,objElement   
+    'Get Material Group
+    arrGetObj = arrGetObjInfoFromXL("PG_Mail","SubTxt")
+    Set objElement = Sys.Browser("iexplore").Page(g_WebMail_NewItemPage).QuerySelector(arrGetObj(1))
+    Set SubTxt = objElement 
+    Set objElement=nothing
+END Function
+
+Function SendBtn()
+    Dim arrGetObj,objElement   
+    'Get Material Group
+    arrGetObj = arrGetObjInfoFromXL("PG_Mail","SendBtn")
+    Set objElement = Sys.Browser("iexplore").Page(g_WebMail_NewItemPage).EvaluateXPath(arrGetObj(1))(0)
+    Set SendBtn = objElement 
+    Set objElement=nothing
+END Function
+
+Function AttatchBtn()
+    Dim arrGetObj,objElement   
+    'Get Material Group
+    arrGetObj = arrGetObjInfoFromXL("PG_Mail","AttatchBtn")
+    Set objElement = Sys.Browser("iexplore").Page(g_WebMail_NewItemPage).QuerySelector(arrGetObj(1))
+    Set AttatchBtn = objElement 
+    Set objElement=nothing
+END Function
+
+Function FirstMail()
+    Dim arrGetObj,objElement   
+    'Get Material Group
+    arrGetObj = arrGetObjInfoFromXL("PG_Mail","FirstMail")
+    For i=0 to UBound(Sys.Browser("iexplore").Page(g_WebMail_Homepage).EvaluateXPath(arrGetObj(1)))
+    Set objElement = Sys.Browser("iexplore").Page(g_WebMail_Homepage).EvaluateXPath(arrGetObj(1))(i)
+    strTitle = GetValue(objElement, "contentText")
+    If strTitle = "COA Processing Response" Then
+    Set FirstMail = objElement
+    Exit For
+    End IF
+    Next  
+    Set objElement=nothing
+END Function
+
+
+Function MailContent()
+    Dim arrGetObj,objElement   
+    'Get Material Group
+    arrGetObj = arrGetObjInfoFromXL("PG_Mail","MailContent")
+    Set objElement = Sys.Browser("iexplore").Page(g_WebMail_Homepage).EvaluateXPath(arrGetObj(1))(0)
+    Set MailContent = objElement
+    Set objElement=nothing
+END Function
+
+Function LoginWebMail(Identifier,environment)
+  On Error Resume Next
+  Dim oCurObj   
+  g_strURL = GetURL(environment)
+  Call TR_EnoviaUtils_LaunchBrowser()
+  Delay(5000)
+ 
+  arrCreds = GetCredentials(Identifier)
+  'fill the username and password
+  oCurObj = objGetObject(OR_WEBMail_UserNameEdt,g_WebMail_LoginPage,"")
+  oCurObj.SetText(arrCreds(0) & "@pg.com")
+   
+  oCurObj = objGetObject(OR_WEBMail_PasswordEdt,g_WebMail_LoginPage,"")
+  oCurObj.SetText(arrCreds(1)) 
+  
+  'click Sign button
+  oCurObj = objGetObject(OR_WEBMail_SignBnt,g_WebMail_LoginPage,"")
+  oCurObj.Click
+  
+  If Err.Number = 0 Then
+    LoginWebMail = True
+  Else
+    LoginWebMail  = False
+  End If
+  
+  Set oCurObj = Nothing
+End Function
+
+Function CreateNewMail(m_strAttFilePath,m_MailSubject,m_SentToAddress)
+
+  On Error Resume Next  
+  
+  Delay(3000)
+  NewBtn.Click
+  
+  'Set SendTo
+  ToTxt.TextContent=m_SentToAddress 
+  'Set Subject
+ 
+  SubTxt.Keys m_MailSubject
+  'Set Attachment
+  
+  AttatchBtn.Click
+  Delay(3000)
+  Sys.Browser(g_strBrowserType).Page("https://webmail.pg.com/owa/?ae=Dialog&t=AttachFileHost").Frame(0).Form("frmAttch").Panel(0).Panel(2).Panel("divFile1").File("file1").Click 403,14
+
+  'Open Attachment
+  'strAttFilePath = "C:\TestCompleteWork\Resources\COA_91929167.001.xls"
+  Sys.Browser(g_strBrowserType).Window("*", "Choose File to Upload", 1).Window("ComboBoxEx32", "", 1).Window("ComboBox", "", 1).Window("Edit", "", 1).SetText(m_strAttFilePath) 
+  Sys.Browser(g_strBrowserType).Window("*", "Choose File to Upload", 1).Window("Button", "&Open", 1).Click
+  Delay(5000)
+  Sys.Browser(g_strBrowserType).Page("https://webmail.pg.com/owa/?ae=Dialog&t=AttachFileHost").Frame(0).Form("frmAttch").Panel(0).Panel("attachcancel").Button("btnAttch").Click
+  'Send Mail
+  Delay(8000)
+  SendBtn.Click
+End Function
+
+Function CloseWebMail()
+  On Error Resume Next
+  Dim oCurObj
+  Set oCurObj = objGetObject(OR_WEBMail_SignOut,g_WebMail_Homepage,"")
+  oCurObj.Click
+  Set oCurObj = Nothing
+End Function
+
+Function CheckECOAMailResponse(m_strECOAFileName, m_strExpInfo)
+''for debug
+'m_strECOAFileName = "COA_CA25_91930271.002_Published_CCCNPMPM10329Y"
+'g_strBrowserType = c_IExplorer
+  On Error Resume Next
+  
+  FirstMail.Click
+  
+  strOrigin = GetValue(MailContent, "contentText")
+  Log.Event strOrigin
+  If InStr(strOrigin, m_strECOAFileName) > 0 Then
+  Log.Event "This is the mail for the lastest ecoa!"
+  Else
+  Log.Error "Please check if lastest ecoa is sent!"
+  End If
+  If InStr(strOrigin, m_strExpInfo) > 0 Then
+  Log.Event "ECOA Test Passed!"
+  Else
+  Log.Error "ECOA Test Failed!"
+  End If
+
+End Function

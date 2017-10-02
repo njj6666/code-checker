@@ -1,0 +1,698 @@
+﻿'USEUNIT EnoviaSearchModels
+'USEUNIT GlobalVars
+'USEUNIT EnoviaSearch_Scenarios
+
+
+'************************************************************************
+ ' Purpose:  To create a dictionary that holds all the search data models
+ '           that need to be executed
+ ' Inputs:   sEnv: Environment (plmtest etc) Picks up SearchData file based on environment value
+ '           
+ ' Returns:  A dictionary object that contains all the data models
+ '           The keys are the test case numbers, the item is the model object
+ '           Check the common model Search Type field to determine which of the 
+ '           3 model types it is        
+ '************************************************************************
+Function EnoviaSearch_CreateDictionaryModel(sEnv)
+ 
+  Dim oModel,i
+  Set oModelList = CreateObject("Scripting.Dictionary")  
+  
+  sPath = aqFileSystem.GetFolderInfo(aqFileSystem.GetCurrentFolder).ParentFolder.ParentFolder.Path&"Files\Search\Search.xlsx"
+  Set mDict_SearchType = EnoviaSearch_CreateDictionaryForInput(sPath)
+  
+  arrDictItems = mDict_SearchType.Items
+  arrDictKeys = mDict_SearchType.Keys
+  
+  g_SearchEngineUserName = mDict_SearchType.Item("UserName")
+  
+  IF Trim(mDict_SearchType.Item("Folder Path")) = "" Then
+   sPath = aqFileSystem.GetFolderInfo(aqFileSystem.GetCurrentFolder).ParentFolder.ParentFolder.Path&"Files\Search\SearchData_"&sEnv&".xlsx"
+  Else
+   sPath = mDict_SearchType.Item("Folder Path")&"SearchData_"&sEnv&".xlsx"
+  End IF
+  
+  Set oExcel = CreateObject("Excel.Application")
+  oExcel.Workbooks.Open sPath
+  
+  For i = 3 to Ubound(arrDictItems)
+    IF arrDictItems(i) = "Named" Then
+      Set oModel = EnoviaSearch_ReadExcel_Name(arrDictItems(i),arrDictKeys(i),oExcel)
+    ElseIf arrDictItems(i) = "Full Text" Then
+      Set oModel = EnoviaSearch_ReadExcel_FullText(arrDictItems(i),arrDictKeys(i),oExcel)
+    ElseIf arrDictItems(i) = "Find Product Data" Then
+      Set oModel = EnoviaSearch_ReadExcel_FindProdData(arrDictItems(i),arrDictKeys(i),oExcel)
+    Else
+      Call Err.Raise(60000, "EnoviaSearch_CreateDictionaryModel", "Search model was not found in spread sheet")
+    End IF 
+           
+    oModelList.Add oModel.Common.TestCaseNumber, oModel
+    Set oModel = nothing
+  Next
+  
+  oExcel.DisplayAlerts = False
+  oExcel.Workbooks.Close
+  oExcel.Quit
+  Set oWorkSheet = Nothing
+  Set oExcel = Nothing
+  
+  Set EnoviaSearch_CreateDictionaryModel = oModelList
+  Set oModelList = nothing
+ 
+End Function
+
+'************************************************************************
+ ' Purpose:  Populates the data object model for Named Search. 
+ ' Inputs:   sPath: The path of the excel sheet from which the data has 
+ '                  to be read.
+ '           searchType: The type of the search that has to be matched.
+ ' Returns:  An object with data populated of the corresponding 
+ '           Search Type.
+'************************************************************************
+
+Function EnoviaSearch_ReadExcel_Name(searchType,nTestCaseNum,oExcel)
+  
+  'Creating the dictionary object to read the values from excel.
+  Set m_DictValues = EnoviaSearch_ReadSearchData(searchType,nTestCaseNum,oExcel)
+    
+  Set oNameSrch = GetEnoviaSearch_NameSearchTypeInstance
+  
+  IF m_DictValues.Item("SearchType") = searchType Then  
+    oNameSrch.CaseSensitive = m_DictValues.Item("CaseSensitive")  
+    oNameSrch.Common.TestCaseNumber = m_DictValues.Item("TestCase")
+    oNameSrch.Common.ALM_ID = m_DictValues.Item("ALM_ID")
+    oNameSrch.Common.ResultsMain = m_DictValues.Item("ResultsMain")
+    oNameSrch.Common.ResultsRefined = m_DictValues.Item("ResultsRefined")
+    oNameSrch.Common.Description = m_DictValues.Item("Description")
+    oNameSrch.Common.SearchType = m_DictValues.Item("SearchType")
+    oNameSrch.Common.SearchValue = m_DictValues.Item("SearchValue")
+    oNameSrch.Common.sType = m_DictValues.Item("Type")
+    oNameSrch.Common.LimitResults = m_DictValues.Item("LimitResults") 
+    oNameSrch.Common.State = m_DictValues.Item("State")
+    oNameSrch.Common.Policy = m_DictValues.Item("Policy")
+    oNameSrch.Common.Title = m_DictValues.Item("Title")
+    
+  blnCheck= False
+  IF IsArray (m_DictValues.Item("Revision")) = True Then
+     blnCheck = True
+  Else
+     IF Trim(m_DictValues.Item("Revision"))<> "" Then
+      blnCheck = True
+     End IF 
+  End IF  
+  
+  IF blnCheck = True Then
+    oNameSrch.Revision.Revision = m_DictValues.Item("Revision")
+  End IF
+    oNameSrch.Revision.Highest = m_DictValues.Item("Revision_Highest")
+    oNameSrch.Revision.ByState = m_DictValues.Item("Revision_ByState")
+  
+  blnCheck= False
+  IF IsArray (m_DictValues.Item("Owner")) = True Then
+     blnCheck = True
+  Else
+     IF Trim(m_DictValues.Item("Owner"))<> "" Then
+      blnCheck = True
+     End IF 
+  End IF
+  
+  IF blnCheck = True Then
+    oNameSrch.OwnerUser.User = m_DictValues.Item("Owner")
+    oNameSrch.OwnerUser.CaseSensitive = m_DictValues.Item("Owner_CaseSensitive")
+    oNameSrch.OwnerUser.LimitResults = m_DictValues.Item("Owner_LimitResults")
+    oNameSrch.OwnerUser.NameOrNumber = m_DictValues.Item("Owner_Name/Number")
+    oNameSrch.OwnerUser.FirstName = m_DictValues.Item("Owner_FirstName")
+    oNameSrch.OwnerUser.LastName = m_DictValues.Item("Owner_LastName")
+    oNameSrch.OwnerUser.Member = m_DictValues.Item("Owner_Member")
+  End IF
+  
+  blnCheck= False
+  IF IsArray (m_DictValues.Item("Originator")) = True Then
+     blnCheck = True
+  Else
+     IF Trim(m_DictValues.Item("Originator"))<> "" Then
+      blnCheck = True
+     End IF 
+  End IF
+  
+  IF blnCheck = True Then  
+    oNameSrch.OriginatorUser.User = m_DictValues.Item("Originator")
+    oNameSrch.OriginatorUser.CaseSensitive = m_DictValues.Item("Originator_CaseSensitive")
+    oNameSrch.OriginatorUser.LimitResults = m_DictValues.Item("Originator_LimitResults")
+    oNameSrch.OriginatorUser.NameOrNumber = m_DictValues.Item("Originator_Name/Number")
+    oNameSrch.OriginatorUser.FirstName = m_DictValues.Item("Originator_FirstName")
+    oNameSrch.OriginatorUser.LastName = m_DictValues.Item("Originator_LastName")
+    oNameSrch.OriginatorUser.Member = m_DictValues.Item("Originator_Member")
+  End IF
+  
+  IF Trim(m_DictValues.Item("Originated")) <> "" Then
+    Call NameSearch_Originated(oNameSrch,m_DictValues)
+  End IF
+  
+  IF Trim(m_DictValues.Item("Modified")) <> "" Then
+    Call NameSearch_Modified(oNameSrch,m_DictValues)
+  End IF
+  
+  Else
+    Log.Error "Search Type does not matches."
+  End IF
+  
+  Set m_DictValues = nothing
+  Set EnoviaSearch_ReadExcel_Name = oNameSrch
+
+End Function 
+
+'************************************************************************
+ ' Purpose:  Populates the data object model for Originated class under 
+ '           Name Search. 
+ ' Inputs:   oNameSrch: The name search object
+ '           m_DictValues: Dictionary Object that holds the name search 
+ '           data.
+ ' Returns:  N/A
+'************************************************************************
+
+Function NameSearch_Originated(oNameSrch,m_DictValues)
+
+  oNameSrch.OriginatedDate.SDate = m_DictValues.Item("Originated")
+  oNameSrch.OriginatedDate.When = m_DictValues.Item("Originated_When")
+  oNameSrch.OriginatedDate.DateOne = m_DictValues.Item("Originated_Date One")
+  oNameSrch.OriginatedDate.DateOneDay = m_DictValues.Item("O_DateOne_Day")
+  oNameSrch.OriginatedDate.DateOneMonth = m_DictValues.Item("O_DateOne_Month")
+  oNameSrch.OriginatedDate.DateOneYear = m_DictValues.Item("O_DateOne_Year")
+  oNameSrch.OriginatedDate.DateTwo = m_DictValues.Item("Originated_Date Two")
+  oNameSrch.OriginatedDate.DateTwoDay = m_DictValues.Item("O_DateTwo_Day")
+  oNameSrch.OriginatedDate.DateTwoMonth = m_DictValues.Item("O_DateTwo_Month")
+  oNameSrch.OriginatedDate.DateTwoYear = m_DictValues.Item("O_DateTwo_Year")
+
+End Function
+
+'************************************************************************
+ ' Purpose:  Populates the data object model for Modified class under 
+ '           Name Search. 
+ ' Inputs:   oNameSrch: The name search object
+ '           m_DictValues: Dictionary Object that holds the name search 
+ '           data.
+ ' Returns:  N/A
+'************************************************************************
+
+Function NameSearch_Modified(oNameSrch,m_DictValues)
+
+  oNameSrch.ModifiedDate.SDate = m_DictValues.Item("Modified")
+  oNameSrch.ModifiedDate.When = m_DictValues.Item("Modified_When")
+  oNameSrch.ModifiedDate.DateOne = m_DictValues.Item("Modified_Date One")
+  oNameSrch.ModifiedDate.DateOneDay = m_DictValues.Item("M_DateOne_Day")
+  oNameSrch.ModifiedDate.DateOneMonth = m_DictValues.Item("M_DateOne_Month")
+  oNameSrch.ModifiedDate.DateOneYear = m_DictValues.Item("M_DateOne_Year")
+  oNameSrch.ModifiedDate.DateTwo = m_DictValues.Item("Modified_Date Two")
+  oNameSrch.ModifiedDate.DateTwoDay = m_DictValues.Item("M_DateTwo_Day")
+  oNameSrch.ModifiedDate.DateTwoMonth = m_DictValues.Item("M_DateTwo_Month")
+  oNameSrch.ModifiedDate.DateTwoYear = m_DictValues.Item("M_DateTwo_Year")
+    
+End Function
+
+'************************************************************************
+ ' Purpose:  Populates the data object model for Full Text Search. 
+ ' Inputs:   sPath: The path of the excel sheet from which the data has 
+ '                  to be read.
+ '           searchType: The type of the search that has to be matched.
+ ' Returns:  An object with data populated of the corresponding 
+ '           Search Type.
+'************************************************************************
+
+Function EnoviaSearch_ReadExcel_FullText(searchType,nTestCaseNum,oExcel)
+  
+  'Creating the dictionary object to read the values from excel.
+  Set m_DictValues = EnoviaSearch_ReadSearchData(searchType,nTestCaseNum,oExcel)
+  
+  Set oFullTxtSrch = GetEnoviaSearch_FullTextSearchModelInstance
+  
+  IF m_DictValues.Item("SearchType") = searchType then  
+    oFullTxtSrch.Common.TestCaseNumber = m_DictValues.Item("TestCase")
+    oFullTxtSrch.Common.ALM_ID = m_DictValues.Item("ALM_ID")
+    oFullTxtSrch.Common.ResultsMain = m_DictValues.Item("ResultsMain")
+    oFullTxtSrch.Common.ResultsRefined = m_DictValues.Item("ResultsRefined")    
+    oFullTxtSrch.Common.Description = m_DictValues.Item("Description")
+    oFullTxtSrch.Common.SearchType = m_DictValues.Item("SearchType")
+    oFullTxtSrch.Common.SearchValue = m_DictValues.Item("SearchValue")
+    oFullTxtSrch.Common.sType = m_DictValues.Item("Type")
+    oFullTxtSrch.Common.LimitResults = m_DictValues.Item("Page Size") 
+    oFullTxtSrch.Common.State = m_DictValues.Item("State")
+    oFullTxtSrch.SecCatClassification = m_DictValues.Item("Security Category Classification")
+    oFullTxtSrch.CSSBusinessCat = m_DictValues.Item("C S S Business Category(Legacy)")
+    oFullTxtSrch.Plant = m_DictValues.Item("Plant")
+    oFullTxtSrch.OwningStandardsOffice = m_DictValues.Item("Owning Standards Office")
+    
+    blnCheck= False
+    IF IsArray (m_DictValues.Item("Revision")) = True Then
+      blnCheck = True
+    Else
+      IF Trim(m_DictValues.Item("Revision"))<> "" Then
+      blnCheck = True
+      End IF 
+    End IF  
+  
+    IF blnCheck = True Then
+      oFullTxtSrch.Revision.Revision = m_DictValues.Item("Revision")  
+    End If
+    
+  Else
+    Log.Error "Search Type does not matches."
+  End IF
+  
+  Set m_DictValues = nothing
+  Set EnoviaSearch_ReadExcel_FullText = oFullTxtSrch
+  
+End Function 
+
+'************************************************************************
+ ' Purpose:  Populates the data object model for Find Product Data Search. 
+ ' Inputs:   sPath: The path of the excel sheet from which the data has 
+ '                  to be read.
+ '           searchType: The type of the search that has to be matched.
+ ' Returns:  An object with data populated of the corresponding 
+ '           Search Type.
+'************************************************************************
+
+Function EnoviaSearch_ReadExcel_FindProdData(searchType,nTestCaseNum,oExcel)
+
+  'Creating the dictionary object to read the values from excel.
+  Set m_DictValues = EnoviaSearch_ReadSearchData(searchType,nTestCaseNum,oExcel)
+  
+  Set oFindPrdData = GetEnoviaSearch_FindProductDataModelInstance
+  
+  IF m_DictValues.Item("SearchType") = searchType then  
+    oFindPrdData.Common.TestCaseNumber = m_DictValues.Item("TestCase")
+    oFindPrdData.Common.ALM_ID = m_DictValues.Item("ALM_ID")
+    oFindPrdData.Common.ResultsMain = m_DictValues.Item("ResultsMain")
+    oFindPrdData.Common.ResultsRefined = m_DictValues.Item("ResultsRefined")
+    oFindPrdData.Common.Description = m_DictValues.Item("Description1")
+    oFindPrdData.Common.SearchType = m_DictValues.Item("SearchType")
+    oFindPrdData.Common.SearchValue = m_DictValues.Item("SearchValue")
+    oFindPrdData.Common.sType = m_DictValues.Item("Type")
+    oFindPrdData.Common.LimitResults = m_DictValues.Item("Page Size") 
+    oFindPrdData.Common.State = m_DictValues.Item("State")
+    oFindPrdData.Common.Policy = m_DictValues.Item("Policy")
+    oFindPrdData.Common.Title = m_DictValues.Item("Title/SAP Description")
+    
+  blnCheck= False
+  IF IsArray (m_DictValues.Item("Revision")) = True Then
+     blnCheck = True
+  Else
+     IF Trim(m_DictValues.Item("Revision"))<> "" Then
+      blnCheck = True
+     End IF 
+  End IF
+  
+  IF blnCheck = True Then  
+    oFindPrdData.Revision.Revision = m_DictValues.Item("Revision")
+  End IF
+    oFindPrdData.Revision.Highest = m_DictValues.Item("Revision_Highest")
+    oFindPrdData.Revision.ByState = m_DictValues.Item("Revision_ByState")
+    
+    Call FindProdData_Data(oFindPrdData,m_DictValues)
+   
+  IF Trim(m_DictValues.Item("Release Date")) <> "" Then
+    Call FindProdData_ReleaseDate(oFindPrdData,m_DictValues)
+  End IF
+  
+  IF Trim(m_DictValues.Item("Effective Date")) <> "" Then
+    Call FindProdData_EffectiveDate(oFindPrdData,m_DictValues)
+  End IF
+  
+  IF Trim(m_DictValues.Item("Expiration Date")) <> "" Then
+    Call FindProdData_ExpirationDate(oFindPrdData,m_DictValues)
+  End IF
+  
+  IF Trim(m_DictValues.Item("Obsolete Date")) <> "" Then
+    Call FindProdData_ObsoleteDate(oFindPrdData,m_DictValues)
+  End IF
+  
+  Else
+    Log.Error "Search Type does not matches."
+  End IF
+  
+  Set m_DictValues = nothing
+  Set EnoviaSearch_ReadExcel_FindProdData = oFindPrdData  
+  
+End Function 
+
+'************************************************************************
+ ' Purpose:  Populates the data object model for Find Product Fields under 
+ '           Find Product Data. 
+ ' Inputs:   oFindPrdData: The find product data object
+ '           m_DictValues: Dictionary Object that holds the find product 
+ '           data.
+ ' Returns:  N/A
+'************************************************************************
+
+Function FindProdData_Data(oFindPrdData,m_DictValues)
+
+  oFindPrdData.NameOrNumber = m_DictValues.Item("Name/Number")
+  oFindPrdData.SpecSubType = m_DictValues.Item("Specification Sub Type")
+  oFindPrdData.Description2 = m_DictValues.Item("Description2")
+  oFindPrdData.SecCatClassification = m_DictValues.Item("Security Category Classification")
+  oFindPrdData.Organization = m_DictValues.Item("Organization")
+  oFindPrdData.Segment = m_DictValues.Item("Segment")
+  oFindPrdData.CSSBusinessCategory = m_DictValues.Item("CSS Business Category (Legacy)")
+  oFindPrdData.PlantsAuth = m_DictValues.Item("Plants Authorized")
+  oFindPrdData.PlantsAuthToUse = m_DictValues.Item("Plants Authorized to Use")
+  oFindPrdData.PlantsAuthToProd = m_DictValues.Item("Plants Authorized to Produce")
+  oFindPrdData.PlantsActivated = m_DictValues.Item("Plants Activated")
+  oFindPrdData.SupplierName = m_DictValues.Item("Supplier Name")
+  oFindPrdData.Originator = m_DictValues.Item("Originator")
+  oFindPrdData.OriginatorOrCoOwner = m_DictValues.Item("Originator/Co-Owner T#")
+  oFindPrdData.MaterialGroup = m_DictValues.Item("Material Group")
+  oFindPrdData.ManufacturingStatus = m_DictValues.Item("Manufacturing Status")
+  oFindPrdData.SClass = m_DictValues.Item("Class")
+  oFindPrdData.SubClass = m_DictValues.Item("Sub Class")
+  oFindPrdData.ReportedFunction = m_DictValues.Item("Reported Function")
+  oFindPrdData.PackagingMaterialType = m_DictValues.Item("Packaging Material Type")
+  oFindPrdData.LocalDescription = m_DictValues.Item("Local Description")
+  oFindPrdData.OtherNames = m_DictValues.Item("Other Names")
+  oFindPrdData.IsIntermediate = m_DictValues.Item("Is Intermediate")
+  oFindPrdData.ATSImpactedType = m_DictValues.Item("ATS Impacted Type")
+  oFindPrdData.IsATS = m_DictValues.Item("Is ATS")
+  oFindPrdData.HasATS = m_DictValues.Item("Has ATS")
+  oFindPrdData.ArtworkConnected = m_DictValues.Item("Artwork Connected")
+  oFindPrdData.Brand = m_DictValues.Item("Brand")
+  oFindPrdData.ProjectSecurityGroup = m_DictValues.Item("Project Security Group")
+  oFindPrdData.OwningStandardsOffice = m_DictValues.Item("Owning Standards Office")
+  
+End Function
+
+'************************************************************************
+ ' Purpose:  Populates the data object model for Release Date under 
+ '           Find Product Data. 
+ ' Inputs:   oFindPrdData: The find product data object
+ '           m_DictValues: Dictionary Object that holds the find product 
+ '           data.
+ ' Returns:  N/A
+'************************************************************************
+
+Function FindProdData_ReleaseDate(oFindPrdData,m_DictValues)
+
+  oFindPrdData.ReleaseDate.SDate = m_DictValues.Item("Release Date")
+  oFindPrdData.ReleaseDate.When = m_DictValues.Item("Release Date_When")
+  oFindPrdData.ReleaseDate.DateOne = m_DictValues.Item("Release Date_Date One")
+  oFindPrdData.ReleaseDate.DateOneDay = m_DictValues.Item("RD_DateOne_Day")
+  oFindPrdData.ReleaseDate.DateOneMonth = m_DictValues.Item("RD_DateOne_Month")
+  oFindPrdData.ReleaseDate.DateOneYear = m_DictValues.Item("RD_DateOne_Year")
+  oFindPrdData.ReleaseDate.DateTwo = m_DictValues.Item("Release Date_Date Two")
+  oFindPrdData.ReleaseDate.DateTwoDay = m_DictValues.Item("RD_DateTwo_Day")
+  oFindPrdData.ReleaseDate.DateTwoMonth = m_DictValues.Item("RD_DateTwo_Month")
+  oFindPrdData.ReleaseDate.DateTwoYear = m_DictValues.Item("RD_DateTwo_Year")
+    
+End Function
+
+'************************************************************************
+ ' Purpose:  Populates the data object model for Effective Date under 
+ '           Find Product Data. 
+ ' Inputs:   oFindPrdData: The find product data object
+ '           m_DictValues: Dictionary Object that holds the find product 
+ '           data.
+ ' Returns:  N/A
+'************************************************************************
+
+Function FindProdData_EffectiveDate(oFindPrdData,m_DictValues)
+
+  oFindPrdData.EffectiveDate.SDate = m_DictValues.Item("Effective Date")
+  oFindPrdData.EffectiveDate.When = m_DictValues.Item("Effective Date_When")
+  oFindPrdData.EffectiveDate.DateOne = m_DictValues.Item("Effective Date_Date One")
+  oFindPrdData.EffectiveDate.DateOneDay = m_DictValues.Item("ED_DateOne_Day")
+  oFindPrdData.EffectiveDate.DateOneMonth = m_DictValues.Item("ED_DateOne_Month")
+  oFindPrdData.EffectiveDate.DateOneYear = m_DictValues.Item("ED_DateOne_Year")
+  oFindPrdData.EffectiveDate.DateTwo = m_DictValues.Item("Effective Date_Date Two")
+  oFindPrdData.EffectiveDate.DateTwoDay = m_DictValues.Item("ED_DateTwo_Day")
+  oFindPrdData.EffectiveDate.DateTwoMonth = m_DictValues.Item("ED_DateTwo_Month")
+  oFindPrdData.EffectiveDate.DateTwoYear = m_DictValues.Item("ED_DateTwo_Year")
+    
+End Function
+
+'************************************************************************
+ ' Purpose:  Populates the data object model for Expiration Date under 
+ '           Find Product Data. 
+ ' Inputs:   oFindPrdData: The find product data object
+ '           m_DictValues: Dictionary Object that holds the find product 
+ '           data.
+ ' Returns:  N/A
+'************************************************************************
+
+Function FindProdData_ExpirationDate(oFindPrdData,m_DictValues)
+
+  oFindPrdData.ExpirationDate.SDate = m_DictValues.Item("Expiration Date")
+  oFindPrdData.ExpirationDate.When = m_DictValues.Item("Expiration Date_When")
+  oFindPrdData.ExpirationDate.DateOne = m_DictValues.Item("Expiration Date_Date One")
+  oFindPrdData.ExpirationDate.DateOneDay = m_DictValues.Item("ExD_DateOne_Day")
+  oFindPrdData.ExpirationDate.DateOneMonth = m_DictValues.Item("ExD_DateOne_Month")
+  oFindPrdData.ExpirationDate.DateOneYear = m_DictValues.Item("ExD_DateOne_Year")
+  oFindPrdData.ExpirationDate.DateTwo = m_DictValues.Item("Expiration Date_Date Two")
+  oFindPrdData.ExpirationDate.DateTwoDay = m_DictValues.Item("ExD_DateTwo_Day")
+  oFindPrdData.ExpirationDate.DateTwoMonth = m_DictValues.Item("ExD_DateTwo_Month")
+  oFindPrdData.ExpirationDate.DateTwoYear = m_DictValues.Item("ExD_DateTwo_Year")
+  
+End Function
+
+'************************************************************************
+ ' Purpose:  Populates the data object model for Obsolete Date under 
+ '           Find Product Data. 
+ ' Inputs:   oFindPrdData: The find product data object
+ '           m_DictValues: Dictionary Object that holds the find product 
+ '           data.
+ ' Returns:  N/A
+'************************************************************************
+
+Function FindProdData_ObsoleteDate(oFindPrdData,m_DictValues)
+
+  oFindPrdData.ObsoleteDate.SDate = m_DictValues.Item("Obsolete Date")
+  oFindPrdData.ObsoleteDate.When = m_DictValues.Item("Obsolete Date_When")
+  oFindPrdData.ObsoleteDate.DateOne = m_DictValues.Item("Obsolete Date_Date One")
+  oFindPrdData.ObsoleteDate.DateOneDay = m_DictValues.Item("OD_DateOne_Day")
+  oFindPrdData.ObsoleteDate.DateOneMonth = m_DictValues.Item("OD_DateOne_Month")
+  oFindPrdData.ObsoleteDate.DateOneYear = m_DictValues.Item("OD_DateOne_Year")
+  oFindPrdData.ObsoleteDate.DateTwo = m_DictValues.Item("Obsolete Date_Date Two")
+  oFindPrdData.ObsoleteDate.DateTwoDay = m_DictValues.Item("OD_DateTwo_Day")
+  oFindPrdData.ObsoleteDate.DateTwoMonth = m_DictValues.Item("OD_DateTwo_Month")
+  oFindPrdData.ObsoleteDate.DateTwoYear = m_DictValues.Item("OD_DateTwo_Year")
+
+End Function
+
+'************************************************************************
+ ' Purpose:  Checks if the sheet exists within the workbook to be read. 
+ ' Inputs:   oExcel: The excel workbook object that has to be read.
+ '           sheetToFind: The sheet that has to be checked if it exists.
+ ' Returns:  A boolean value stating whether the sheet exists.
+'************************************************************************
+
+Function EnoviaSearch_ChecksheetExists(oExcel,sheetToFind)
+
+  bSheetExists = False
+  For Each sheet In oExcel.Worksheets
+    IF sheetToFind = sheet.name Then
+        bSheetExists = True
+        EnoviaSearch_ChecksheetExists = bSheetExists
+        Exit Function
+    End IF
+  Next 
+  Set EnoviaSearch_ChecksheetExists = bSheetExists
+  
+End Function
+
+'************************************************************************
+ ' Purpose:  Reads the data from an excel and stores them in a dictionary
+ '           object. 
+ ' Inputs:   sSheetLocation: The excel location that has to be read.
+ ' Returns:  A dictionary object that contains the data read from the 
+ '           main search excel alone.
+'************************************************************************
+
+Function EnoviaSearch_CreateDictionaryForInput(sSheetLocation)
+
+  const xlCellTypeVisible = &Hc 'TO select only cells that are visible
+  Set objInput = CreateObject("Scripting.Dictionary") 'Dictionary Object to store Field Names as Keys and Inputs as Value
+  
+  Set oExcel = CreateObject("Excel.Application")
+  oExcel.Workbooks.Open sSheetLocation
+  
+  IF EnoviaSearch_ChecksheetExists(oExcel,"Sheet1") Then 'Check Sheet exists in Workbook
+    Set oWorkSheet = oExcel.Worksheets.Item("Sheet1")
+  Else  
+    Log.Error "Sheet "&sSheetName&" does not exist in the specified file"
+    Exit Function
+  End IF
+    
+  If IsNull(oWorkSheet.cells(1,1)) = False Then
+    Set oFoundKey = oWorkSheet.cells(1,1) 
+  End If
+  nFoundKeyColumn = oFoundKey.Column
+  
+  If IsNull(oWorkSheet.cells(1,2)) = False Then
+    Set oFoundValue = oWorkSheet.cells(1,2)
+  End If
+  nFoundValueColumn = oFoundValue.Column
+  
+  RowCount = oWorkSheet.cells(oWorkSheet.Rows.count,nFoundKeyColumn).End(-4162).Row 'Get the last row with data
+     
+  For iRow = nFoundKeyColumn to RowCount
+        objInput.add Trim(oWorkSheet.cells(iRow,nFoundKeyColumn).value),Trim(oWorkSheet.cells(iRow,nFoundValueColumn).value)  'Add Field Name as Key and Input Text as Value
+  Next
+    
+  Set EnoviaSearch_CreateDictionaryForInput = objInput 'Return Dictionary Object
+  
+  oExcel.DisplayAlerts = False
+  oExcel.Workbooks.Close
+  oExcel.Quit
+  Set oWorkSheet = nothing
+  Set oExcel = nothing
+  
+  Set objInput = nothing
+    
+End Function
+
+'************************************************************************
+ ' Purpose:  Reads the data from an excel and stores them in a dictionary
+ '           object. 
+ ' Inputs:   sSheetLocation: The excel location that has to be read.
+ '           nTestCaseNum: The test case number for which the data has 
+ '           to be read.
+ '           oExcel: The excel object from which the data has to be read.      
+ ' Returns:  A dictionary object that contains the data read from the 
+ '           excel.
+'************************************************************************
+Function EnoviaSearch_ReadSearchData(sSheetName,nTestCaseNum,oExcel)
+
+  const xlCellTypeVisible = &Hc 'TO select only cells that are visible
+  Set objInput = CreateObject("Scripting.Dictionary") 'Dictionary Object to store Field Names as Keys and Inputs as Value
+  
+  IF EnoviaSearch_ChecksheetExists(oExcel,sSheetName) Then 'Check Sheet exists in Workbook
+    Set oWorkSheet = oExcel.Worksheets.Item(sSheetName)
+  Else  
+    Call Err.Raise(79001,sSheetName&" does not exist in the specified file.")
+    Exit Function
+  End IF
+  
+  If IsNull(oWorkSheet.cells(1,1)) = False Then   
+    Set oFoundKey = oWorkSheet.cells(1,1)
+  End If 
+  nFoundKeyRow = oFoundKey.Row
+  
+  'Const xlWhole = 1
+  'Set FoundCell = oWorkSheet.cells(oWorkSheet.UsedRange.Rows.Count,1).SpecialCells(xlCellTypeVisible).Find(nTestCaseNum,,,xlWhole)
+  
+  RowCount = oWorkSheet.UsedRange.Rows.Count
+    For iRow = 2 to RowCount
+    IF Trim(oWorkSheet.cells(iRow,1).value) = nTestCaseNum Then
+      Set FoundCell = oWorkSheet.cells(iRow,1) 
+      nFoundValueRow = FoundCell.Row
+      Exit For
+    End IF
+  Next  
+    
+  IF FoundCell Is Nothing Then   'If the particular test case does not exist in Specified Sheet
+    Log.Error "Test Case not Found in Excel Sheet"
+    oExcel.Quit
+    Set oWorkSheet = Nothing
+    Set oExcel = Nothing
+    Exit Function
+  End IF
+  
+  'nFoundValueRow = FoundCell.Row
+   
+  'To get the number of columns from the sheet
+  ColCount = oWorkSheet.UsedRange.Columns.Count   
+  
+  For iCol = nFoundKeyRow to ColCount
+    sCellValue = oWorkSheet.cells(nFoundValueRow,iCol).value
+    If (IsEmpty(sCellValue) = False) Then
+      If instr(oWorkSheet.cells(nFoundValueRow,iCol).value,"|") then
+        arrField = Split(Trim(oWorkSheet.cells(nFoundValueRow,iCol)),"|")
+        objInput.add Trim(oWorkSheet.cells(nFoundKeyRow,iCol).value),arrField
+      Else
+        objInput.add Trim(oWorkSheet.cells(nFoundKeyRow,iCol).value),Trim(oWorkSheet.cells(nFoundValueRow,iCol).value)  'Add Field Name as Key and Input Text as Value
+      End If
+    End If
+  Next 
+  
+  Set EnoviaSearch_ReadSearchData = objInput 'Return Dictionary Object
+  
+End Function
+
+
+'************************************************************************
+ ' Purpose:  Reads the data from an excel and stores them in a dictionary
+ '           object. 
+ ' Inputs:   sTestCase: The test case number for which the data has 
+ '           to be read.
+ '           sField: The key for which value has to be returned.      
+ ' Returns:  A variable that contains the value of the key passed.
+'************************************************************************
+
+Function EnoviaSearch_ReadTestCasesData(sTestCase,sField)
+  
+  nTestCaseCount = g_objTestObject.count
+  arrKeys = g_objTestObject.keys
+  
+  For j = 0 to nTestCaseCount-1
+    If arrKeys(j) = sTestCase Then
+      Set arrValues = g_objTestObject.Item(sTestCase)
+    End If
+  Next
+    
+  EnoviaSearch_ReadTestCasesData = arrValues.item(sField)
+    
+  Set arrValues = nothing
+  Erase arrKeys
+
+End Function
+
+
+Function EnoviaSearch_CreateDicObjTestCases(sEnv)
+
+sPath = aqFileSystem.GetFolderInfo(aqFileSystem.GetCurrentFolder).ParentFolder.ParentFolder.Path&"Files\Search\ExtraTestCases.xlsx"
+
+  const xlCellTypeVisible = &Hc 'TO select only cells that are visible
+  'Dictionary Object to store Field Names as Keys and Inputs as Value
+  Set g_objTestObject = CreateObject("Scripting.Dictionary")
+  
+  Set oExcel = CreateObject("Excel.Application")
+  oExcel.Workbooks.Open sPath
+  
+  IF EnoviaSearch_ChecksheetExists(oExcel,"Peripheral_"&Lcase(sEnv)) Then 'Check Sheet exists in Workbook
+    Set oWorkSheet = oExcel.Worksheets.Item("Peripheral")
+  Else  
+    Call Err.Raise(79000,"Peripheral Sheet does not exist in the specified file.")
+    Exit Function
+  End IF
+  
+  'To get the number of columns from the sheet
+  nColCount = oWorkSheet.UsedRange.Columns.Count   
+  nRowCount = oWorkSheet.UsedRange.Rows.Count
+  
+  sUserName = oWorkSheet.cells(1,2).value
+  If (IsEmpty(sUserName) = False) Then
+    g_SearchTestCasesUserName = sUserName
+  Else
+    Log Err.Raise(69000,"User Name does not exists in the sheet.")
+  End If
+  
+  For iRow = 3 to nRowCount
+    Set objInput = CreateObject("Scripting.Dictionary")
+      For iCol = 1 to nColCount
+      sCellValue = oWorkSheet.cells(iRow,iCol).value
+        If (IsEmpty(sCellValue) = False) Then
+          If instr(oWorkSheet.cells(iRow,iCol).value,":") then
+            arrField = Split(Trim(oWorkSheet.cells(iRow,iCol)),":")
+            objInput.add Trim(arrField(0)),Trim(arrField(1))
+          End If
+        End If
+      Next
+      g_objTestObject.add Trim(oWorkSheet.cells(iRow,1).value),objInput
+      Set objInput = nothing
+  Next
+    
+    oExcel.DisplayAlerts = False
+    oExcel.Workbooks.Close
+    oExcel.Quit
+    Set oWorkSheet = Nothing
+    Set oExcel = Nothing 
+    
+End Function

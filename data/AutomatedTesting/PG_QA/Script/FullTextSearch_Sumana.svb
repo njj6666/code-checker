@@ -1,0 +1,37 @@
+﻿
+
+
+
+
+'USEUNIT EnoviaSearch_PopulateSearchModel
+'USEUNIT EnoviaSearchModels
+'USEUNIT OR_Enovia
+'USEUNIT LogLib
+'USEUNIT WindowsUtility
+'USEUNIT EnoviaUtils
+'USEUNIT GlobalVars
+'USEUNIT WebObjectLib
+
+Private g_dblWaitTime 
+
+
+Sub Main()
+ 
+    sFilePath = aqFileSystem.GetFolderInfo(aqFileSystem.GetCurrentFolder).ParentFolder.ParentFolder.Path&"Files\Search\"&"SearchSpecification_FullText_Sumana"&".xlsx" 
+    Set oModel = EnoviaSearch_ReadExcel_Name(sFilePath,"Fulltext")
+    Call EnoviaSearch_NamedSearch(oModel)
+
+End Sub
+
+'This Function Filters Based on Type of Search
+Function EnoviaSearch_NamedSearch(oModel)
+
+End Function
+
+Sub Test1
+  Dim page
+  Call Browsers.Item(btIExplorer).Navigate("https://plmtest.pg.com/enovia/common/emxNavigator.jsp?ticket=ST-4740-01YQoc9fBVwphjtrtkJW-cas")
+  Set page = Sys.Browser.Page("https://plmtest.pg.com/enovia/common/emxNavigator.jsp*")
+  page.Panel("pageHeadDiv").Form("navigatorForm").Panel("globalToolbar").Panel("divToolbar").Panel(1).Panel("GTBsearchDiv").Panel(0).Panel("AEFGlobalFullTextSearch").Link(0).Label(0).Click
+  page.Panel(1).Panel(1).Panel(0).Panel(0).TextNode(0).TextNode(3).Link(0).Label(0).Click
+End Sub

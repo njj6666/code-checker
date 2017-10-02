@@ -1,0 +1,572 @@
+﻿'USEUNIT WebObjectLib
+'USEUNIT WebKeywords
+'USEUNIT OR_Enovia
+'USEUNIT ExcelLib
+'USEUNIT EnoviaPDT_ValidationUtils
+'USEUNIT EnoviaPDT_PDTUtils
+'USEUNIT StringLib
+'USEUNIT WindowsUtility
+'USEUNIT GlobalVars
+'USEUNIT LogLib
+'USEUNIT EnoviaUtils
+
+'Function to display the Notes tab in editable format
+Function EnoviaPDT_OpenNotes()
+  on error resume next 
+
+  Dim objEdit
+ 
+  Set objEdit = objGetObject(OR_EnoviaPDT_TablesEditImg,"",2000)
+  objEdit.Click()
+  Call Enovia_OpenMenu(OR_EnoviaPDT_TablesAddBtn , OR_EnoviaPDT_NotesInsertAboveCmb)
+  Call EnoviaPDT_SetNOCellValue(1,1)
+  
+  'Terminate members
+  Set objEdit = Nothing
+      
+End Function
+
+Sub EnoviaPDT_OpenTables()
+  on error resume next
+  
+  Dim objPage, objChar, stransName, objEdit
+  stransName="Show Characteristics:Local"
+  Set objPage = objGetPage("")
+  Set objChar = objGetObject(OR_EnoviaPDT_TablesShowCharacteristicsCmb,"","")
+  aqPerformance.Start(stransName)
+  objChar.ClickItem("Local")
+  Set objEdit = objGetObject(OR_EnoviaPDT_TablesEdit_Xpath,"",20000)
+  if (objEdit is Nothing)=False then
+    Log.Message stransName&" : "&aqPerformance.Value(stransname)/1000&" seconds"
+    Call LogPerformance(stransName, false, "")
+  end if
+  Call EnoviaPDT_OpenNotes()
+  
+  Set objPage = Nothing
+  Set objChar = Nothing
+  Set stransName = Nothing
+  Set objEdit = Nothing
+End Sub
+  
+Function EnoviaPDT_SetNOCellValue(nRow, nValue)
+  Dim oField
+  
+  Set oField=objGetObject(OR_EnoviaPDT_TablesPnl1,"","")'Applicable only for 1 field i.e. No as it will comes in a different panel
+  Set oField=oField.FindChild("ObjectIdentifier","treeBodyTable",6)
+  Set oField=oField.cell(nRow,1)
+  oField.Click
+  oField.Keys(nValue)
+      
+  Set oField = Nothing
+End Function
+
+   '************************Creation of Table***************************************************
+   
+Function EnoviaPDT_CreateFillTableData(sSheetName,sPartType)
+
+  Set oParent = objGetObject(OR_EnoviaPDT_TablesPnl,"","")   'Object for Table tab  
+  sColumnName = "Field" 'Name of column to be searched in the Excel 
+  sColumnInput = "Input"  'Name of column to be searched in the Excel     
+  sFilePath = g_pdt_FileLocation&sPartType'&".xlsx"  'Part Type excel file path
+  'Opening table and Adding New Rows
+  Call EnoviaPDT_OpenTables()
+  oParent.Click        
+  aFieldArr = Excel_GetColumnValues(sSheetName,sFilePath,sColumnName) 
+  aInputArr= Excel_GetColumnValues(sSheetName,sFilePath,sColumnInput)
+  Set oInputDict = Excel_CreateDictionaryForInput(sSheetName,sFilePath,sColumnName,"Input")
+  If Ucase(sSheetName) = "TABLES"  Then            
+  Set oParentObj=oParent.FindChild("objectIdentifier","headTable",10)                  
+  oParentObj.Click
+  For  i = 0 to Ubound(aFieldArr)          
+  	Set oFieldArrayObj=oParentObj.FindChild("contentText",aFieldArr(i),10)
+  	If  oFieldArrayObj.Exists Then
+  		If oInputDict.Exists(aFieldArr(i))  Then
+  		Log.Message(aFieldArr(i))
+  		oFieldArrayObj.ScrollintoView()       
+  		nColumnIndex =(oFieldArrayObj.ColumnIndex)/2
+  		'Clicking on Each Coulmn in Table
+  		Set oFieldArray=oParent.Find("ColumnIndex",nColumnIndex ,4)                     
+  		oFieldArray.ScrollintoView() 
+  		oFieldArray.Click
+  		'Creating Floating object                
+  		set oFloatingDivPnl=objGetObject(OR_EnoviaPDT_TablesFloatingDivPnl,"","1000")
+  		If (oFloatingDivPnl is Nothing) = False then
+  			'Setting Floating formfield object
+  			Set oFloatingPnl=oFloatingDivPnl.FindChild("ObjectIdentifier","formField",5)              
+  		End If 
+  		If oFloatingPnl.type = "select-multiple" and aFieldArr (i)= "Test Group" Then
+  			oFloatingPnl.ClickItem aInputArr(i)
+  			Delay 2000  
+  			oFieldArrayObj.Click                                                   
+  		ElseIf aFieldArr (i)= "Characteristic"  Then 
+  			oFloatingPnl. Keys(aInputArr(i))
+  			Delay 2000   
+  			Set oTypeAhead_TextNode = objGetObject(OR_EnoviaPDT_TypeAheadTxtNd,"","")
+  			If (oTypeAhead_TextNode Is Nothing) = False Then
+  			  oTypeAhead_TextNode.Click
+  			  Delay 1000
+  			  Set oTypeAhead_TextNode = Nothing
+  			End If                                   
+  		ElseIf aFieldArr (i)= "Test Method Name"  Then 
+  			bflag = False   
+  			aTempstr = Split (aInputArr(i),"|")  
+  			If ubound (aTempstr) > 0  Then
+  				oFloatingPnl. Keys(Left(Trim(aTempstr(0)),6))
+  				Delay 5000
+  				bflag = True
+  				OR_EnoviaTable_TypeAheadTextNode = Array("WEBOBJECT", "idStr~ObjectType", "type_ahead~Panel", "")
+  				Set oTypeAheadTextNode = objGetObject(OR_EnoviaTable_TypeAheadTextNode,"","")
+  				If  Not (oTypeAheadTextNode Is Nothing)  And bflag = True  Then 
+  				   oTypeAheadTextNode.Keys "[Hold]^"  
+  					For  cnt =  0 To ubound (aTempstr)
+  						Set oText = oTypeAheadTextNode.FindChild("contentText",aTempstr(cnt),10)
+  						oText.Click -1,-1,skCtrl 
+  						oTypeAheadTextNode.Keys "[Hold]^"
+  					Next 
+  					Set oDone_Link = oTypeAheadTextNode.FindChild("contentText","Done",10)                                                                   
+  					If (oDone_Link Is Nothing) = False Then
+  					  oDone_Link.Click
+  					  Set oDone_Link = Nothing
+  					End If        
+  					'oTypeAheadTextNode.Keys"[Release]^"
+  				End If
+  			Else 
+  			  oFloatingPnl. Keys(aInputArr(i))
+  			  Delay 2000
+  			End If
+  		ElseIf  oFloatingPnl.type = "select-one"  Then
+  			oFloatingPnl.ClickItem aInputArr(i)  
+  			Delay 2000 
+  		ElseIf instr(1,Ucase(aInputArr(i)),Ucase("GENERATE"),1) Then                                                       
+  			oFloatingPnl. value= oInputDict.item(aFieldArr(i)) 
+  			Delay 2000
+  		Else
+  			oFloatingPnl.Keys(aInputArr(i))
+  			Delay 2000   
+  		End If       
+  		If aFieldArr (i)= "Characteristic Specifics" Then
+  				oFloatingPnl.Value = aInputArr(i) 
+  		End If
+  		If  aFieldArr (i)= "Test Method Reference Document Name" Or (aFieldArr (i)= "Test Method Name" And bflag = False) Then                                      
+  				Set oText=objGetObject(OR_EnoviaPDT_TypeAheadTextNodeEdt,"",500)
+  				Set oDone_Link = objGetObject(OR_EnoviaPDT_TypeAheadDoneLnk,"",1000)  'Look for Type Ahead Done Link
+  				If (oDone_Link Is Nothing) = False Then
+  				  oText.Click
+  				  oDone_Link.Click
+  				  Set oDone_Link = Nothing
+  				End If
+  		End If             
+  		If  instr(1,Ucase(aInputArr(i)),Ucase("GENERATE"),1) Then                               
+  			If  aqstring.Trim(oFloatingPnl. value) =  aqstring.Trim(oInputDict.item(aFieldArr(i))) Then
+  				bSetReset =True
+  				Call EnoviaPDT_InputResultValidation(bSetReset, aFieldArr(i))
+  			Else
+  				bSetReset =False
+  				Call EnoviaPDT_InputResultValidation(bSetReset, aFieldArr(i))
+  			End If
+  		ElseIf  aFieldArr (i)= "Test Method Name" Then
+  			If instr(1,aqstring.Trim(oFloatingPnl. value),aqstring.Trim(aTempstr(0)) ,1) Then
+  				bSetReset =True
+  				Call EnoviaPDT_InputResultValidation(bSetReset, aFieldArr(i))
+  			End If
+  		ElseIf  aFieldArr (i)= "Characteristic" Then
+  			If instr(1,aqstring.Trim(oFloatingPnl. value),aqstring.Trim(aInputArr(i)) ,1) Then
+  				bSetReset =True
+  				Call EnoviaPDT_InputResultValidation(bSetReset, aFieldArr(i))
+  			End If
+  		ElseIf aqstring.Trim(oFloatingPnl. value) = aqstring.Trim(aInputArr(i)) Then
+  				bSetReset =True
+  				Call EnoviaPDT_InputResultValidation(bSetReset, aFieldArr(i))
+  		Else
+  				bSetReset =False
+  				Call EnoviaPDT_InputResultValidation(bSetReset, aFieldArr(i))
+  		End If
+  		If aFieldArr (i)= "Basis" Then
+  			  oFieldArrayObj.Click  
+  		Else
+  			oFieldArray.Keys("[Enter]")
+  			Delay 2000
+  		End If
+  		End If  
+  	Else
+  		Log.Message  aFieldArr(i)& "-Field is not Found in Apllication"
+  	End If
+  Next
+
+  call EnoviaPDT_ValidationOfSave(sSheetName)
+  Set oSaveBtn =   Nothing
+  Set oFieldArrayObj = Nothing
+  Set oParentObj = Nothing
+  End If
+  g_isBlocked = False
+End Function	
+
+ Function  EnoviaPDT_InputResultValidation(bSetReset, sFieldName) 
+   'Checking Enter valued in  Corresponding field	
+    sErrorMessage =""
+   If  bSetReset = True Then 
+          Log.Message  "Field: "&sFieldName& "- Field content text matches with input value in Apllication"    	
+          bPassed = True
+   Else
+    	  Log.Message  "Field: "&sFieldName& "- Field content text Not matches with input value in Apllication"    	
+          bPassed = False
+          sErrorMessage = "Field: "&sFieldName& "- Field content text Not matches with input value in Application"      
+   End If
+   
+   Call LogStepData(g_pdt_CurrentCategory&"-"&g_pdt_CurrentTab&": "&"Field: "&sFieldName&" Enter Table Field Text validated succesfully", bPassed, sErrorMessage,"")
+    'doesn't block anything 
+   g_isBlocked = False
+   
+ End Function
+  
+Sub EnoviaPDT_CreateFillAttributesData(sSheetName,sFileName)
+ 
+  Dim sColumnName,sColumnInput,sFilePath,aFields,oInputDict,oParentobj,oLabel,i,oCell,nRowIndex,nColumnIndex,_
+  nCount,oCell1,oDishCare,oDone_Obj,oDone,oPartNumber,sPartNumber,sExpected,sErrorMessage,bPassed,OEdit,oReqdCell,sPage
+  
+  sColumnName = "Field"
+  sColumnInput="Input"
+  sErrorMessage=""
+  if UCase(sSheetName)="ATTRIBUTES" then
+      Set ODone=objGetObject(OR_EnoviaPDT_DoneBtn,"",30000)'Object creation for Done button
+  else
+      Set ODone=objGetObject(OR_EnoviaPDT_DoneBtn,g_CreatePage_URL,30000)'Object creation for Done button
+  end if
+  sFilePath = g_pdt_FileLocation&sFileName
+  aFields = Excel_GetColumnValues(sSheetName,sFilePath,sColumnName)
+  Set oInputDict = Excel_CreateDictionaryForInput(sSheetName,sFilePath,sColumnName,sColumnInput)'Dictionary of Input and field values
+  Select Case Ucase(sSheetName)
+    Case "CREATE" 
+      Set oParentobj = objGetObject(OR_EnoviaPDT_CreateTbl,g_CreatePage_URL,"")'Object for create page
+      stransName = "Create Part: "&sFileName
+    Case "ATTRIBUTES"
+      Set oParentobj = objGetObject(OR_EnoviaPDT_CreateTbl,"","")'Object for attribute tab
+      stransName = "Save Attributes data"
+     Case Else
+      Log.Warning "Application Page Name given is not Valid"
+      Exit Sub    
+  End Select
+  oParentobj.Click 200,150 
+  For i = 0 to Ubound(aFields)
+    Set oLabel=oParentobj.FindChild("contentText",aFields(i),5)'Find all labels in a page based on contentText
+    if isObject(oLabel)and oLabel.Exists then
+        nRowIndex=oLabel.RowIndex 'Row value remains same
+        nColumnIndex=(oLabel.ColumnIndex)+1 'add +1 to Columnindex of a label to get the cell related to it
+        nCount=oParentobj.Cell(nRowIndex, nColumnIndex).ChildCount
+        if nCount>0 and oInputDict.Exists(aFields(i))then 'Child count of a cell should be greater than zero and the value should be exist in dictionary
+            For m=0 to nCount-1
+              Set oCell=oParentobj.Cell(nRowIndex, nColumnIndex).Child(m)
+              if (oCell.ObjectType="Table") then
+                  Set oCell1=oCell.Child((oCell.ChildCount)-1)
+                  ocell_count=oCell1.ChildCount
+                  'To iterate all the childs of a cell
+                  For s=0 to ocell_count-1
+                    Set oCell=oCell1.Child(s)
+                     if not ((oCell.ObjectType="Button") or (oCell.ObjectType="Link"))then
+                         Set oReqdCell=oCell
+                         Exit For
+                     end if
+                  NEXT
+              else
+                if not ((oCell.ObjectType="Button") or (oCell.ObjectType="Link"))then' if cell doesn't have table
+                  ' JR 09/12 Need to check if there is nested objects. This only goes down one level. might need to check 
+                  ' Until we find object that we can set something into it
+                  If oCell.ObjectType="Panel" and oCell.ChildCount > 0 Then
+                    Set oReqdCell = oCell.Child(0)
+                  Else
+                    Set oReqdCell=oCell
+                  End If
+                  
+                end if
+              end if 
+            NEXT
+            if oReqdCell.Enabled=True then
+              if aFields(i)="Effective Date" or aFields(i)="Expiration Date"then'if field is effective date or expiration date
+                  oReqdCell.value=MonthName(Month(oInputDict.item(aFields(i))),True)&" "&day(oInputDict.item(aFields(i)))&", "&year(oInputDict.item(aFields(i)))
+              elseif oReqdCell.ObjectType="Textbox" then 'if objectType of field is Textbox
+                  oReqdCell.setText(oInputDict.item(aFields(i)))
+                  if aFields(i)="Characteristic" or aFields(i)="Unit of Measure" or aFields(i)="Security Category Classification" then
+                      if UCase(sSheetName)="ATTRIBUTES" then
+                        sPage=""
+                      else
+                        sPage=g_CreatePage_URL
+                      end if
+                      Set oDishCare=objGetObject(OR_EnoviaPDT_TypeAheadTextNodeEdt,sPage,"5000")'Object create for Text node
+                      Set oDone_Obj=objGetObject(OR_EnoviaPDT_TypeAheadDoneLnk,sPage,"2500")'Object create for Done Button
+                      oDishCare.Click
+                      Call Delay(2000)
+                      oDone_Obj.Click
+                  elseif aFields(i)="Primary Organization" or aFields(i)="Change Template" then
+                      Set oDishCare=objGetObject(OR_EnoviaPDT_TypeAheadTextNodeEdt,g_CreatePage_URL,"5000")'Object create for Text node
+                      oDishCare.Click
+                  end if
+              elseif oReqdCell.ObjectType="Textarea" then'if objectType of field is Textarea
+                  oReqdCell.value = oInputDict.item(aFields(i))'Enters value into a field
+              elseif oReqdCell.Type="select-multiple" then'if objectType of field is select-multiple
+                  
+                  aItemList = Split(oReqdCell.wItemList,";")
+                  For j=0 to Ubound(aItemList)
+                    If Ucase(aItemList(j)) = Ucase(oInputDict.item(aFields(i))) Then
+                      Exit For
+                    End If
+                  Next
+                  oReqdCell.selectedIndex = j
+              elseif oReqdCell.ObjectType="Select" then'if objectType of field is Select
+                  if aFields(i)="Type" then
+                      oReqdCell.focus
+                      oReqdCell.clickItem(oInputDict.item(aFields(i)))'Enters value into a field
+                      WaitPageLoad(g_CreatePage_URL)
+                      Set oParentobj = objGetObject(OR_EnoviaPDT_CreateTbl,g_CreatePage_URL,"")'Object for create page
+                  else
+                      oReqdCell.focus
+                      oReqdCell.clickItem(oInputDict.item(aFields(i)))'Enters value into a field
+                  end if
+              end if
+              oReqdCell.Keys("[Tab]")
+            else
+              Log.Warning(aFields(i)&" is not editable")
+            end if
+        end if
+        
+        if oInputDict.Exists(aFields(i))then
+            if trim(oReqdCell.value) <> "" then
+                sExpected="Data populated in the Field: "&aFields(i) 
+                Log.Message sExpected  	
+                bPassed = True
+            else
+                bPassed = False
+                if oReqdCell.Enabled=False then
+                  sErrorMessage=aFields(i)&" is not editable" 
+                else
+                  sErrorMessage="Data not populated in the Field: "&aFields(i)
+                end if
+                Log.Warning sErrorMessage
+            end if
+            Call LogStepData (g_pdt_CurrentCategory&"-"&g_pdt_CurrentTab&": "&sExpected,bPassed,sErrorMessage,"")
+        end if
+    else
+        Log.Warning("Unable to find field:"&aFields(i))
+    end if
+  NEXT
+  Call Delay(500)'Object creation for Done button
+  ODone.click
+  aqPerformance.Start(stransName)
+  if UCase(sSheetName)="CREATE" then
+    Set oPartNumber = objGetObject(OR_EnoviaPDT_PartNumberEle_xpath,"","30000")'Object creation for part number
+    sExpected = "Part Number :"&sPartNumber&" have been created successfully" 
+    If (oPartNumber is Nothing) = False Then 'if object is visible on screen it will set value to sExpected
+      sPartNumber = oPartNumber.contentText 
+      Log.Message stransName&" : "&aqPerformance.Value(stransname)/1000&" seconds"
+      Call LogPerformance(stransName, false, "")
+      Log.Message sExpected&""&sPartNumber
+      bPassed = True
+    Else    'It will set error message to sErrorMessage
+      bPassed = False
+      sErrorMessage="Part haven't been created"
+      Log.Warning sErrorMessage
+    End If 
+    
+    ' Need to click the category button get categories visible for formulation
+    If sFileName = "Formulation" Then
+      Call Click(OR_EnoviaPDT_CategoriesBtn,"","")
+    End If
+  
+    Call LogStepData (g_pdt_CurrentCategory&"-"&g_pdt_CurrentTab&": "&sExpected,bPassed,sErrorMessage,sPartNumber)
+  else
+    iEditCheckCounter = 0
+    bPassed = False
+    While iEditCheckCounter <= 1  'Checks if the edit icon is available 
+      iEditCheckCounter = iEditCheckCounter+1
+      'Set OEdit=objGetObject(OR_EnoviaTB_EditIconBtn,"","30000")'Object creation for Edit Icon
+      sExpected = "Attribute page have been saved successfully"   
+      If WaitForBody(OR_EnoviaPDT_AttributesFme, "ObjectIdentifier", "iconActionEdit_*", "", 20000) = True Then 'if object is visible on screen, then start capturing response time
+        Log.Message stransName&" : "&aqPerformance.Value(stransName)/1000&" seconds"
+        Call LogPerformance(stransName, false, "")
+        bPassed = True
+        iEditCheckCounter = 2 'Set a condition to exit while loop
+      Else 
+        'Code to click ok button of Alert window
+        Set objAlertWindow = objGetObject(OR_EnoviaPDT_AlertWnd,"","1500")
+        If objAlertWindow Is Nothing = False Then
+          Set objAlertOK = objGetObject(OR_EnoviaPDT_AlertOKBtn,"","500")
+          If objAlertOK Is Nothing = False Then
+            objAlertOK.Click
+            aqPerformance.Start(stransName) 'Reset timer if Alert Pop up is found
+          End if    
+        End If
+      End If
+    WEnd
+
+    If bPassed = True Then
+      Log.Message sExpected
+    Else  'It will set error message to sErrorMessage
+      bPassed = False
+      sErrorMessage="Attribute page was not saved"
+      Log.Warning sErrorMessage
+    End If
+    Call LogStepData (g_pdt_CurrentCategory&"-"&g_pdt_CurrentTab&": "&sExpected,bPassed,sErrorMessage,"")
+  end if
+   g_isBlocked = False
+  'Clean up the variables
+  EnoviaPDT_ClearVariable sColumnName 
+  EnoviaPDT_ClearVariable sFilePath
+  EnoviaPDT_ClearVariable sColumnInput
+  EnoviaPDT_ClearVariable sErrorMessage
+  EnoviaPDT_ClearVariable bPassed
+  EnoviaPDT_ClearVariable oParentobj
+  EnoviaPDT_ClearVariable aFields
+  EnoviaPDT_ClearVariable oInputDict
+  EnoviaPDT_ClearVariable oLabel
+  EnoviaPDT_ClearVariable oCell
+  EnoviaPDT_ClearVariable nRowIndex 
+  EnoviaPDT_ClearVariable nColumnIndex
+  EnoviaPDT_ClearVariable oCell1
+  EnoviaPDT_ClearVariable oDishCare
+  EnoviaPDT_ClearVariable nCount
+  EnoviaPDT_ClearVariable oDone_Obj
+  EnoviaPDT_ClearVariable oDone
+  EnoviaPDT_ClearVariable i
+  EnoviaPDT_ClearVariable sExpected
+  EnoviaPDT_ClearVariable oPartNumber
+  EnoviaPDT_ClearVariable sPartNumber
+  EnoviaPDT_ClearVariable OEdit
+  EnoviaPDT_ClearVariable oReqdCell
+End Sub
+
+Sub EnoviaPDT_FillNotes(sSheetName,sFileName)
+  Dim sColumnName,sColumnInput,sFilePath,aFields,oInputDict,oParentobj,oLabel,i,oCell,nRowIndex,nColumnIndex,_
+  nCount,oCell1,oDishCare,oDone_Obj,oDone,oPartNumber,sPartNumber,sExpected,sErrorMessage,bPassed,OEdit,oReqdCell,sPage
+  
+  sColumnName = "Field"
+  sColumnInput="Input"
+  sErrorMessage=""
+  sFilePath = g_pdt_FileLocation&sFileName
+  aFields = Excel_GetColumnValues(sSheetName,sFilePath,sColumnName)
+  Call EnoviaPDT_OpenNotes()
+  Set oInputDict = Excel_CreateDictionaryForInput(sSheetName,sFilePath,sColumnName,sColumnInput)'Dictionary of Input and field values
+  Set oParentobj = objGetObject(OR_EnoviaPDT_NotesPnl,"","")'Object for Notes tab
+  
+  For i =0 to UBound(aFields)
+      Set oParentobj2=oParentobj.Findchild("ObjectIdentifier","headTable",6)
+      Set oLabel=oParentobj2.FindChild("contentText",aFields(i),10)
+      if isObject(oLabel)and oLabel.Exists then
+  		  if oInputDict.Exists(aFields(i))  Then
+            'Applicable for the remaining fields in Tables tab
+            nColumnIndex=(oLabel.ColumnIndex)/2
+            Set oParentobj1=oParentobj.Findchild("ObjectIdentifier","bodyTable",6)
+            Set oField=oParentobj1.Cell(1,nColumnIndex)
+            oField.Click
+        		'Creating Floating object                
+        		set oFloatingDivPnl=objGetObject(OR_EnoviaPDT_TablesFloatingDivPnl,"","1000")
+        		If (oFloatingDivPnl is Nothing) = False then
+        			'Setting Floating formfield object
+        			Set oFloatingPnl=oFloatingDivPnl.FindChild("ObjectIdentifier","formField",5)   
+              oFloatingPnl.Value = oInputDict.item(aFields(i))          
+        		End If 
+
+            if oFloatingPnl.value<>" " then
+                sExpected="Data populated in the Field: "&aFields(i) 
+                Log.Message sExpected  	
+                bPassed = True
+            else
+                bPassed = False
+                sErrorMessage="Data not populated in the Field: "&aFields(i)
+                Log.Warning sErrorMessage
+            end if
+            Call LogStepData (g_pdt_CurrentCategory&"-"&g_pdt_CurrentTab&": "&sExpected,bPassed,sErrorMessage,"")
+        end if
+      end if
+  NEXT
+
+  call EnoviaPDT_ValidationOfSave(sSheetName)
+  g_isBlocked = False
+  'Clean up the variables
+  EnoviaPDT_ClearVariable sColumnName 
+  EnoviaPDT_ClearVariable sFilePath
+  EnoviaPDT_ClearVariable sColumnInput
+  EnoviaPDT_ClearVariable sErrorMessage
+  EnoviaPDT_ClearVariable bPassed
+  EnoviaPDT_ClearVariable oParentobj
+  EnoviaPDT_ClearVariable aFields
+  EnoviaPDT_ClearVariable oInputDict
+  EnoviaPDT_ClearVariable oLabel
+  EnoviaPDT_ClearVariable nColumnIndex
+  EnoviaPDT_ClearVariable sExpected
+End Sub
+
+
+Sub EnoviaPDT_ValidationOfSave_old(sSheetName)
+  Dim oNotesTab,iconAction,iconError,sExpected,bPassed,sErrorMessage
+   Set oNotesTab=objGetObject(OR_EnoviaPDT_NotesPnl,"",2000)
+   set iconAction=oNotesTab.FindChild("ObjectIdentifier","iconActionCreate_gif",10)
+   set iconError=oNotesTab.FindChild("ObjectIdentifier","iconStatusError_gif",10)
+   sExpected=sSheetName&" tab have been saved Successfully!!!" 
+   if not (iConAction.Exists or iconError.Exists) then
+     Log.Message sExpected  	
+     bPassed = True
+   else
+     bPassed = False
+     sErrorMessage=sSheetName&" tab haven't been done"
+     Log.Warning sErrorMessage
+  end if
+  Call LogStepData (g_pdt_CurrentCategory&"-"&g_pdt_CurrentTab&": "&sExpected,bPassed,sErrorMessage,"")
+  
+  g_isBlocked = False
+  'Clean up the variables  
+  EnoviaPDT_ClearVariable oNotesTab
+  EnoviaPDT_ClearVariable iconAction
+  EnoviaPDT_ClearVariable iconError    
+  EnoviaPDT_ClearVariable sErrorMessage
+  EnoviaPDT_ClearVariable bPassed
+  EnoviaPDT_ClearVariable sExpected
+End Sub
+
+'Validate Save for notes and Tables with performance Logging
+
+Sub EnoviaPDT_ValidationOfSave(sSheetName)
+  Dim oNotesTab,oBdyTbl,oField,sExpected,bPassed,sErrorMessage,stransName
+  
+  If sSheetName = "Notes" Then
+    stransName = "Save Notes tab data"
+  else
+    stransName = "Save Tables Characteristic data"
+  End If   
+  Set oSaveBtn = objGetObject(OR_EnoviaPDT_NotesSaveBtn,"","")     'Object for Save button tab
+  aqPerformance.Start(stransName)                              
+  oSaveBtn.Click
+    
+  dblDelayLoop = 0
+  ldblWaitTime = 10000
+  
+  Set oNotesTab=objGetObject(OR_EnoviaPDT_NotesPnl,"","")
+  Set oBdyTbl=oNotesTab.FindChild("ObjectIdentifier","treeBodyTable",6)
+  Set oField=oBdyTbl.cell(1,1)  'Get the Cell(1,1) for No. column
+  
+  Do While instr(oField.innertext," ")<> 0 and (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))  'Before saving the Innertext contains spaces which do not exist on successfull save
+    Delay 500
+    dblDelayLoop = cdbl(dblDelayLoop) + 500
+  Loop
+  
+  itransTime = aqPerformance.Value(stransName)/1000
+  Call LogPerformance(stransName, false, "")
+  sExpected=sSheetName&" tab have been saved Successfully!!!" 
+  If instr(oField.innertext," ") = 0 Then
+     Log.Message sExpected  	
+     Log.Message stransName&" : "&itransTime&" seconds"
+     bPassed = True
+   else
+     bPassed = False
+     sErrorMessage=sSheetName&" tab haven't been done"
+     Log.Warning sErrorMessage
+  End If
+  
+  'Clean up the variables  
+  EnoviaPDT_ClearVariable oNotesTab
+  EnoviaPDT_ClearVariable oBdyTbl
+  EnoviaPDT_ClearVariable oField    
+  EnoviaPDT_ClearVariable sErrorMessage
+  EnoviaPDT_ClearVariable bPassed
+  EnoviaPDT_ClearVariable sExpected
+  EnoviaPDT_ClearVariable stransName
+  EnoviaPDT_ClearVariable itransTime
+End Sub

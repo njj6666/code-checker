@@ -1,0 +1,48 @@
+﻿'USEUNIT DBLib 
+'USEUNIT GlobalVars
+'USEUNIT WebKeywords
+'USEUNIT WinKeywords
+'USEUNIT WebObjectLib
+'USEUNIT RecordSetLib
+'USEUNIT LogLib
+'USEUNIT OR_Enovia
+'USEUNIT GlobalVars
+'USEUNIT TimeLib
+'USEUNIT EnoviaUtils
+'USEUNIT WindowsUtility
+
+g_strBrowserType="iexplore" 
+
+Sub Main
+' Call Function CreateEnvironment(sAppName, sEnvironment, bDevelopmentFlag, sComments, bCitrix, sTestType)
+' For now, just leave everything as is except for the ones that say "CHANGE THIS ONE". Make those the same value.
+      Call CreateEnvironment("Trackwise", "trackwise-dev", False, "Trackwise Performance Run", False, "Performance")
+      Call LaunchBrowser( g_props.Item("applicationURL").URL, "TW: Open Login Screen" )
+
+      Call TrackwiseLogin()
+            
+'Function LogPerformance(sStepName, bLoginStep, sIdentifier)
+' Use same step name as the "Start" line. 2nd parameter should be false. Third parameter is only needed if you want extra text on the screen - example different input used for searches      
+      Call CloseEnvironment()
+End Sub
+
+Sub TrackwiseLogin
+      userNameTextbox = Array("WEBOBJECT", "ObjectIdentifier", "tfUserName", "") 
+      pwdTextbox = Array("WEBOBJECT", "ObjectIdentifier", "tfPassword", "") 
+      loginButton = Array("WEBOBJECT", "ObjectIdentifier", "btLoginId", "") 
+            
+      aqPerformance.Start( "TW: Step to know when home page painted")  ' This sets up and starts a stopwatch
+
+      Set userObj = objGetObject(userNameTextbox,"","") ' Go find the object on the screen that tells us when screen is done painting.
+      Call LogPerformance( "TW: Step to know when home page painted", False, "")      
+      userObj.SetText( "My Username" )
+      
+      Set pwdObj = objGetObject(pwdTextbox,"","") ' Go find the object on the screen that tells us when screen is done painting.
+      pwdObj.SetText( "My Password" )
+
+      Set loginObj = objGetObject(loginButton,"","") ' Go find the object on the screen that tells us when screen is done painting.
+      aqPerformance.Start( "TW: Login")  ' This sets up and starts a stopwatch
+      loginObj.Click
+      Call LogPerformance( "TW: Login", False, "")
+
+End Sub

@@ -1,0 +1,225 @@
+﻿'USEUNIT GlobalVars	
+'USEUNIT LogLib	
+'USEUNIT OR_Enovia	
+'USEUNIT WindowsUtility	
+'USEUNIT EnoviaUtils	
+'USEUNIT WebObjectLib	
+'USEUNIT EnoviaSearch_PopulateSearchModel
+                                  
+Dim SearchRecord
+                                                                                                                      
+'##################################################################################################################
+'Function Name                : EnoviaSearch_FullTC13_Steps
+'Description                  : TC-13_Full Text Search_Refinement_Page_Size - Search with Page Size (If you have too many Search Results with the same Name(s)/Phrase(s).)
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+                                                                
+Function EnoviaSearch_FullTC13_Steps()	
+	                                                  
+	  Call LogStep("EnoviaSearch_FullTC13_Step1", "A dropdown with various commands(Like-Named Search, My Favourite Searches, Full Text Search..etc) should appear", "")
+	  Call LogStep("EnoviaSearch_FullTC13_Step2", "A new window with Search Refinement Pane and Search Results Pane should pop up", "")
+	  Call LogStep("EnoviaSearch_FullTC13_Step3", "The 'Search Results Pane' should refresh and all the objects which contain the Name(s)/Phrase(s) that was typed will be displayed.Ex:  All the Objects which contain the Phrase 'Test' in their Specification/Attributes/Docs should be displayed.", "") 
+	  Call LogStep("EnoviaSearch_FullTC13_Step4", "A Message from the Webpage dialogue box should appear which says 'Page size cannot be 0 or less.'", "")
+	  Call LogStep("EnoviaSearch_FullTC13_Step5", "The 'Search Results Pane' should refresh and all the objects which contain the Name(s)/Phrase(s) that was typed will be displayed.Ex:  All the Objects which contain the Phrase 'Test' in their Specification/Attributes/Docs should be displayed.", "")
+	  Call LogStep("EnoviaSearch_FullTC13_Step6", "A Message from the Webpage dialogue box should appear which says 'Maximum allowed page size is 10000.'", "")
+	                            
+	  Call LogTestCase("Save your Specific Search Results", "TC-13_Full Text Search_Refinement_Page_Size","47687")
+	                
+End Function	
+                            
+                                                 
+'##################################################################################################################
+'Function Name                : EnoviaSearch_FullTC13_Step1
+'Description                  : Click on the dropdown beside the textbox(default value:Named Search),In the Global Search Bar
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+                                           
+Function EnoviaSearch_FullTC13_Step1()
+                                        
+    'Create object for clicking name search
+    Set objDeleteSaved = objGetObject(OR_EnoviaSearch_TC19_DeleteSavedName,"","")
+    objDeleteSaved.Click()
+    Set objDeleteSaved = nothing
+    'Create object for FullSearch Text
+    Set objFullSearchText = objGetObject(OR_EnoviaSearch_TC13_FullSearchText_Label,"","")
+    If objFullSearchText.VisibleOnScreen = False Then
+        'Create the object for Product Specifications
+          Set objEnoviaSearchProductSpec = objGetObject(OR_EnoviaSearchProductSpec_SearchDrp,"","")
+          objEnoviaSearchProductSpec.Click()
+           If objFullSearchText.VisibleOnScreen = False Then
+              Call Err.raise (70027,"EnoviaSearch_FullTC13_Step1","A FULL Search Text dropdown with various commands are NOT shown")
+           End If
+           Set objEnoviaSearchProductSpec = nothing
+        
+    End If
+    Set objFullSearchText = nothing
+                   
+End Function	
+                                 
+                                                
+'##################################################################################################################
+'Function Name                : EnoviaSearch_FullTC13_Step2
+'Description                  : Click on the 'Full Text Search' Command
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+                                             
+Function EnoviaSearch_FullTC13_Step2()
+                                       
+    'Create object for FullSearch Text
+    Set objFullSearchText = objGetObject(OR_EnoviaSearch_TC13_FullSearchText_Label,"","")
+    objFullSearchText.Click()
+    Set objFullSearchText = nothing
+                                                     
+    'Create object for Name text field
+    Set objNameEdit = objGetObject(OR_EnoviaSearchFullText_SearchEdt,g_SearchPageURL,7000)
+    If objNameEdit.VisibleOnScreen = False Then
+         Call Err.raise (70028,"EnoviaSearch_FullTC13_Step2","A FULL Search Text is NOT displayed on Screen")
+    End If    
+    Set objNameEdit = nothing
+                                                 
+End Function	
+                                                  
+                                 
+'##################################################################################################################
+'Function Name                : EnoviaSearch_FullTC13_Step3
+'Description                  : In the textbox under  Search Refinement  Pane', type the Name(s)/Phrase(s) you want to search and Click on the Search Icon next to the textbox Ex: Test
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+                                                    
+Function EnoviaSearch_FullTC13_Step3()
+                                                                           
+    'Create object for Name text field
+    Set objNameEdit = objGetObject(OR_EnoviaSearchFullText_SearchEdt,g_SearchPageURL,"")
+    
+    SearchRecord = EnoviaSearch_ReadTestCasesData("TC-13_Full Text Search_Refinement_Page_Size","Phrase")
+    
+    objNameEdit.SetText(SearchRecord)
+    Set objNameEdit = nothing
+    
+    'Create object for search refresh command
+    Set objSearchRefreshCmd = objGetObject(OR_EnoviaSearch_SSearchRefreshCmd,g_SearchPageURL,"")
+    objSearchRefreshCmd.Click()
+    
+    Set objSearchRefreshCmd = nothing
+                                 
+End Function	
+                                       
+'##################################################################################################################
+'Function Name                : EnoviaSearch_FullTC13_Step4
+'Description                  : Change the Value of the Page Size to 0 and Click on Search Icon.Ex: Page Size: 0 Per Page
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+                                                 
+Function EnoviaSearch_FullTC13_Step4()
+                                                        
+    'Create object for page size
+    Set objPageSizeOfSearch = objGetObject(OR_EnoviaSearch_PageSize_TxtBox,g_SearchPageURL,7000)
+    PageSizevalue=objPageSizeOfSearch.Text
+    
+    SearchRecord = EnoviaSearch_ReadTestCasesData("TC-13_Full Text Search_Refinement_Page_Size","PageSize1")
+       
+    objPageSizeOfSearch.SetText(SearchRecord)
+    Set objPageSizeOfSearch = nothing
+    
+    'Create object for Setting the Page Size
+    Set objSetPageSizeImg = objGetObject(OR_EnoviaSearch_SetPageSize_Img,g_SearchPageURL,"")
+    objSetPageSizeImg.Click()
+    Set objSetPageSizeImg = nothing
+                                          
+    'Code to handle warning message
+     Call EnoviaSearch_AlertWindow("Page size cannot be 0 or less")
+                
+End Function	
+                                             
+                             
+'##################################################################################################################
+'Function Name                : EnoviaSearch_FullTC13_Step5
+'Description                  : Change the Value of the Page Size from any number 1-10000 and Click on Search Icon.Ex: Page Size: 10000 Per Page
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_FullTC13_Step5()
+                                              
+    'Create object for page size
+    Set objPageSizeOfSearch = objGetObject(OR_EnoviaSearch_PageSize_TxtBox,g_SearchPageURL,"")
+    PageSizevalue=objPageSizeOfSearch.Text
+                               
+    SearchRecord = EnoviaSearch_ReadTestCasesData("TC-13_Full Text Search_Refinement_Page_Size","PageSize2")
+    objPageSizeOfSearch.SetText(SearchRecord)
+    Set objPageSizeOfSearch = nothing
+                                
+    'Create object for Setting the Page Size
+    Set objSetPageSizeImg = objGetObject(OR_EnoviaSearch_SetPageSize_Img,g_SearchPageURL,"")
+    objSetPageSizeImg.Click()
+    Set objSetPageSizeImg = nothing
+               
+End Function	
+
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_FullTC13_Step6
+'Description                  : Change the Value of the Page Size to 10001.Ex: Page Size: 10001 Per Page
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_FullTC13_Step6()
+                                                                         
+    'Create object for page size
+    Set objPageSizeOfSearch = objGetObject(OR_EnoviaSearch_PageSize_TxtBox,g_SearchPageURL,7000)
+    PageSizevalue=objPageSizeOfSearch.Text
+                                             
+    SearchRecord = EnoviaSearch_ReadTestCasesData("TC-13_Full Text Search_Refinement_Page_Size","PageSize3")
+    objPageSizeOfSearch.SetText(SearchRecord)
+    Set objPageSizeOfSearch = nothing
+                                                                         
+     'Create object for Setting the Page Size
+    Set objSetPageSizeImg = objGetObject(OR_EnoviaSearch_SetPageSize_Img,g_SearchPageURL,"")
+    objSetPageSizeImg.Click()
+    Set objSetPageSizeImg = nothing                   
+         	 
+    'Code to handle warning message
+    Call EnoviaSearch_AlertWindow("Maximum allowed page size is : 10000")
+      
+End Function	

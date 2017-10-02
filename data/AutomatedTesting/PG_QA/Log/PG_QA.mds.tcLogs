@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE Nodes [
+
+<!ENTITY % NameValue "CDATA">
+<!ENTITY % PropType "(I|S|D|L|H|B)">
+<!ENTITY % VersionValue "CDATA">
+
+<!ELEMENT Prp (#PCDATA)>
+<!ELEMENT Node (Node|Prp)*>
+<!ELEMENT Nodes (Node)+>
+
+<!ATTLIST Nodes version CDATA "1">
+
+<!ATTLIST Node name CDATA #REQUIRED>
+
+<!ATTLIST Prp name CDATA #REQUIRED>
+<!ATTLIST Prp type CDATA #REQUIRED>
+<!ATTLIST Prp value CDATA #REQUIRED>
+]>
+<Nodes version="1">
+	<Node name="root">
+		<Node name="folders"/>
+		<Node name="logs">
+			<Node name="log idx=0000">
+				<Prp name="caption" type="S" value=""/>
+				<Prp name="datetime" type="D" value="43008.4311136574"/>
+				<Prp name="description" type="S" value=""/>
+				<Prp name="key" type="S" value="{00D61A08-9714-499C-9557-8D5EDFF24204}"/>
+				<Prp name="nameofroot" type="S" value="Script Test Log [S4036_CreateAlternateRelationship\EnoviaDSM_S04036_CreateAlternateRelationship]"/>
+				<Prp name="relpath" type="S" value="2017_9_30_10_20_48_220\Description.tcLog"/>
+				<Prp name="status" type="I" value="2"/>
+			</Node>
+			<Node name="log idx=0001">
+				<Prp name="caption" type="S" value=""/>
+				<Prp name="datetime" type="D" value="43008.4335753241"/>
+				<Prp name="description" type="S" value=""/>
+				<Prp name="key" type="S" value="{757AD5F2-AB5F-4DEC-A1E9-E2FDBF9AABDB}"/>
+				<Prp name="nameofroot" type="S" value="Script Test Log [S4036_CreateAlternateRelationship\EnoviaDSM_S04036_CreateAlternateRelationship]"/>
+				<Prp name="relpath" type="S" value="2017_9_30_10_24_20_908\Description.tcLog"/>
+				<Prp name="status" type="I" value="2"/>
+			</Node>
+			<Node name="log idx=0002">
+				<Prp name="caption" type="S" value=""/>
+				<Prp name="datetime" type="D" value="43008.4416116435"/>
+				<Prp name="description" type="S" value="Script Test Log [S4036_CreateAlternateRelationship\EnoviaDSM_S04036_CreateAlternateRelationship]"/>
+				<Prp name="key" type="S" value="{06D0B943-17F9-41F5-944F-102308205203}"/>
+				<Prp name="nameofroot" type="S" value="Script Test Log [S4036_CreateAlternateRelationship\EnoviaDSM_S04036_CreateAlternateRelationship]"/>
+				<Prp name="relpath" type="S" value="2017_9_30_10_35_55_246\Description.tcLog"/>
+				<Prp name="status" type="I" value="2"/>
+			</Node>
+			<Node name="log idx=0003">
+				<Prp name="caption" type="S" value=""/>
+				<Prp name="datetime" type="D" value="43008.4471045949"/>
+				<Prp name="description" type="S" value=""/>
+				<Prp name="key" type="S" value="{0A16D44F-21A5-4A23-A064-707C733900FB}"/>
+				<Prp name="nameofroot" type="S" value="Script Test Log [S4036S_AddAlternate\EnoviaDSM_S04036_S_ClearData]"/>
+				<Prp name="relpath" type="S" value="2017_9_30_10_43_49_837\Description.tcLog"/>
+				<Prp name="status" type="I" value="2"/>
+			</Node>
+			<Node name="log idx=0004">
+				<Prp name="caption" type="S" value=""/>
+				<Prp name="datetime" type="D" value="43008.4483977778"/>
+				<Prp name="description" type="S" value=""/>
+				<Prp name="key" type="S" value="{0DD8B2FC-2B4E-4CE8-A605-7809F2CE816E}"/>
+				<Prp name="nameofroot" type="S" value="Script Test Log [S4036S_AddAlternate\EnoviaDSM_S04036_S_ClearData]"/>
+				<Prp name="relpath" type="S" value="2017_9_30_10_45_41_568\Description.tcLog"/>
+				<Prp name="status" type="I" value="2"/>
+			</Node>
+			<Node name="log idx=0005">
+				<Prp name="caption" type="S" value=""/>
+				<Prp name="datetime" type="D" value="43008.4498071759"/>
+				<Prp name="description" type="S" value=""/>
+				<Prp name="key" type="S" value="{170C1BF0-3D4F-46F5-8CE0-056DD1A07EDC}"/>
+				<Prp name="nameofroot" type="S" value="Script Test Log [S4036S_AddAlternate\EnoviaDSM_S04036_S_ClearData]"/>
+				<Prp name="relpath" type="S" value="2017_9_30_10_47_43_340\Description.tcLog"/>
+				<Prp name="status" type="I" value="2"/>
+			</Node>
+			<Node name="log idx=0006">
+				<Prp name="caption" type="S" value=""/>
+				<Prp name="datetime" type="D" value="43008.4566997454"/>
+				<Prp name="description" type="S" value=""/>
+				<Prp name="key" type="S" value="{C34172BD-D1C8-4557-92A6-9578FEC6B103}"/>
+				<Prp name="nameofroot" type="S" value="Script Test Log [S4036S_AddAlternate\EnoviaDSM_S04036_S_ClearData]"/>
+				<Prp name="relpath" type="S" value="2017_9_30_10_57_38_858\Description.tcLog"/>
+				<Prp name="status" type="I" value="2"/>
+			</Node>
+			<Node name="log idx=0007">
+				<Prp name="caption" type="S" value=""/>
+				<Prp name="datetime" type="D" value="43008.4599545602"/>
+				<Prp name="description" type="S" value=""/>
+				<Prp name="key" type="S" value="{D2435968-1349-4E1F-998D-9E5731300BFB}"/>
+				<Prp name="nameofroot" type="S" value="Script Test Log [S4036S_AddAlternate\EnoviaDSM_S04036_S_ClearData]"/>
+				<Prp name="relpath" type="S" value="2017_9_30_11_02_20_74\Description.tcLog"/>
+				<Prp name="status" type="I" value="2"/>
+			</Node>
+		</Node>
+		<Prp name="signature" type="S" value="{681DCC69-A39F-4C4D-8E7D-B2D9362FAF4F}"/>
+		<Prp name="version" type="S" value="11.0"/>
+	</Node>
+</Nodes>

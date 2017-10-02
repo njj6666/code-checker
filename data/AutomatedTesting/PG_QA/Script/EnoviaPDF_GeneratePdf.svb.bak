@@ -1,0 +1,119 @@
+﻿'USEUNIT DBLib
+'USEUNIT EnoviaPDF_Main
+'USEUNIT EnoviaPDF_Utils
+'USEUNIT EnoviaPDF_Vars
+'USEUNIT EnoviaUtils
+'USEUNIT GlobalVars
+'USEUNIT LogLib
+'USEUNIT OR_Enovia
+'USEUNIT TimeLib
+'USEUNIT WebObjectLib
+'USEUNIT WindowsUtility
+
+Function EnoviaPDFViews_DownloadPdfView()
+ On Error Resume Next
+   Call EnoviaPDFViews_PartSearch()
+   Call EnoviaPDFViews_DownloadPDF()
+   g_Pdf_sGcasCode = Trim(g_Pdf_sGcasCode)
+   If g_pdf_sCurrentViewType = "GenDocView" Then
+      Delay 30000
+    Else
+      Set Var = Sys.Browser("iexplore").BrowserWindow(1)
+      Do While Var.Exists = True
+          Delay(1000)
+          Set Var = Sys.Browser("iexplore").BrowserWindow(1)                    
+      Loop 
+   End If
+   Call EnoviaPDFViews_SaveDownloadedfile()
+   sys.Browser("iexplore").Terminate
+   If Err.Number = 0 and aqFile.Exists(g_Pdf_CurrentPDFfilePathAndName&".pdf")Then
+      bPassed = True   
+      Log.Message "PDF downloaded for pattype: "&g_pdf_sCurrentPartType&" successfully"    
+    Else
+      sErrorMsg = "Failed to load Input data into Enovia" 
+      bPassed  = False
+   End If
+  Call LogStepDatapdf("Download and save "&g_pdf_sCurrentViewType&" pdf", bPassed, sErrorMsg, "")
+End Function
+
+Function EnoviaPDFViews_PartSearch()
+ On Error Resume Next     
+    searchbox = Array("NATIVEWEBOBJECT","idStr","GlobalNewTEXT","INPUT")
+    searchbtn = Array("WEBOBJECT","className~tagName","btn search~A","")
+    Set Searchbox = objGetObject(searchbox,"","")
+    sys.HighlightObject(Searchbox)
+    if(Searchbox.Exists)then
+      Searchbox.setText g_Pdf_sGcasCode  
+    end if
+    Set SearchBtn = objGetObject(searchbtn,"","")
+    sys.HighlightObject(SearchBtn)
+    if(SearchBtn.Exists)then
+      SearchBtn.Click  
+    end if
+    Set objEnoviaSearchName = objGetObject(OR_EnoviaSearch_Name,"","")
+    Set objEnoviaSearchFields = objGetObject(OR_EnoviaSearch_Fields,"","")
+    If objEnoviaSearchName.Exists Then 
+        if aqString.Find((objEnoviaSearchFields.Cell(1,0).ContentText),"No Objects") >= 0 Then
+            Log.Warning "No results found"
+            If g_regLog.Environment = "plmtest" Then
+                OR_EnoviaPDFViewsSearchRefinepane = Array("WEBOBJECT","idStr~ObjectType","windowshade~Panel","")
+                Set ObjPDFViewsSearchRefinepane = objGetObject(OR_EnoviaPDFViewsSearchRefinepane,"","")
+                Set ObjRefineBtn = ObjPDFViewsSearchRefinepane.FindChild("idStr","switchQueryButton",10)
+                ObjRefineBtn.Click
+                Delay 4000
+            End If                      
+        End If
+       objEnoviaSearchName.Cell(1,1).Child(0).Click       
+    End If   
+End Function
+
+Function EnoviaPDFViews_DownloadPDF()
+  On Error Resume Next
+  OR_EnoviaAttributespanel = Array("WEBOBJECT","ObjectIdentifier","pgVPDSectionAttributes","")
+  Set ObjPdfTableframe = objGetObject(OR_EnoviaAttributespanel,"","")  
+  If g_pdf_sCurrentViewType = "AllInfoView" Then
+      PDfDownloadContentText = "All Info View..."
+    Elseif g_pdf_sCurrentViewType = "CMView" Then
+      PDfDownloadContentText = "regexp:Packing View"   
+    Elseif g_pdf_sCurrentViewType = "SupplierView" Then
+      PDfDownloadContentText = "Supplier View..."      
+  End If
+  If g_pdf_sCurrentViewType = "GenDocView" Then    
+      If(ObjPdfTableframe.Exists)then
+          Set ObjGenDoc = ObjPdfTableframe.FindChild("ObjectIdentifier","iconActionPDF_gif",10)
+          ObjGenDoc.Click
+        Else
+          Log.Error "Gendoc doenload failied  - Error 9"
+      End If
+    Else
+      OR_EnoviaAttributesPDFMain = Array("WEBOBJECT","className~contentText","text-button~PDF Views","")
+      Set oPdfViewsDropDown = objGetObject(OR_EnoviaAttributesPDFMain,"","")       
+      If(ObjPdfTableframe.Exists)then
+          oPdfViewsDropDown.Click    
+          Set oPdfview =ObjPdfTableframe.FindChild("contentText",PDfDownloadContentText,10)
+          oPdfview.Click 
+        Else
+          Log.Error "Search results are blank"  
+      End If
+  End If
+End function
+
+Function EnoviaPDFViews_SaveDownloadedfile()  
+  Set s1=Sys.Browser("iexplore").Browserwindow(0)                           
+  set frame=s1.findChild("WndClass","Frame Notification Bar",5) 
+  Set objdownbtn=frame.findChild("Name","UIAObject(1)",5) 
+  If objdownbtn.Exists then                            
+      objdownbtn.Click                                                            
+  End If
+  Sys.Keys "[Down][Enter]"
+  Set objwnd = Sys.Process(g_strBrowserType).window("*","Save As")
+  Set objEdit = objwnd.FindChild("WndClass","Edit",5)
+  Set objsavebtn = objwnd.FindChild("WndCaption","&Save")    
+  aqFileSystem.DeleteFile(g_Pdf_CurrentPDFfilePathAndName&".pdf")
+  Delay 1000
+  If objEdit.Exists then                            
+    objEdit.Keys g_Pdf_CurrentPDFfilePathAndName       
+    objsavebtn.Click                                                     
+  End If
+  Delay 2000      
+End Function

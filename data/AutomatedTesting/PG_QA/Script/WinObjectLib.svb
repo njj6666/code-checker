@@ -1,0 +1,99 @@
+﻿'USEUNIT GlobalVars
+
+Function objGetWinObject(m_arrFindProperties, m_dblWaitTime)
+    On Error Resume Next                                                              
+    
+    'Declaration of variables
+    Dim arrProps, arrVals
+    Dim arrstrPropertyNames(), arrstrPropertyValues()
+    Dim i, dblDelayLoop
+    Dim m_strFindMethod, m_strPropertyName, m_strPropertyValue, ldblWaitTime
+    
+    m_strFindMethod     = m_arrFindProperties(0)
+    m_strPropertyName   = m_arrFindProperties(1)  
+    m_strPropertyValue  = m_arrFindProperties(2)
+    
+    ' Wait time set in function call. 
+    If m_dblWaitTime = "" Then
+      ' Not set, use default
+      ldblWaitTime = 15000
+    Else
+      ldblWaitTime = m_dblWaitTime
+    End If
+    
+     'Set Flag to 0 initially
+    dblDelayLoop = 0
+    
+    Select Case UCase(m_strFindMethod)
+            
+        'Multiple property values
+        Case "WINOBJECT"
+        
+            ' Create arrays of property names and values
+            arrProps = Split(m_strPropertyName, "~")
+            arrVals = Split(m_strPropertyValue, "~")
+
+            Redim arrstrPropertyNames(UBound(arrProps))
+            Redim arrstrPropertyValues(UBound(arrProps))
+            
+            'Build the array of property names and values
+            For i = 0 to UBound(arrProps)
+              arrstrPropertyNames(i) = arrProps(i)
+              arrstrPropertyValues(i) = arrVals(i)
+            Next
+            
+            Set objProcess = objGetProcess()          
+            Set objGetWinObject = objProcess.Find(arrstrPropertyNames, arrstrPropertyValues, 60, True)
+            
+            Do While blnObjExists(objGetWinObject) = False And (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))
+                  Delay(500)
+                  dblDelayLoop = cdbl(dblDelayLoop) + 500
+                  
+                  Set objProcess = objGetProcess()
+                  Set objGetWinObject = objProcess.Find(arrstrPropertyNames, arrstrPropertyValues,60, True)
+            Loop             
+          
+     End Select
+          
+     If (BuiltIn.IsSupported(objGetWinObject, "Enabled") = False) Or (BuiltIn.IsSupported(objGetWinObject, "Visible") = False) Then
+          Set objGetWinObject = Nothing
+     ElseIf (IsNull(objGetWinObject)) OR (IsEmpty(objGetWinObject)) Then
+          Set objGetWinObject = Nothing
+     Else
+          If (BuiltIn.IsSupported(objGetWinObject, "Visible") = True) Then  objGetWinObject.WaitProperty "Visible", True, d_dblObjectWaitTime   
+     End If
+End Function
+
+Function objGetProcess()
+    On Error Resume Next                                                              
+       
+    Set objProcess = Sys.Process(g_strWinProcessType)
+
+    Set objGetProcess = objProcess 
+
+End Function
+
+
+Function blnObjExists(m_objTestObject)
+
+    On Error Resume Next                                                              
+  
+      'Set Flag to False initially
+      Err.Clear
+      blnObjExists = False
+  
+      If (Not(IsEmpty(m_objTestObject) AND IsNull(m_objTestObject))) Then
+            If m_objTestObject.Exists = True Then
+              blnObjExists = m_objTestObject.Exists
+            Else
+              AqUtils.Delay(500)    
+            End if
+      End If
+      
+      If Err.Number = 0 And (blnObjExists) Then 
+        blnObjExists = True
+      Else
+        blnObjExists = False
+      End If
+             
+End Function

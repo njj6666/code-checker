@@ -1,0 +1,751 @@
+﻿'USEUNIT EnoviaUtils
+'USEUNIT ExcelLib
+'USEUNIT GlobalVars
+'USEUNIT OR_DSM
+'USEUNIT OR_Enovia
+'USEUNIT WebKeywords
+'USEUNIT WebObjectLib
+
+Function DSM_OpenCreateProductData()
+  On Error Resume Next
+  Dim objPDSpecIcon, objCreatePD
+  '****Click ToolBar Menu "+" and Click Create Product Data
+  Set objPDSpecIcon = objGetObject(OR_EnoviaMenu_ProductSpecificationLnk,"",30000)
+  Set objCreatePD = objGetObject(OR_EnoviaMenu_CreateProductDataLnk,"",30000)
+  Call Enovia_OpenPlusMenu(objPDSpecIcon, objCreatePD)
+End Function
+
+Function DSM_GetNewProductData(name)
+  OR_product = Array ("EVALUATEXPATH",".//*[@id='divExtendedHeaderName']/span[1]","","SPAN")
+  Set obj = objGetObject(OR_product,"","")
+  id = aqObject.GetPropertyValue(obj,"textContent")
+  log.Message id
+  Call Excel_InsertValue(g_strOutputDataFilePath,"DSM_OutputData",name,id)
+End Function 
+
+Function Copy_ProductData(strTitle,strDescription,strTemp,strCO,strNumber)
+  On Error Resume Next
+  Dim objCurrentExe
+  Dim arrGetObj
+  '***Set title
+  arrGetObj = arrGetObjInfoFromXL("DSM_CopyPDPage","Title")
+  Set objCurrentExe = objGetObject(arrGetObj,g_EnoviaCopyPDPage_URL,30000)
+  objCurrentExe.SetText(strTitle)
+  '***Set description
+  If strDescription = "" Then
+  Else
+  arrGetObj = arrGetObjInfoFromXL("DSM_CopyPDPage","Description")
+  Set objCurrentExe = objGetObject(arrGetObj,g_EnoviaCopyPDPage_URL,30000)
+  objCurrentExe.Click
+  objCurrentExe.Keys("^a[BS]")
+  objCurrentExe.Keys(strDescription)
+  End If
+  '***Check All
+  arrGetObj = arrGetObjInfoFromXL("DSM_CopyPDPage","CheckAll")
+  Call Click(arrGetObj,g_EnoviaCopyPDPage_URL,"")
+  '***Select temp
+  If strTemp = ""Then
+  Else
+  arrGetObj = arrGetObjInfoFromXL("DSM_CopyPDPage","ChangeTemp")
+  Call Click(arrGetObj,g_EnoviaCopyPDPage_URL,"")
+  Call Enovia_SearchAndSelectByName(strTemp)  
+  End If
+  '***Select CO
+  If strCO = ""Then
+  Else
+  arrGetObj = arrGetObjInfoFromXL("DSM_CopyPDPage","CO")
+  Call Click(arrGetObj,g_EnoviaCopyPDPage_URL,"")
+  Call Enovia_SearchAndSelectByName(strCO)  
+  Call WaitPageLoad(g_EnoviaCopyPDPage_URL)
+  End If
+  '***Set copy number
+  arrGetObj = arrGetObjInfoFromXL("DSM_CopyPDPage","Number")
+  Set objCurrentExe = objGetObject(arrGetObj,g_EnoviaCopyPDPage_URL,30000)
+  objCurrentExe.SetText(strNumber)
+  '***Click Done
+  arrGetObj = arrGetObjInfoFromXL("DSM_CopyPDPage","Done")
+  Call Click(arrGetObj,g_EnoviaCopyPDPage_URL,"")
+  Set objCurrentExe = Nothing
+End Function 
+
+
+Function AddExisting(inputTxt)
+  On Error Resume Next
+  OR_Action = Array("WEBOBJECT","ObjectIdentifier~ObjectType","iconActionActions_png~Image","IMG")
+  OR_AddExisting = Array("WEBOBJECT","contentText~ObjectType","Add Existing...~Label","LABEL")
+  Call Click(OR_Action,"","")
+  Call Click(OR_AddExisting,"","")
+  Call Enovia_SearchAndSelectByName(inputTxt)
+End Function 
+
+'##################################################################################################################
+'Function Name                : GetTableCellAndClick
+'Description                  : Click a cell in a table
+'Arguments                    : headName: cell's headname in headTable,This function is used only for insert above
+'Return Value                 : Nothing
+'Author                       : Marvin
+'Creation Date                : 2017-08-30
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function GetTableCellAndClick(headName)
+  On Error Resume Next
+  Dim arrObjProps,oParentobj, oHeadTable, oBodyTable, oLabel
+  ' Find Column from header table
+  aSearchProps = Array("WEBOBJECT","contentText~VisibleOnScreen",headName&"~True","")
+  Set oLabel = objGetObject(aSearchProps,"","")
+  '****Get parent frame
+  arrObjProps = Array("WEBOBJECT","ObjectIdentifier~ObjectType","CPNProductDataViewTables~Frame","IFRAME")
+  Set oParentobj = objGetObject(arrObjProps,"","")
+  '****Get HeadTable and BodyTable
+  Set oHeadTable = oParentobj.FindChild("ObjectIdentifier","headTable",10)
+  Set oBodyTable = oParentobj.FindChild("ObjectIdentifier","bodyTable",10)
+  '****Get headName's column in oHeadTable
+  'log.Message oLabel.ColumnIndex
+  'log.Message oBodyTable.idStr
+  nColumnIndex=(oLabel.ColumnIndex)/2
+  aPropNames = Array("ColumnIndex","RowIndex")
+  aPropValues = Array(nColumnIndex, "1")
+  
+  Set oField = oBodyTable.FindChild(aPropNames,aPropValues,10)
+  If headName = "Report Type" or headName = "Action Required" Then
+  oField.Click
+  Else
+  oField.DblClick
+  End If
+  '***Clear
+  Set oLabel = Nothing
+  Set oParentobj = Nothing
+  Set oHeadTable = Nothing
+  Set oBodyTable = Nothing
+  Set oField = Nothing
+End Function 
+'****Created by Marvin
+Function AddSpec(strSpecs,strUrl)
+  On Error Resume Next
+  'Click Specs label
+  arrGetObj = arrGetObjInfoFromXL("DSM_ProductDataHomePage","Specs")
+  Call Click(arrGetObj,strUrl,"")
+  'Click Actions
+   arrGetObj = arrGetObjInfoFromXL("DSM_ProductDataHomePage","Actions")
+  Call Click(arrGetObj,strUrl,"")
+  'Click AddExisting
+  arrGetObj = arrGetObjInfoFromXL("DSM_ProductDataHomePage","AddExisting")
+  Call Click(arrGetObj,strUrl,"")
+  AqUtils.Delay(5000)
+  Call Enovia_SearchAndSelectByName(strSpecs)
+End Function 
+
+
+'##################################################################################################################
+'Function Name                : EditTable
+'Description                  : Edit necessary field in table
+'Arguments                    : NA
+'Return Value                 : Nothing
+'Author                       : Marvin
+'Creation Date                : 2017-08-30
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function EditTable(srtCharacter,strLowerLimit,strLowerTarget,strTarget,strUpperTarget,strUpperLimit,strReportType,strActionReq)
+  On Error Resume Next
+  '***Click Action
+  arrGetObj = arrGetObjInfoFromXL("DSM_EditTablePage","Action")
+  Call Click(arrGetObj,"","")
+  'Click Insert Above
+  arrGetObj = arrGetObjInfoFromXL("DSM_EditTablePage","InsertAbove")
+  Call Click(arrGetObj,"","")
+  Set obj = Nothing
+  '***Set Characteristic
+  Call GetTableCellAndClick("Characteristic")
+  arrGetObj = arrGetObjInfoFromXL("DSM_EditTablePage","SelectChar")
+  Call Click(arrGetObj,"","")
+  AqUtils.Delay(5000)
+  Call Enovia_SearchAndSelectByName(srtCharacter)
+  '***Set Lower Specification Limit
+  Call GetTableCellAndClick("Lower Specification Limit")
+  arrGetObj = arrGetObjInfoFromXL("DSM_EditTablePage","TextBox")
+  Call SetTextByProps(arrGetObj,strLowerLimit,"")
+  Set obj = Nothing
+  'Check Target is null
+  If strTarget = "" Then
+  '***Set Lower Target
+  Call GetTableCellAndClick("Lower Target")
+  arrGetObj = arrGetObjInfoFromXL("DSM_EditTablePage","TextBox")
+  Call SetTextByProps(arrGetObj,strLowerTarget,"")
+  '****Set Upper Target
+  Call GetTableCellAndClick("Upper Target")
+  arrGetObj = arrGetObjInfoFromXL("DSM_EditTablePage","TextBox")
+  Call SetTextByProps(arrGetObj,strUpperTarget,"")
+  Else
+  '***Set Target
+  Call GetTableCellAndClick("Target")
+  arrGetObj = arrGetObjInfoFromXL("DSM_EditTablePage","TextBox")
+  Call SetTextByProps(arrGetObj,strTarget,"")
+  End If  
+  '***Set Upper Specification Limit
+  Call GetTableCellAndClick("Upper Specification Limit")
+  arrGetObj = arrGetObjInfoFromXL("DSM_EditTablePage","TextBox")
+  Call SetTextByProps(arrGetObj,strUpperLimit,"")
+  Set obj = Nothing
+  '***Set report type
+  Call GetTableCellAndClick("Report Type")
+  arrGetObj = arrGetObjInfoFromXL("DSM_EditTablePage","SelectBox")
+   Set obj = objGetObject(arrGetObj,"","")
+   obj.ClickItem(strReportType)
+   Set obj = Nothing
+   'Set Action Required
+  Call GetTableCellAndClick("Action Required")
+  arrGetObj = arrGetObjInfoFromXL("DSM_EditTablePage","SelectBox")
+   Set obj = objGetObject(arrGetObj,"","")
+   'obj.Click
+   obj.ClickItem(strActionReq)
+   Set obj = Nothing
+   'Click Save
+   arrGetObj = arrGetObjInfoFromXL("DSM_EditTablePage","Save")
+   Call Click(arrGetObj,"","")
+  End Function
+  
+  
+'##################################################################################################################
+'Function Name                : AddRouteTemplate
+'Description                  : slect and add route template for CA
+'Arguments                    : template
+'Return Value                 : Nothing
+'Author                       : Rita
+'Creation Date                : 2017-08-31
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################  
+Function AddRouteTemplate(template)
+  On Error Resume Next
+  Dim arrGetObj
+  Dim objCurrentExe
+  '*****click route template tab
+  arrGetObj = arrGetObjInfoFromXL("DSM_ProductDataHomePage","RouteTemplates")
+  Set objCurrentExe = objGetObject(arrGetObj,g_EnoviaHomePage_URL,30000)
+  objCurrentExe.Click
+  '****click the button manage route approval
+  arrGetObj = arrGetObjInfoFromXL("DSM_ProductDataHomePage","ManageRouteApprovals")
+  Set objCurrentExe = objGetObject(arrGetObj,g_EnoviaHomePage_URL,30000)
+  objCurrentExe.Click
+  '****Click on "…" button after Routes field for "In Approval"
+  Call WaitPageLoad(g_ManageRouteApprovalsPage_URL)
+  arrGetObj = arrGetObjInfoFromXL("DSM_ManageRouteApprovalsPage","InApprovalChoose")
+  Set objCurrentExe = objGetObject(arrGetObj,g_ManageRouteApprovalsPage_URL&"*",30000)
+  objCurrentExe.Click
+  '****search route template and select it
+  Call WaitPageLoad(g_SearchPageURL)
+  Call Enovia_SearchAndSelectByName(template)
+  '****click done in manage route approval page
+  Call WaitPageLoad(g_ManageRouteApprovalsPage_URL)
+  arrGetObj = arrGetObjInfoFromXL("DSM_ManageRouteApprovalsPage","ChooseDone")
+  Set objCurrentExe = objGetObject(arrGetObj,g_ManageRouteApprovalsPage_URL,30000)
+  objCurrentExe.Click
+  Call WaitPageLoad(g_EnoviaHomePage_URL)
+
+  Set objCurrentExe = Nothing
+End Function 
+  
+'##################################################################################################################
+'Function Name                : GetApprovalUser
+'Description                  : get username of approver
+'Arguments                    : NA
+'Return Value                 : Nothing
+'Author                       : Rita
+'Creation Date                : 2017-08-31
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################  
+Function GetApprovalUser()
+  On Error Resume Next
+  Dim arrGetObj
+  Dim objCurrentExe
+  '****click properties tab
+  arrGetObj = arrGetObjInfoFromXL("DSM_ProductDataHomePage","Properties")
+  Set objCurrentExe = objGetObject(arrGetObj,g_EnoviaHomePage_URL,30000)
+  objCurrentExe.Click
+  '****get approval user
+  OR_Assignee = Array("EVALUATEXPATH",".//*[@id='calc_dummy1']/td[2]","","TD")
+  Set objCurrentExe = objGetObject(OR_Assignee,"","")
+  strName = aqObject.GetPropertyValue(objCurrentExe,"contentText")
+  log.Message strName
+  strSub = right(strName, len(strName)-4)
+  approver = strSub & ".im"
+  Call Excel_InsertValue(g_strOutputDataFilePath,"DSM_OutputData","ApprovalUser",approver)
+
+  Set objCurrentExe = Nothing
+End Function 
+
+ 
+'##################################################################################################################
+'Function Name                : PromoteInApproval
+'Description                  : go to lifecycle, promote CA to InApproval and chaeck the state
+'Arguments                    : NA
+'Return Value                 : Nothing
+'Author                       : Rita
+'Creation Date                : 2017-08-31
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################  
+Function PromoteInApproval()
+  On Error Resume Next
+  Dim arrGetObj
+  Dim objCurrentExe
+  '****click lifecycle
+  OR_Lifecycle = arrGetObjInfoFromXL("DSM_ProductDataHomePage","Lifecycle")
+  Call Click(OR_Lifecycle,"","")
+  '****click promote to In work
+  OR_Promote = arrGetObjInfoFromXL("DSM_ProductDataHomePage","Promote")
+  Call Click(OR_Promote,"","")
+  '****click promote to In Approval
+  OR_Promote = arrGetObjInfoFromXL("DSM_ProductDataHomePage","Promote")
+  Call Click(OR_Promote,"","")
+  '****check whether the state is in Approval or not
+  arrGetObj = Array("WEBOBJECT","contentText~ObjectType~RowIndex","In Approval~Cell~1","TD")
+  Set objCurrentExe = objGetObject(arrGetObj,g_EnoviaHomePage_URL,30000)
+  Call aqObject.CheckProperty(objCurrentExe, "className", cmpEqual, "stateNameHighlight")
+  
+  Set objCurrentExe = Nothing
+End Function 
+
+'##################################################################################################################
+'Function Name                : OpenPendingView
+'Description                  : click pending view under product data administration
+'Arguments                    : NA
+'Return Value                 : Nothing
+'Author                       : Rita
+'Creation Date                : 2017-08-31
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################  
+Function OpenPendingView()
+  On Error Resume Next
+  Dim arrLevel1,arrLevel2,objCurrentExe
+  arrLevel1 = arrGetObjInfoFromXL("DSM_ProductDataHomePage","PDAdministration")
+  arrLevel2 = arrGetObjInfoFromXL("DSM_ProductDataHomePage","PendingView")
+  Set objCurrentExe = objGetObject(arrLevel2,g_EnoviaHomePage_URL&"*",30000)
+  '*****click product data administration and pending view
+  If objCurrentExe.VisibleOnScreen = True Then
+    objCurrentExe.Click  
+  Else
+    Call Click(arrLevel1,"","")
+    objCurrentExe.Click
+  End If
+  Set objCurrentExe = Nothing
+End Function 
+
+'##################################################################################################################
+'Function Name                : ClainOrReclaim
+'Description                  : search unclaimed CA to click ClaimOrReclaim
+'Arguments                    : name
+'Return Value                 : Nothing
+'Author                       : Rita
+'Creation Date                : 2017-08-31
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################  
+Function ClaimOrReclaim(name)
+  On Error Resume Next
+  Dim objCurrentExe
+  OR_Name = Array("NATIVEWEBOBJECT","idStr","NAME","INPUT")
+  OR_Search = Array("NATIVEWEBOBJECT","idStr","mx_btn-search","A")
+  OR_Check = Array("NATIVEWEBOBJECT","idStr","rmbrow-0,0","INPUT")
+  OR_ClaimReclaim = Array("NATIVEWEBOBJECT","idStr","pgDSOClaimOwnership","TD")
+  OR_OK = Array("WEBOBJECT","ObjectIdentifier~ObjectType","OK~Button","")
+  '****Search CA, and click ClaimOrReclaim
+  Set objCurrentExe = objGetObject(OR_Name,g_EnoviaHomePage_URL,"")
+  objCurrentExe.Click
+  objCurrentExe.Keys(name)
+  Call Click(OR_Search, g_EnoviaHomePage_URL,"")
+  Call Click(OR_Check, g_EnoviaHomePage_URL,"")
+  Call Click(OR_ClaimReclaim, g_EnoviaHomePage_URL,"")
+  Call Click(OR_OK, g_EnoviaHomePage_URL,"")
+  
+  Set objCurrentExe = Nothing
+End Function 
+
+
+'##################################################################################################################
+'Function Name                : AwaitingApproval
+'Description                  : in taskSignature tab,click Awaiting Approval,Choose "Approve" for action
+'Arguments                    : NA
+'Return Value                 : Nothing
+'Author                       : Rita
+'Creation Date                : 2017-08-31
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################  
+Function AwaitingApproval()
+  On Error Resume Next
+  Dim arrGetObj
+  '****click tasks/Signature
+  arrGetObj = arrGetObjInfoFromXL("DSM_ProductDataHomePage","TasksSignatures")
+  Call Click(arrGetObj,"","")
+  '*****click the link:awaiting approval
+  OR_Awaiting = Array("WEBOBJECT","contentText~ObjectType","Awaiting Approval~Link","A")
+  Call Click(OR_Awaiting,"","")
+  '*****Choose "Approve" for action,then click done
+  Call WaitPageLoad(g_EnoviaApprovalPage_URL)
+  OR_ActionApprove = Array("WEBOBJECT","ObjectIdentifier~ObjectType~value","approvalAction~RadioButton~approve","INPUT")
+  Call Click(OR_ActionApprove,g_EnoviaApprovalPage_URL,"")
+  OR_ApprovalDone = Array("WEBOBJECT","contentText~ObjectType","Done~Button","BUTTON")
+  Call Click(OR_ApprovalDone,g_EnoviaApprovalPage_URL,"")
+  
+End Function 
+
+'##################################################################################################################
+'Function Name                : UserVerification
+'Description                  : input username and password to confirm approval
+'Arguments                    : identifier
+'Return Value                 : Nothing
+'Author                       : Rita
+'Creation Date                : 2017-08-31
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################  
+Function UserVerification(identifier)
+  On Error Resume Next
+  Dim objCurrentExe
+  arrCreds = GetCredentials(identifier)
+  log.Message arrCreds(0)
+  OR_User = Array("NATIVEWEBOBJECT","idStr","userName","INPUT")
+  OR_Pswd = Array("NATIVEWEBOBJECT","idStr","passWord","INPUT")
+  OR_Check = Array("NATIVEWEBOBJECT","idStr","readAndUnderstood","INPUT")
+  OR_Done = Array("WEBOBJECT","ObjectIdentifier~ObjectType","buttonDialogDone_gif~Image","IMG")
+  Set objCurrentExe = objGetObject(OR_User,g_UserVerificationPage_URL,"")
+  objCurrentExe.SetText(arrCreds(0))
+  Set objCurrentExe = objGetObject(OR_Pswd,g_UserVerificationPage_URL,"")
+  objCurrentExe.SetText(arrCreds(1))
+  Call Click(OR_Check,g_UserVerificationPage_URL,"") 
+  Call Click(OR_Done,g_UserVerificationPage_URL,"")
+  AqUtils.Delay(10000)
+  
+  Set objCurrentExe = Nothing 
+End Function 
+'##################################################################################################################
+'Function Name                : ClickCheckboxInTreeTable
+'Description                  : This function is used in bom to check a fpp or cup,etc
+'Arguments                    : 
+'Return Value                 : Nothing
+'Author                       : Marvin
+'Creation Date                : 2017-08-31
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################  
+Function DSM_ClickCheckboxInTreeTable(strValue,strUrl)
+    On Error Resume Next
+    Dim arrGetObj
+    'log.Message strValue
+    'Get TreeTable
+    'arrGetObj = arrGetObjInfoFromXL("DSM_BOMPage","TreeTable")
+    Set obj = objGetObject(OR_EnoviaBOM_TreeTable,strUrl,"")
+    
+    aPropNames = Array("contentText","ObjectType")
+     aPropValues = Array(strValue, "Table")
+     Set oLabel = obj.FindChild(aPropNames,aPropValues,10)
+     'log.Message "11:"&oLabel.ObjectIdentifier
+     aPropNames = Array("contentText","ObjectType")
+     aPropValues = Array(strValue, "Cell")
+     Set oResult = oLabel.FindChild(aPropNames,aPropValues,10)
+     'log.Message "22:"&oResult.contentText
+     aPropNames = Array("ColumnIndex","RowIndex")
+     aPropValues = Array(oResult.ColumnIndex-2, "0")
+     Set Check = oLabel.FindChild(aPropNames,aPropValues,10)
+     Check.DblClick
+     Set obj = Nothing
+     Set oLabel= Nothing
+End Function 
+'##################################################################################################################
+'Function Name                : GetCell
+'Description                  : This function is used in bom to set seq or Qty
+'Arguments                    : strValue: the name in the left table,headName: name in the headTable
+'Return Value                 : Cell
+'Author                       : Marvin
+'Creation Date                : 2017-08-31
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################  
+Function GetCell(strValue,headName,strUrl)
+    On Error Resume Next
+    'log.Message strValue
+    Dim arrGetObj,oTreeTable,oHeadTable,oBodyTable,oLabel
+    'Get TreeTable
+    'arrGetObj = arrGetObjInfoFromXL("DSM_BOMPage","TreeTable")
+    Set oTreeTable = objGetObject(OR_EnoviaBOM_TreeTable,strUrl,"")
+    
+    'Get Row
+    aPropNames = Array("contentText","ObjectType")
+    aPropValues = Array(strValue, "Cell")
+    Set oResult = oTreeTable.FindChild(aPropNames,aPropValues,10)
+    row = oResult.RowIndex
+    Set oLabel=Nothing
+    Set oResult=Nothing
+    'Get HeadTable
+    arrGetObj = arrGetObjInfoFromXL("DSM_BOMPage","HeadTable")
+    Set oTreeTable = objGetObject(arrGetObj,strUrl,"")
+    'Get Column
+    aSearchProps = Array("WEBOBJECT","contentText~VisibleOnScreen",headName&"~True","")
+    Set oLabel = objGetObject(aSearchProps,"","")
+    column = oLabel.ColumnIndex
+    
+    'Get BodyTable
+    arrGetObj = arrGetObjInfoFromXL("DSM_BOMPage","BodyTable")
+    Set BodyTable = objGetObject(arrGetObj,strUrl,"")
+    aPropNames = Array("ColumnIndex","RowIndex")
+    aPropValues = Array(column/2, row)
+    Set Cell = BodyTable.FindChild(aPropNames,aPropValues,10)
+    
+    Set GetCell = Cell
+    Set oTreeTable = Nothing
+    Set oHeadTable = Nothing
+    Set oBodyTable = Nothing
+End Function 
+  
+  
+  Function CreateMEP(strVendor,strTitle,strDescription,strApprover,strOrg)
+    On Error Resume Next
+    '***Create Product Data
+    Dim objCurrentExe
+    Dim arrGetObj
+    '****Set Vendor
+    arrGetObj = arrGetObjInfoFromXL("DSM_ProductDataHomePage","CreateMEPVender")
+    Set objCurrentExe = objGetObject(arrGetObj,"",30000)
+    objCurrentExe.Click
+    Call Enovia_SearchAndSelectByNameAndRefinement(strVendor,"")  
+    'Set Title
+    arrGetObj = arrGetObjInfoFromXL("DSM_ProductDataHomePage","CreateMEPTitle")
+    Set objCurrentExe = objGetObject(arrGetObj,"",30000)
+    objCurrentExe.Keys(strTitle)
+     'Set description
+    arrGetObj = arrGetObjInfoFromXL("DSM_ProductDataHomePage","CreateMEPDescription")
+    Set objCurrentExe = objGetObject(arrGetObj,"",30000)
+    objCurrentExe.Keys(strDescription)
+    '****Set Approver
+    arrGetObj = arrGetObjInfoFromXL("DSM_ProductDataHomePage","CreateMEPApprover")
+    Set objCurrentExe = objGetObject(arrGetObj,"",30000)
+    objCurrentExe.Click
+    Call Enovia_SearchAndSelectByName(strApprover) 
+    '****Set org
+    arrGetObj = arrGetObjInfoFromXL("DSM_ProductDataHomePage","CreateMEPOrg")
+    Set objCurrentExe = objGetObject(arrGetObj,"",30000)
+    objCurrentExe.Click
+    Call Enovia_SearchAndSelectByName(strOrg)   
+    'Click done
+    arrGetObj = arrGetObjInfoFromXL("DSM_ProductDataHomePage","CreateMEPDone")
+    Set objCurrentExe = objGetObject(arrGetObj,"",30000)
+    objCurrentExe.Click
+    Set objCurrentExe = Nothing
+  End Function 
+  
+'##################################################################################################################
+'Function Name                : GetCellInTable
+'Description                  : This function is used to get a table in one table according to headname and left value
+'Arguments                    : strValue: the name in the left ,headName: name in the head
+'Return Value                 : GetCellInTable
+'Author                       : Marvin
+'Creation Date                : 2017-09-11
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################  
+Function GetCellInTable(arrTableProps,strValue,headName,strURL)
+  On Error Resume Next
+  Dim arrGetObj, oCellHeadoTable,oCellLeft,oCellHead
+  'Get Table
+  Set oTable = objGetObject(arrTableProps,strURL,"")
+  'Get cell's row
+  aPropNames = Array("contentText","ObjectType")
+  aPropValues = Array(strValue, "Cell")
+  Set oCellLeft = oTable.FindChild(aPropNames,aPropValues,10)
+  'Get Cell's column
+  aPropNames = Array("contentText","ObjectType")
+  aPropValues = Array(headName, "Cell")
+  Set oCellHead = oTable.FindChild(aPropNames,aPropValues,10)
+  'Get cell
+  aPropNames = Array("RowIndex","ColumnIndex")
+  aPropValues = Array(oCellLeft.RowIndex, oCellHead.ColumnIndex)
+  Set GetCellInTable = oTable.FindChild(aPropNames,aPropValues,10)
+  
+  Set oTable = Nothing
+  Set oCellLeft = Nothing
+  Set oCellHead = Nothing
+End Function 
+
+
+'##################################################################################################################
+'Function Name                : DSM_SearchAndOpenGCAS
+'Description                  : This function is used to search for GCAS created in CSS
+'Arguments                    : strValue: the name in the left ,headName: name in the head
+'Return Value                 : DSM_SearchAndOpenGCAS
+'Author                       : Sun.XJ
+'Creation Date                : 2017-09-14
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################  
+Function DSM_SearchAndOpenGCAS(inputTxt, str_Type)
+  On Error Resume Next
+  Dim SearchProps, objResult
+  
+  Enovia_SearchStuff(inputTxt)
+
+  Delay(12000)
+  
+  OR_EnoviaSearch_TypeBtn.Click
+  
+  Delay(15000)
+  
+  OR_EnoviaSearch_TypeCmb.SelectItem(str_Type)
+  
+  OR_EnoviaSearch_TypeDoneBtn.Click
+  
+  OR_EnoviaSearch_GlobalSearchBtn.Click
+  
+  Delay(20000)
+  
+  SearchProps = Array("WEBOBJECT", "contentText~ObjectType", inputTxt&"~Link", "")
+  Call Click(SearchProps, "","")
+  
+End Function 
+
+'##################################################################################################################
+'Function Name                : DSM_Revise
+'Description                  : This function is used to Revise GCAS
+'Arguments                    : str_CO: The CO number to link with
+'Return Value                 : DSM_Revise
+'Author                       : Sun.XJ
+'Creation Date                : 2017-09-14
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################  
+Function DSM_Revise(str_CO)
+  OR_Enovia_ReviseBtn.Click
+  If str_CO="New" Then
+  CreateNewCO()
+  Else 
+  OR_EnoviaRevise_COBtn.Click
+  Call WaitPageLoad(g_SearchPageURL)
+  Call Enovia_SearchAndSelectByName(str_CO)
+  End If
+  OR_EnoviaRevise_DoneBtn.Click
+End Function 
+
+
+Function CreateNewCO()
+  OR_EnoviaRevise_TemplateBtn.Click
+  Call WaitPageLoad(g_SearchPageURL)
+  Call Enovia_SearchAndSelectByName("Fast track")
+End Function 
+
+'##################################################################################################################
+'Function Name                : DSM_SearchUpVersionedGCAS
+'Description                  : This function is used to Search upversioned GCAS Data
+'Arguments                    : str_Type: the GCAS type to open; str_Revision: the GCAS version
+'Return Value                 : DSM_Revise
+'Author                       : Sun.XJ
+'Creation Date                : 2017-09-14
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################  
+Function DSM_SearchUpVersionedGCAS(inputTxt, str_Type, str_Revision)
+  On Error Resume Next
+  Dim SearchProps, objResult
+  
+  Enovia_SearchStuff(inputTxt)
+
+  Delay(12000)
+  
+  OR_EnoviaSearch_TypeBtn.Click
+  
+  Delay(15000)
+  
+  OR_EnoviaSearch_TypeCmb.SelectItem(str_Type)
+  
+  OR_EnoviaSearch_TypeDoneBtn.Click
+  
+  OR_EnoviaSearch_RevisionEdt.SetText(str_Revision)
+  
+  OR_EnoviaSearch_GlobalSearchBtn.Click
+  
+  Delay(20000)
+  
+  SearchProps = Array("WEBOBJECT", "contentText~ObjectType", inputTxt&"~Link", "")
+  Call Click(SearchProps, "","")
+  
+End Function 
+
+'##################################################################################################################
+'Function Name                : DSM_SearchUpVersionedGCAS
+'Description                  : This function is used to Search upversioned GCAS Data
+'Arguments                    : str_Type: the GCAS type to open; str_Revision: the GCAS version
+'Return Value                 : DSM_Revise
+'Author                       : Sun.XJ
+'Creation Date                : 2017-09-14
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################  
+Function Copy_GCASProductData(strTitle,strDescription,str_CO)
+  On Error Resume Next
+
+  OR_Enovia_CopyBtn.Click
+  WaitPageLoad(g_CopyPage_URL)
+  '***Set title
+  OR_Enovia_CopyTitleEdt.SetText(strTitle)
+  '***Set description
+  OR_Enovia_CopyDescEdt.contentText = strDescription
+
+  '***Select temp
+  If strCO = "New"Then
+  CreateNewCO()
+  Else
+  OR_EnoviaRevise_COBtn.Click
+  Call WaitPageLoad(g_SearchPageURL)
+  Call Enovia_SearchAndSelectByName(str_CO)
+  End If
+  '***Click Done
+  OR_EnoviaRevise_DoneBtn.Click
+End Function 
+
+'##################################################################################################################
+'Function Name                : GetPDTID
+'Description                  : Get ID of new create Data
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Xiaoji Sun
+'Creation Date                : 31 -Aug- 2017
+'Special Conditions           : NA                                       
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function GetPDTID()
+Dim strGCAS
+strGCAS = GetValue(OR_Enovia_PRDID, "contentText")
+GetPDTID = strGCAS
+END Function
+
+'Log step result
+Function LogStepDataDSM(sExpectedResult, bPassed, sErrorMessage, sInfo)
+  bBlocked = g_isBlocked 
+  g_isBlocked = Flase 
+  Call g_currentTestCase.AddStep(sExpectedResult, bPassed, sErrorMessage, bBlocked, sInfo)    
+End Function
+
+
+
+
+

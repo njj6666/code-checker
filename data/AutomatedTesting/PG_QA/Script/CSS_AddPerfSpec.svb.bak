@@ -1,0 +1,142 @@
+﻿'USEUNIT FW_GlobalVars
+'USEUNIT CSS_OBJClass
+
+Function AddCPSIntoPerformanceSpec(strCPSCode)
+g_strBrowserType = c_IExplorer
+EditExcel.Click
+Delay(60000)    
+  Dim oXLApp, oWorkBook
+  Set oDesktop = Sys.Desktop
+  Set oXLApp = GetObject(,"Excel.Application")
+  'Set oWorkBook=oXLApp.Workbooks(oXLApp.ActiveWorkbook.Name) 
+  Set oXLWorkBook = Sys.Process("EXCEL").Window("XLMAIN", "CSS_Performance_Specifications.xlsm  [Read-Only] - Excel", 1)
+  Set oXLTable = Sys.Process("EXCEL").Window("XLMAIN", "CSS_Performance_Specifications.xlsm  [Read-Only] - Excel", 1).Window("XLDESK", "", 1).Window("EXCEL7", "CSS_Performance_Specifications.xlsm  [Read-Only]", 1)
+  'Set oUnSearch = Sys.Process("EXCEL").Window("*", "Unable to Search", 1)
+  If oXLTable.Exists Then
+    oXLApp.ActiveSheet.Range("AE8").Select
+'    'Click Search.Make
+'    Call oXLTable.Click(398, 107) 
+    'Add CPS Code 
+    Call oXLTable.Click(1359, 117) 
+    Set oCPIDialog = Sys.Process("EXCEL").Window("ThunderDFrame", "CSS Advanced Search Window", 1).Window("F3 Server *", "", 1)
+    If oCPIDialog.Exists Then
+      oDesktop.Keys "[Tab]"
+      oDesktop.Keys "[Tab]"
+      oDesktop.Keys "[Tab]"
+      oDesktop.Keys "[Tab]"
+      oDesktop.Keys "[Tab]"
+      oDesktop.Keys strCPSCode
+      Set objOwningGBU = oCPIDialog.Window("F3 Server *", "", 3)
+      'Cancel Owning GBU
+      Call objOwningGBU.Click(64,38)
+      'Click Search Button, if opreation "click" is not stable, it can use the way that is to press 27 times "Tab" key and press "Enter" key 
+      Call oCPIDialog.Click(600,43)
+      Delay(5000)
+      
+      'Select the CPI search result
+      oXLApp.ActiveSheet.Range("I4").Select
+      Call oXLTable.ClickR(1008, 119)
+      Delay(500)
+      oXLWorkBook.Keys "[Enter]"
+      Delay(500)
+      Set confirmDialog = Sys.Process("EXCEL").Window("*", "Insert Search Rows", 1).Window("Button", "&Yes", 1)
+      confirmDialog.Click
+      
+      Delay(1000)
+      
+      'Save
+      oXLWorkBook.Keys "[F10]"
+      oXLWorkBook.Keys "[Down]"
+      oXLWorkBook.Keys "[Right]"
+      oXLWorkBook.Keys "[Right]"
+      oXLWorkBook.Keys "[Right]"
+      oXLWorkBook.Keys "[Right]"
+      oXLWorkBook.Keys "[Right]"
+      oXLWorkBook.Keys "[Enter]"
+      Delay(500)
+      oXLWorkBook.Keys "[Enter]"
+      
+      'Clearn Up
+      Set objOwningGBU = Nothing
+      Set oCPIDialog = Nothing
+      Set oXLTable = Nothing
+      Set oDesktop = Nothing
+    End IF
+  End If
+ 
+  Set oXLWorkBook = Nothing
+  Set oXLApp = Nothing
+  Delay(10000)
+
+End Function
+
+Function EditFormulation(arrGCAS, intGCAS)
+g_strBrowserType = c_IExplorer
+EditExcel.Click
+FormulationLink.Click
+
+Delay(60000)    
+  Dim oXLApp, oWorkBook
+  Set oDesktop = Sys.Desktop
+  Set oXLApp = GetObject(,"Excel.Application")
+  'Set oWorkBook=oXLApp.Workbooks(oXLApp.ActiveWorkbook.Name) 
+  Set oXLWorkBook = Sys.Process("EXCEL").Window("XLMAIN", "CSS_Formulation.xlsm  [Read-Only] - Excel", 1)
+  Set oXLTable = Sys.Process("EXCEL").Window("XLMAIN", "CSS_Formulation.xlsm  [Read-Only] - Excel", 1).Window("XLDESK", "", 1).Window("EXCEL7", "CSS_Formulation.xlsm  [Read-Only]", 1)
+  'Set oUnSearch = Sys.Process("EXCEL").Window("*", "Unable to Search", 1)
+  If oXLTable.Exists Then
+    oXLApp.ActiveSheet.Range("F9").Select
+'    'Click Search.Make
+'    Call oXLTable.Click(398, 107) 
+    'Add CPS Code 
+    Call oXLTable.Click(682, 320) 
+    Set oCPIDialog = Sys.Process("EXCEL").Window("ThunderDFrame", "CSS Advanced Search Window", 1).Window("F3 Server *", "", 1)
+    If oCPIDialog.Exists Then
+      oDesktop.Keys "[Tab]"
+      oDesktop.Keys "[Tab]"
+      oDesktop.Keys "[Tab]"
+      oDesktop.Keys "[Tab]"
+      oDesktop.Keys "[Tab]"
+      oDesktop.Keys arrGCAS
+      Set objOwningGBU = oCPIDialog.Window("F3 Server *", "", 3)
+      'Cancel Owning GBU
+      Call oCPIDialog.Click(193,397)
+      'Click Search Button, if opreation "click" is not stable, it can use the way that is to press 27 times "Tab" key and press "Enter" key 
+      Call oCPIDialog.Click(633,25)
+      Delay(5000)
+      intCell = 4+intGCAS-1
+      strCell = "F4"&":"&"O"&intCell
+      'Select the CPI search result
+      oXLApp.ActiveSheet.Range(strCell).Select
+      Call oXLTable.ClickR(1008, 119)
+      Delay(500)
+      oXLWorkBook.Keys "[Enter]"
+      Delay(500)
+      Set confirmDialog = Sys.Process("EXCEL").Window("*", "Insert Search Rows", 1).Window("Button", "&Yes", 1)
+      confirmDialog.Click
+      
+      Delay(9000)
+      
+      'Save
+      oXLWorkBook.Keys "[F10]"
+      oXLWorkBook.Keys "[Down]"
+      oXLWorkBook.Keys "[Right]"
+      oXLWorkBook.Keys "[Right]"
+      oXLWorkBook.Keys "[Right]"
+      oXLWorkBook.Keys "[Right]"
+      oXLWorkBook.Keys "[Right]"
+      oXLWorkBook.Keys "[Enter]"
+      Delay(500)
+      oXLWorkBook.Keys "[Enter]"
+      
+      'Clearn Up
+      Set objOwningGBU = Nothing
+      Set oCPIDialog = Nothing
+      Set oXLTable = Nothing
+      Set oDesktop = Nothing
+    End IF
+  End If
+ 
+  Set oXLWorkBook = Nothing
+  Set oXLApp = Nothing
+  Delay(10000)
+End Function 

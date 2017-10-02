@@ -1,0 +1,25 @@
+﻿'USEUNIT EnoviaPDT_PDTMain
+'USEUNIT FileLib
+'USEUNIT CommonModels
+'USEUNIT GlobalVars
+
+Function Start_PDT_Engine_Manual()
+  ' plmdev  = DEV
+  ' plmtest = SIT
+  ' set devglag to false when executing actual runs 
+  Call Start_PDT_Engine("plmtest", 0)
+End Function
+
+Function Start_PDT_Engine_Auto()
+  Set oParams = FileLib_GetTestCompleteAutoParams()
+  Call Start_PDT_Engine(oParams.Environment, oParams.BuildNumber)
+End Function
+
+Function Start_PDT_Engine(sEnv, nBuildNumber)
+  If sEnv = "plmprod" Then
+    Log.Message("Unable to run PDTs on the production server.")
+  Else
+    g_strBrowserType = "iexplore"
+    Call EnoviaPDT_PDTMain.Main(sEnv,"dsmregression", False)
+  End If
+End Function

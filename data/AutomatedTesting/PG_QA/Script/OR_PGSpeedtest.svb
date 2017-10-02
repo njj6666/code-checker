@@ -1,0 +1,21 @@
+﻿'P&G Start Speedtest 
+OR_PGSpeedtestStart_GOBtn = Array("WEBOBJECT", "Name~ObjectType~contentText~VisibleOnScreen", "Button(0)~Button~GO~True", "")
+
+'P&G NA-Alpharetta Speedtest
+OR_PGSpeedtestLocation_DropDown = Array("EVALUATEXPATH",".//*[@id='root']//*[@class='text-primary text-primary-hover host-list__link']","","")
+OR_PGSpeedtestLocation_NABtn = Array("WEBOBJECT", "contentText~ObjectType~Visible", "Procter & Gamble - Alpharetta~Panel~True", "")
+
+
+
+'P&G Speedtest Results IE
+'OR_PGSpeedtestResults_Ping = Array("FULLNAME", "Frame(0).Panel(""root"").Panel(0).Panel(0).Panel(0).Panel(0).Panel(0).Panel(0).Panel(1).Panel(0).Panel(0).TextNode(0)", "", "")
+'OR_PJSpeedtestResults_Jitter = Array("FULLNAME", "Frame(0).Panel(""root"").Panel(0).Panel(0).Panel(0).Panel(0).Panel(0).Panel(1).Panel(1).Panel(0).Panel(0).TextNode(0)", "", "")
+'OR_PGSpeedtestResults_DownloadField = Array("FULLNAME", "Frame(0).Panel(""root"").Panel(0).Panel(0).Panel(0).Panel(0).Panel(1).Panel(0).Panel(1).Panel(0).Panel(0).TextNode(0)", "", "")
+'OR_PGSpeedtestResults_UploadField = Array("FULLNAME", "Frame(0).Panel(""root"").Panel(0).Panel(0).Panel(0).Panel(0).Panel(1).Panel(1).Panel(1).Panel(0).Panel(0).TextNode(0)", "", "")
+
+'P&G Speedtest Results Firefox
+OR_PGSpeedtestResults_Ping = Array("FULLNAME", "Frame(0).Panel(""root"").Panel(0).Panel(0).Panel(0).Panel(1).Panel(0).Panel(0).Panel(1).Panel(0).Panel(0).TextNode(0)", "", "")
+OR_PJSpeedtestResults_Jitter = Array("FULLNAME", "Frame(0).Panel(""root"").Panel(0).Panel(0).Panel(0).Panel(1).Panel(0).Panel(1).Panel(1).Panel(0).Panel(0).TextNode(0)", "", "")
+OR_PGSpeedtestResults_DownloadField = Array("FULLNAME", "Frame(0).Panel(""root"").Panel(0).Panel(0).Panel(0).Panel(1).Panel(1).Panel(0).Panel(1).Panel(0).Panel(0).TextNode(0)", "", "")
+OR_PGSpeedtestResults_UploadField = Array("FULLNAME", "Frame(0).Panel(""root"").Panel(0).Panel(0).Panel(0).Panel(1).Panel(1).Panel(1).Panel(1).Panel(0).Panel(0).TextNode(0)", "", "")
+ 

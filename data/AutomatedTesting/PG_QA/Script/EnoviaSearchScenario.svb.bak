@@ -1,0 +1,33 @@
+﻿'USEUNIT GlobalVars
+'USEUNIT TimeLib
+'USEUNIT EnoviaSearchTC1
+'USEUNIT EnoviaSearchTC2
+'USEUNIT EnoviaSearchTC3
+
+Function EnoviaSearch_StartScenarios()
+
+  Call EnoviaSearch_Scenario1()
+  g_isBlocked = false
+  Call EnoviaSearch_Scenario2()
+  g_isBlocked = false
+  Call EnoviaSearch_Scenario3()
+  
+End Function 
+
+Function EnoviaSearch_Scenario1()
+  
+  Call EnoviaSearchTC17_Steps()
+  g_isBlocked = false
+  Call EnoviaSearchTC18_Steps()
+  
+End Function 
+
+Function EnoviaSearch_Scenario2()
+  
+  
+End Function
+
+Function EnoviaSearch_Scenario3()
+  
+  
+End Function  

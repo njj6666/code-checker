@@ -1,0 +1,21 @@
+﻿'USEUNIT WebKeywords
+'USEUNIT EnoviaUtils
+'USEUNIT OR_Enovia
+'USEUNIT DSM_E2EUtility
+
+Sub Main()
+  Call Enovia_LoginNoSelectRole("pg_DSM41","plmtest")
+  Call Enovia_SearchAndOpen("91940704")
+  'Select the Alternate category
+  Delay(3000)
+  Call Click(OR_EnoviaPDTLP_Sixteenth,g_EnoviaHomePage_URL,3000)
+  Delay(3000)
+  Call ClickAddExistButton()
+  Call AddAlternate("91938877")
+  Call Enovia_SearchAndOpen("91938877")
+  'Select the Alternate category
+  Delay(5000)
+  Call Click(OR_EnoviaPDTLP_Sixteenth,g_EnoviaHomePage_URL,3000)
+  Call ClickAddExistButton()
+  Call AddAlternate("91938625") 
+End Sub 

@@ -1,0 +1,366 @@
+﻿'USEUNIT EnoviaSearchModels
+'USEUNIT EnoviaSearch_PopulateSearchModel
+'USEUNIT EnoviaSearch_ValidateResults
+'USEUNIT OR_Enovia
+'USEUNIT LogLib
+'USEUNIT WindowsUtility
+'USEUNIT EnoviaUtils
+'USEUNIT GlobalVars
+'USEUNIT WebObjectLib
+'USEUNIT WebKeywords
+'USEUNIT EnoviaSearch_ExecuteNamedSearch
+'USEUNIT EnoviaSearch_Utility
+
+
+Function Dummy()
+'  Set temp = EnoviaSearch_CreateDictionaryModel()
+'  Set oModel = temp.Item("TC-15_Named Search_Refinement_Combination")
+'  Call EnoviaNamed_SearchType(oModel)
+  'Call EnoviaFullText_SearchType(oModel)
+  'Call EnoviaFindProdData_SearchType(oModel)
+  
+  'Call EnoviaName_FieldsValidation(oModel)
+  
+  
+  'temp = EnoviaSearch_ReadTestCasesData("TC-04_Named Search_Toolbar Delete/Add To Collections","SearchDelete")
+  'Log.Message temp
+  
+  
+  Call EnoviaSearch_CreateDicObjTestCases()
+  temp = EnoviaSearch_ReadTestCasesData("TC-18_Find Product Data_Toolbar View","Sortby3")
+  Log.Message temp
+  Log.Message g_SearchTestCasesUserName
+  Set g_SearchTestCasesUserName = nothing
+  Log.Message g_SearchTestCasesUserName
+  Set g_objTestObject = nothing
+  
+  
+'  Call EnoviaSearch_CreateDictionaryModel()
+'  Log.Message g_SearchEngineUserName
+'   Set g_SearchEngineUserName = nothing
+
+  
+End Function 
+
+
+Function Test1
+
+sPath = aqFileSystem.GetFolderInfo(aqFileSystem.GetCurrentFolder).ParentFolder.ParentFolder.Path&"Files\Search\ExtraTestCases Backup.xlsx"
+
+  const xlCellTypeVisible = &Hc 'TO select only cells that are visible
+  'Dictionary Object to store Field Names as Keys and Inputs as Value
+  Set objTestCases = CreateObject("Scripting.Dictionary")
+  
+  Set oExcel = CreateObject("Excel.Application")
+  oExcel.Workbooks.Open sPath
+  
+  Set oWorkSheet = oExcel.Worksheets.Item("Sheet1")
+  
+  'To get the number of columns from the sheet
+  nColCount = oWorkSheet.UsedRange.Columns.Count   
+  nRowCount = oWorkSheet.UsedRange.Rows.Count
+  
+  
+    For iRow = 2 to nRowCount
+    Set objInput = CreateObject("Scripting.Dictionary")
+      For iCol = 1 to nColCount
+      sCellValue = oWorkSheet.cells(iRow,iCol).value
+        If (IsEmpty(sCellValue) = False) Then
+          If instr(oWorkSheet.cells(iRow,iCol).value,":") then
+            arrField = Split(Trim(oWorkSheet.cells(iRow,iCol)),":")
+            objInput.add arrField(0),arrField(1)
+          End If
+        End If
+      Next
+      objTestCases.add oWorkSheet.cells(iRow,1).value,objInput
+      Set objInput = nothing
+    Next
+    
+    nTestCaseCount = objTestCases.count
+    arrKeys = objTestCases.keys
+    For j = 0 to nTestCaseCount
+      If arrKeys(j) = TestCaseName Then
+        Set arrValues = objTestCases.Item(TestCaseName)
+      End If
+    Exit For    
+    Next
+    
+    Test1 = arrValues.item(sField)
+   
+    oExcel.DisplayAlerts = False
+    oExcel.Workbooks.Close
+    oExcel.Quit
+    Set oWorkSheet = Nothing
+    Set oExcel = Nothing 
+    Set objTestCases = nothing
+    Set arrValues = nothing
+    Erase arrKeys
+
+End Function
+
+Function CloseBrowser()
+
+  On Error Resume Next   
+  
+    Dim objPage
+    Dim arrPropNames, arrPropValues, arrChildBrowser 
+
+    lstrPageURL = Sys.Process(g_strBrowserType).Page("*").URL
+    arrPropNames = Array("ObjectType", "URL")
+    arrPropValues = Array("Page", lstrPageURL & "*")
+    
+        
+    Set objPage = Sys.Process(g_strBrowserType).FindChild(arrstrPropNames, arrstrPropValues, 20, True)
+    
+    arrChildBrowser = Sys.Process(g_strBrowserType).FindAllchildren("ObjectType","BrowserWindow")
+    
+    For each obj in arrChildBrowser
+      If obj.ObjectIdentifier <> 0 Then
+        obj.Close
+      End If
+    Next
+    
+    objPage.Refresh2()
+    aqUtils.Delay 15000,"Waiting for the main page to load."
+    
+    Set objPage = nothing   
+
+End Function
+
+
+Function Test
+ 
+' OR_EnoviaSearch_CloseButton = Array("WEBOBJECT","ObjectType~ObjectIdentifier~tagName~className","Link~0~A~btn close","")
+' OR_EnoviaSearch_CloseLink = Array("WEBOBJECT","ObjectType~ObjectIdentifier~tagName~className","Link~0~A~btn clear","")
+' Set objClose = objGetObject(OR_EnoviaSearch_CloseButton,"","")
+' Set objCloseLink = objGetObject(OR_EnoviaSearch_CloseLink,"","")
+' Sys.HighlightObject(objCloseLink)
+' objCloseLink.Click()
+ 
+ 
+' OR_EnoviaSearch_SSearchResetCmd = Array("WEBOBJECT", "ObjectType~ObjectIdentifier~tagName~className~VisibleOnScreen", "Link~mx_reset~A~btn-reset~True","")
+'   Set Reset = objGetObject(OR_EnoviaSearch_SSearchResetCmd,"","")
+'   Set delete = objGetObject(OR_EnoviaSearch_TC18_DeletIcon,"","")
+'  Sys.HighlightObject(delete)
+  
+  
+'  Set objOwner = objGetObject(OR_EnoviaSearch_SearchOwnerPnl,"",2000)
+'  Sys.HighlightObject(objOwner)
+  
+'  OR_EnoviaSearch_ModifiedText = Array("WEBOBJECT","ObjectIdentifier~ObjectType~VisibleOnScreen","8~Label~True","") 
+'  Set objcaseSensitive = objGetObject(OR_EnoviaSearch_ModifiedText,"",1500)
+'  Sys.HighlightObject(objcaseSensitive)
+'  objcaseSensitive.click()
+  
+  
+'  Set objRefresh = objGetObject(OR_EnoviaSearch_SSearchRefreshCmd,"",1500)
+'  Sys.HighlightObject(objRefresh)
+'  objRefresh.Click()
+  
+  
+'  Set objTypeText = objGetObject(OR_EnoviaSearch_RevisionText,"",1500)
+'  Sys.HighlightObject(objTypeText)
+'      objTypeText.Click()
+'      For k = 1 to 8
+'      objTypeText.keys("^[Down]")
+'      Next
+'      OR_EnoviaSearch_Panel=Array("WEBOBJECT","ObjectType~ObjectIdentifier~visibleOnScreen","Panel~searchBody~True","")
+'      Set objTypeText = objGetObject(OR_EnoviaSearch_Panel,"",1500)
+'      Sys.HighlightObject(objTypeText)
+'      objTypeText.click 330,375
+'      objTypeText.click 330,375
+'      objTypeText.click 330,375
+'      objTypeText.click 330,375
+      
+'      OR_EnoviaSearch_RevisionText = Array("WEBOBJECT","ObjectIdentifier~ObjectType~tagName~VisibleOnScreen","1~TextNode~LI~True","")
+'      Set objTypeText = objGetObject(OR_EnoviaSearch_RevisionText,"",1500)
+'      objTypeText.Click()
+'      Sys.HighlightObject(objTypeText)
+
+
+
+'      OR_EnoviaSearch_RevisionText = Array("WEBOBJECT","ObjectIdentifier~ObjectType~tagName~VisibleOnScreen","searchBody~Panel~DIV~True","")
+'      Set objTypeText = objGetObject(OR_EnoviaSearch_RevisionText,"",1500)
+'      Sys.HighlightObject(objTypeText)
+
+
+
+
+'    Set objTypeText = objGetObject(OR_EnoviaSearch_SearchPolicyPnl,"",1500)
+'    
+'    Sys.HighlightObject(objTypeText)
+'    objTypeText.Click()
+      
+
+      
+'      Set objSearchPanel = objGetObject(OR_EnoviaSearch_Panel,"",1500)
+'      Sys.HighlightObject(objSearchPanel)
+'      'nHeight = objSearchPanel.Height
+'      'nWidth = objSearchPanel.Width
+'      For k = 1 to 4
+'      objSearchPanel.Click (objSearchPanel.Width)*0.97,(objSearchPanel.Height)*0.99
+'      Next
+      
+      'OR_EnoviaSearch_TC18_DeletIcon = Array("WEBOBJECT", "ObjectIdentifier~ObjectType~sourceIndex~ie9_tagName~VisibleOnScreen", "iconActionDelete_png~Image~107~IMG~True", "")
+'      set obj = objGetObject(OR_EnoviaSearchFindProdData_TitlePnl,g_SearchPageURL,"")
+'      Sys.HighlightObject(obj)
+      
+      'OR_EnoviaSLM_PerformanceStudyPage = Array("NATIVEWEBOBJECT", "idStr", "list", "DIV")
+      
+      OR_Panel = Array("WEBOBJECT", "ObjectIdentifier~ObjectType~sourceIndex~VisibleOnScreen", "pageContentDiv~Panel~741~True", "")
+      Set objPanel = objGetObject(OR_Panel, "","")
+      Sys.HighlightObject(objPanel)
+      
+      
+      Set sg = objPanel.FindChildByXPath(".//*[@id='list']/sp-updatepanel[2]/ps-simulation-item/div")
+      v = sg.Name
+      Sys.HighlightObject(sg)
+      Log.Message v
+      
+'      OR_EnoviaSLM_PerformanceStudyPage = Array("EVALUATEXPATH",".//*[@id='list']","")
+'      Set objPerfStudyPage = objGetObject(OR_EnoviaSLM_PerformanceStudyPage, "","")
+'      Sys.HighlightObject(objPerfStudyPage)
+      
+      
+End Function
+
+
+
+
+
+
+
+'##################################################################################################################
+'Function Name                : EnoviaNamed_SelectMultiUser
+'Description                  : Selects Multiple users
+'Arguments                    : An array of Users
+'Return Value                 : Nothing
+'Author                       : Geetanjali Vajrapu
+'Creation Date                : 1 & 2-Jun-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaNamed_SelectMultiUser(sUser)
+    
+    'g_SearchPageURL = "https://plmtest.pg.com/enovia/common/emxFullSearch.jsp?"
+          
+    Set objFirstTab = objGetObject(OR_EnoviaSearch_MultiUser,g_SearchPageURL,"")
+    nRowCount = objFirstTab.rowCount
+    errCount = 0
+    
+    For i = 0 to Ubound(sUser)
+      For iRow = 1 to nRowCount-1
+        IF objFirstTab.Cell(iRow,1).contentText = sUser(i) Then
+           Set checkBox = objFirstTab.Cell(iRow,1).FindChild("ObjectType","Checkbox",6) 
+           checkBox.ClickChecked(True) 
+           errCount = errCount + 1     
+        End IF
+      Next
+    Next
+    
+    IF errCount = 0 Then
+      Log.Error "User not found in the list."
+    End IF
+    
+    Set btnSubmit = objGetObject(OR_EnoviaSearch_SOwnerBtn,g_SearchPageURL,"")
+    btnSubmit.Click()
+     
+End Function
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_SetDate
+'Description                  : Sets the date
+'Arguments                    : Object for which date has to be set, Date Criteria and Dates
+'Return Value                 : Nothing
+'Author                       : Geetanjali Vajrapu
+'Creation Date                : 1 & 2-Jun-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_SetDate(oDateField,oModel)
+  
+  IF oDateField(2) = "ORIGINATED~Textbox" Then
+    sWhen = oModel.OriginatedDate.When
+    dDate1 = oModel.OriginatedDate.DateOne
+    dDate2 = oModel.OriginatedDate.DateTwo
+  Else IF oDateField(2) = "MODIFIED~Textbox" Then
+    sWhen = oModel.ModifiedDate.When
+    dDate1 = oModel.ModifiedDate.DateOne
+    dDate2 = oModel.ModifiedDate.DateTwo
+  End IF
+  End IF
+
+  Set DateTimePicker = WebObjectLib.objGetObject(oDateField,"","")
+
+  Select Case sWhen
+    case "On"
+      dDate1 = aqConvert.DateTimeToFormatStr(dDate1, "%b %d, %Y")
+      'Set the date
+      DateTimePicker.innerText = dDate1
+    case "On or after"
+      dDate1 = aqConvert.DateTimeToFormatStr(dDate1, "%b %d, %Y")
+      'Set the date
+      DateTimePicker.innerText = "> "&dDate1
+    case "On or before"
+      dDate1 = aqConvert.DateTimeToFormatStr(dDate1, "%b %d, %Y")
+      'Set the date
+      DateTimePicker.innerText = "< "&dDate1
+    case "Between"
+      dDate1 = aqConvert.DateTimeToFormatStr(dDate1, "%b %d, %Y")
+      dDate2 = aqConvert.DateTimeToFormatStr(dDate2, "%b %d, %Y")
+      'Set the date
+      DateTimePicker.innerText = "> "&dDate1&", < "&dDate2
+    case Else
+      Log.Error "Select appropriate Date Criteria" 
+  End Select
+  
+End Function 
+
+
+Function Dum
+  'sPath = aqFileSystem.GetFolderInfo(aqFileSystem.GetCurrentFolder).ParentFolder.ParentFolder.Path&"Files\Search\ExtraTestCases.xlsx"
+  temp = EnoviaSearch_ReadTestCasesData("TC-13_Named Search_Refinement_Title","TitleName")
+  Log.Message temp
+End Function 
+
+
+Function Dummy1
+  Set temp = EnoviaSearch_CreateDictionaryModel()
+  Call EnoviaSearch_StartNamedSearch(temp)
+End Function 
+
+
+
+Function F
+  Set objTable = Sys.Browser("iexplore").BrowserWindow(0).Window("Frame Tab", "", 1).Tab("3DEXPERIENCE Platform - Internet Explorer provided by Capgemini").Window("Shell DocObject View", "", 1).MSAAObject("client").MSAAObject("cl_httpsplmprodpgcomenoviacommonpg_emxNavigatorjspticketST79597dXelffsj0Ndw641rvJhcas").MSAAObject("pane_DEXPERIENCE_Platform").MSAAObject("cl_httpsplmprodpgcomenoviawebappsSMAProcPSUIpsapppsappunloadhtml").MSAAObject("pane")
+  Log.message objTable.Exists
+  Set objPane = Sys.Browser("iexplore").BrowserWindow(0).Window("Frame Tab", "", 1).Tab("3DEXPERIENCE Platform - Internet Explorer provided by Capgemini").Window("Shell DocObject View", "", 1).MSAAObject("client").MSAAObject("cl_httpsplmprodpgcomenoviacommonpg_emxNavigatorjspticketST79597dXelffsj0Ndw641rvJhcas").MSAAObject("pane_DEXPERIENCE_Platform")
+  Log.Message "Child count" &objPane.AChildCount
+
+End Function 
+
+
+Function A
+  OR_ObjClick = Array("WEBOBJECT","ObjectIdentifier~ObjectType~className~VisibleOnScreen","layerOverlayRight~Panel~toolbar-mask group-right~True","")
+    Set objClick = objGetObject(OR_ObjClick,"","")
+    Sys.HighlightObject(objClick)
+    objClick.Click()
+End Function 
+
+Function B
+   sProdData = aqDateTime.GetYear(sDateTime) & aqDateTime.GetMonth(sDateTime) & aqDateTime.GetDay(sDateTime) & aqDateTime.GetHours(sDateTime) & aqDateTime.GetMinutes(sDateTime) & aqDateTime.GetSeconds(sDateTime)
+    SearchRecord =  EnoviaSearch_CreateProdData(sProdData)
+End Function 
+
+Function C 
+  
+  objD = Array("WEBOBJECT","ObjectIdentifier~ObjectType~tagName~VisibleOnScreen","AEFGenericDelete~Cell~TD~True","")
+  Set objDel = objGetObject(OR_EnoviaSearch_TC18_DeletIcon,"","")
+  Sys.HighlightObject(objDel)
+  objDel.Click()
+
+End Function

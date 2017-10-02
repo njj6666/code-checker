@@ -1,0 +1,282 @@
+﻿'USEUNIT GlobalVars
+'USEUNIT TimeLib
+'USEUNIT CallBackFunction
+'USEUNIT DBLib
+'USEUNIT DatabaseModels
+'USEUNIT RegressionModels
+'USEUNIT FileLib
+'USEUNIT PerformanceModels
+
+Function Log_UpdateIsBlocked()
+  If Err.Number <> 0 Then
+    g_isBlocked = true
+  End If
+  Log_UpdateIsBlocked = g_isBlocked
+End Function 
+
+' Creates the global variables used during script execution
+Function CreateEnvironment(sAppName, sEnvironment, bDevFlag, sComments, bCitrix, sTestType)  
+  Set g_props = CreateObject("Scripting.Dictionary")  
+  Call PrepareForRegressionRun(sAppName, sEnvironment, bDevFlag, sComments)  
+  Call PrepareForPerformanceRun(sAppName, sEnvironment, bDevFlag, sComments, bCitrix, sTestType)
+End Function 
+
+' Writes to the database and clears the global variables
+Function CloseEnvironment()
+  Call CommitLogsToDatabase()
+  
+  Set g_props.Item("machine") = nothing
+  Set g_props.Item("applicationURL") = nothing
+  Set g_props = nothing
+  Set g_regLog = nothing
+  Set g_runLog = nothing
+  Set g_currentTestCase = nothing
+End Function 
+
+'This will prepare all the global variables for a regression run
+Function PrepareForRegressionRun(sAppName, sEnvironment, bDevFlag, sComments)
+
+  Set g_regLog = GetRegressionLogInstance  
+  Set g_currentTestCase = GetTestCaseInstance
+  g_isBlocked = false
+  
+  Set objPC = CreateObject("WScript.Network")
+  sComputerName = objPC.ComputerName
+  sUserName = objPC.UserName
+  Set objPC = nothing
+  
+  Set oMachine = GetMachine(sComputerName)
+  
+  sRegion = GetRegion(oMachine.RegionID)
+  
+  Set oAppUrl = GetApplicationUrl(sEnvironment)
+  
+  g_regLog.Name = sAppName
+  g_regLog.Comments = sComments
+  g_regLog.RunDate = GetCurrentTime()
+  g_regLog.RunDateEST = GetCurrentESTTime()
+  g_regLog.Region = sRegion
+  g_regLog.Environment = sEnvironment
+  g_regLog.RunSuccess = true
+  g_regLog.SUTMachine = oMachine.NickName
+  g_regLog.ExecutionMachine = sComputerName
+  g_regLog.ExecutionUserName = sUserName
+  g_regLog.DevelopmentFlag = bDevFlag
+  g_regLog.AppVersion = oAppUrl.AppVersionID
+  
+  If g_props.Exists("machine") = False Then
+    g_props.Add "machine", oMachine
+  End If
+  
+  If g_props.Exists("applicationURL") = False Then
+    g_props.Add "applicationURL", oAppUrl
+  End If
+  
+  Set oMachine = nothing
+  Set oAppUrl = nothing
+  
+End Function
+
+'This will prepare all the global variables for a performance run
+Function PrepareForPerformanceRun(sAppName, sEnvironment, bDevFlag, sComments, bCitrix, sTestType)
+
+  Set g_runLog = GetRunLogInstance  
+  
+  Set oPC = CreateObject("WScript.Network")
+  sComputerName = oPC.ComputerName
+  strUserName = oPC.UserName
+  Set oPC = nothing
+  
+  Set oMachine = GetMachine(sComputerName)
+  
+  sRegion = GetRegion(oMachine.RegionID)
+  
+  Set oAppUrl = GetApplicationUrl(sEnvironment)
+  
+  g_runLog.Name = sAppName
+  g_runLog.Comments = sComments
+  g_runLog.RunDate = GetCurrentTime()
+  g_runLog.RunDateEST = GetCurrentESTTime()
+  g_runLog.Region = sRegion
+  g_runLog.Environment = sEnvironment
+  g_runLog.RunSuccess = true
+  g_runLog.Citrix = bCitrix
+  g_runLog.SUTMachine = oMachine.NickName
+  g_runLog.ExecutionMachine = sComputerName
+  g_runLog.ExecutionUsername = strUserName
+  g_runLog.DevelopmentFlag = bDevFlag
+  g_runLog.AppVer = oAppUrl.AppVersionID
+  g_runLog.TestType = sTestType
+  
+  If g_props.Exists("machine") = False Then
+    g_props.Add "machine", oMachine
+  End If
+  
+  If g_props.Exists("applicationURL") = False Then
+    g_props.Add "applicationURL", oAppUrl
+  End If
+  
+  Set oMachine = nothing
+  Set oAppUrl = nothing
+  
+End Function
+
+'***Start Example***
+'USEUNIT PerformanceStepNames
+'aqPerformance.Start(c_NameSearchRealTime_SN)
+'Call LogPerformance(c_NameSearchRealTime_SN, False, "")
+'***End Example***
+'This adds a transaction to the run log
+'New step names should be added to the PerformanceStepNames file and the 
+'expectedsteptimes table in the db
+Function LogPerformance(sStepName, bLoginStep, sIdentifier)
+  'Calculate the time duration
+  nStepDuration = aqPerformance.Value(sStepName) / 1000
+  
+  'Write to the performance log
+  Call g_runLog.AddRunDetail(sStepName, bLoginStep, nStepDuration, sIdentifier)
+  
+  'Write to Test Complete Log
+  output = sStepName & ": " & nStepDuration
+  Call Log.Event(output, sStepName)
+end Function
+
+' Excecutes code and logs the time to the transaction log
+Function LogTransaction(functionName, transName)
+  'Start Timer
+  aqPerformance.Start(transName)
+  Call CallBack(functionName)
+  'Stop Timer
+  Call LogPerformance( transName, true, "" )
+End Function
+
+' Adds a step to the current test case
+Function LogStep(functionName, sExpectedResult, sInfo)
+  
+  Dim isSuccessful : isSuccessful = true
+  Dim errorMsg : errorMsg = ""
+  Dim isBlocked : isBlocked = g_isBlocked
+  
+  On Error Resume Next
+  
+  If (g_isBlocked = false) Then
+    Call CallBack(functionName)
+  End If
+  
+  If Err.Number <> 0 Then
+    errorMsg = Err.Description
+    g_isBlocked = true
+    isSuccessful = false
+    'Write error message on Step object
+  End If
+  
+  On Error Resume Next
+  
+  'Update step object
+  Call g_currentTestCase.AddStep(sExpectedResult, isSuccessful, errorMsg, isBlocked, sInfo)
+  
+  If Err.Number <> 0 Then
+    g_systemError = Err.Description
+  End If
+  
+End Function
+
+' Adds a step to the current test case
+Function LogStepData(sExpectedResult, bPassed, sErrorMessage, sInfo)
+  
+  bBlocked = g_isBlocked
+  
+  If (bPassed = false) Then
+    g_isBlocked = true
+  End If
+  
+  'Update step object
+  Call g_currentTestCase.AddStep(sExpectedResult, bPassed, sErrorMessage, bBlocked, sInfo)
+    
+End Function
+
+' Closes the current test case and starts a new one
+Function LogTestCase(description, tcNumber, almId)
+
+  Log.Message description & " - " & tcNumber
+  
+  g_currentTestCase.RunDate = GetCurrentTime()
+  g_currentTestCase.RunDateEST = GetCurrentESTTime()  
+  g_currentTestCase.Description = description
+  g_currentTestCase.AlmId = almId
+  g_currentTestCase.Blocked = true
+  g_currentTestCase.Success = true
+  g_currentTestCase.Name = tcNumber
+  
+  For Each testStep in g_currentTestCase.Steps.Items()
+    If testStep.Passed = False Then
+      g_currentTestCase.Success = false
+    End If
+    If testStep.IsBlocked = false Then
+      g_currentTestCase.Blocked = false
+    End If
+  Next
+  
+  Call g_regLog.AddTestCase(tcNumber, g_currentTestCase)
+  Set g_currentTestCase = GetTestCaseInstance
+  
+End Function
+
+' Writes the database with the regression information
+Function CommitLogsToDatabase()
+  
+  'This will write all the regression info to the database
+  Call WriteRegRunInfo(g_regLog)
+  
+  'This will write all the performance info to the database
+  Call WriteRunLog(g_runLog)
+  
+  'This will write all the regression info into a file
+  'The data is over written after each run
+'  Dim sText : sText = ""
+'  
+'  If IsNull(g_regLog) = false Then
+'    If IsNull(g_regLog.TestCases) = false Then
+'      For Each item In g_regLog.TestCases.Items()
+'        sText = sText + item.Description + vbCrLf      
+'        If IsNull(item.Steps) = false Then
+'          For Each tcStep In item.Steps.Items()
+'            If tcStep.ErrorMsg = "" Then
+'              sText = sText + tcStep.ExpectedResult + vbCrLf
+'            else
+'              sText = sText + tcStep.ErrorMsg + vbCrLf
+'            End If
+'          Next
+'          sText = sText + vbCrLf
+'        End If  
+'      Next
+'    End If
+'  End If
+'  
+'  sPath = aqFileSystem.GetFolderInfo(aqFileSystem.GetCurrentFolder).ParentFolder.ParentFolder.Path&"Files\Log\"&"RegressionLog"&".txt"
+'  Call FileLib_WriteTextFile(sText, sPath)
+    
+End Function 
+
+'This is just to test the regression logging
+Function CreateFakeRegData()
+
+  Call CreateEnvironment("testing", "plmtest", true, "Test Regression", false, "Regression")
+  
+  Call LogStep("EmptyFunction", "Test Code", "info")
+  Call LogStepData("Step Data Expected Results", false, "Things are all jacked up.", "info")
+  Call LogTestCase("Testing 123", 1, "n/a")  
+  Call WriteRegRunInfo(g_regLog)
+  
+'  aqPerformance.Start("test step")
+'  Call LogPerformance("test step", false, "my id")
+'  Call WriteRunLog(g_runLog)
+
+  Call CloseEnvironment()
+End Function 
+
+Function EmptyFunction()
+  
+End Function 
+
+

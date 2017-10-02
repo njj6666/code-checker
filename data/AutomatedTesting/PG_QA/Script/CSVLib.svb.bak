@@ -1,0 +1,76 @@
+﻿'##################################################################################################################
+'Script/Function/Sub Name     : objOpenADODBConnectionToCSV
+'Description                  : To Open required ADODB connections to various CSV's
+'Arguments                    : m_strCSVFileName: File Name of the CSV File
+'Return Value                 : Connection Object - Returns the Connection Object
+'Author                       : Pramod Rao
+'Creation Date                : 11 -April- 2015
+'Special Conditions           : If the CSV File is not found then report error & Exit
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function objOpenADODBConnectionToCSV(m_strCSVFileName)
+    
+    'Declare Variables
+    Dim objConn, objFile
+     
+    'Create a FileSystemObject
+    Set objFile = CreateObject("Scripting.FileSystemObject")
+   
+    'check if excel file exists, if not report error and exit
+    If Not objFile.FileExists(m_strCSVFileName) Then
+      Log.Error "Error: File not found: " & m_strCSVFileName, "Error opening CSV"
+      Exit Function
+    Else
+      'Else create the ADODB.Connection and Open the connection
+      Set objConn = CreateObject("ADODB.Connection")
+      'Connection String
+      objConn.ConnectionString = "Provider=Microsoft.JET.OLEDB.4.0;Data Source=" & g_strORFileFullPath & ";Extended Properties=""Text;HDR=YES;FMT=Delimited""" 'IMEX=1
+      objConn.Open
+      'objConn.CursorLocation = adUseClient
+    End If
+       
+    'Destroy the objects
+    Set objFile = Nothing
+   
+    'Return the Connection Object
+    Set objOpenADODBConnectionToCSV = objConn
+   
+    'Reltease memory from the objec
+    Set objConn = Nothing
+End Function
+
+'##################################################################################################################
+'Script/Function/Sub Name     : objGetRecordSet
+'Description                  : To Return a recordset based on the query passed
+'Arguments                    : m_objConn: Connection Object of the Excel Workbook
+'                             : strSql: The SQL query to execute
+'Return Value                 : Recordset Object - Returns the Recordset Object
+'Author                       : Pramod Rao
+'Creation Date                : 25 -March- 2014
+'Special Conditions           : NA
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function objGetCSVRecordSet(m_objConn, m_strSql)
+    On Error Resume Next
+
+    Dim objRs   'Declaraton of the variable
+    
+    'Create the record set object
+    Set objRs = CreateObject("ADODB.Recordset")
+    'objRs.CursorLocation  = 3
+    
+    'Open the record set
+    objRs.Open m_strSql, m_objConn
+    'objRs.Open Source:=m_strSql, ActiveConnection:=m_objConn, CursorType:=adOpenDynamic, LockType:=adLockOptimistic
+
+    'Set objRs.ActiveConnection = Nothing
+
+    'Pass the object record set into the function
+    Set objGetCSVRecordSet = objRs
+    
+'    'Release memory from the objects
+    Set objRs = Nothing
+    
+End Function

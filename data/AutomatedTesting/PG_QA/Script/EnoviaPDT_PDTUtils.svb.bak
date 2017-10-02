@@ -1,0 +1,848 @@
+﻿'USEUNIT EnoviaPDT_PDTMain
+'USEUNIT EnoviaPDT_ValidationUtils
+'USEUNIT EnoviaPDT_CreateEditAttributesTables
+'USEUNIT EnoviaUtils
+'USEUNIT ExcelLib
+'USEUNIT GlobalVars
+'USEUNIT OR_Enovia
+'USEUNIT StringLib
+'USEUNIT WebObjectLib
+'USEUNIT WebKeywords
+'USEUNIT WindowsUtility
+'USEUNIT LogLib
+
+Dim PartTypeArray(200,1), aAlmIDArray(200,1), TestCaseID
+ArraySize = -1
+
+' function to wait for page body to be visible and capture performance loggings
+Function EnoviaPDT_WaitForBody(sCategory, sPageName)
+  
+  Dim sURL, sFailed,transName
+  
+  If sPageName <> "" Then
+    sURL = ""
+    transName = "Load_Page_"&sCategory&"_"&sPageName
+    
+    Select Case Ucase(sPageName) ' Select the OR based on page name
+      Case "CREATE"
+        ' Define parent object. ie. Frame, Table that can be uniquely identified. Prefer Frame since it is unique for every tab
+        ' and this way we will avoid finding object that doesn't belong to current tab or page. 
+        oPageFrame = OR_EnoviaPDT_CreateTbl
+        ' Define object properties that we want to wait to be visible. can be variable or an array
+        SearchProps = "idStr"
+        SearchValues = "TypeActualId"
+        ' Define page Url if multiple pages open
+        sURL = g_CreatePage_URL
+      Case "COPY"
+        oPageFrame = OR_EnoviaPDT_CopyFme
+        SearchProps = "idStr"
+        SearchValues = "Title"
+        sURL = g_CopyPage_URL
+      Case "AFFECTED FINISHED PRODUCT..."
+        oPageFrame = OR_EnoviaPDT_AffectedFinishedProductFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "FORMULA"
+        oPageFrame = OR_EnoviaPDT_FormulaFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "ATTRIBUTES"
+        oPageFrame = OR_EnoviaPDT_AttributesFme
+        SearchProps = Array("ObjectType","className")
+        SearchValues = Array("Table","form")
+      Case "FORMULATION PARTS AND PRO..."
+        oPageFrame = OR_EnoviaPDT_FormulationPartsAndProFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "FORMULATION PROCESS"
+        oPageFrame = OR_EnoviaPDT_FormulationProcessFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "SAP BOM AS FED"
+        oPageFrame = OR_EnoviaPDT_SAPBOMFme
+        SearchProps = "idStr"
+        SearchValues = "pgIPMFlatBOMViewTable"
+      Case "NOTES"
+        oPageFrame = OR_EnoviaPDT_NotesFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"  
+      Case "TABLES"
+        oPageFrame = OR_EnoviaPDT_TablesFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "TABLES WEIGHT"
+        oPageFrame = OR_EnoviaPDT_TablesFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "MASTER"
+        oPageFrame = OR_EnoviaPDT_MasterFme
+        SearchProps = Array("ObjectType","className")
+        SearchValues = Array("Table","form")
+      Case "TRANSPORT UNIT"
+        oPageFrame = OR_EnoviaPDT_TransportUnitFme
+        SearchProps = "idStr"
+        SearchValues = "pgVPDTransportUnit"
+      Case "CUP ARTWORK"
+        oPageFrame = OR_EnoviaPDT_CUPArtWorkFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "REVISIONS"
+        oPageFrame = OR_EnoviaPDT_RevisionsFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"  
+      Case "HISTORY"
+        oPageFrame = OR_EnoviaPDT_HistoryAEFFme
+        SearchProps = Array("ObjectType","className")
+        SearchValues = Array("Table","list")
+      Case "CONTENT"
+        oPageFrame = OR_EnoviaPDT_ContentFme
+        SearchProps = "idStr"
+        SearchValues = "CPNProductDataViewContentFilesSummary"  
+      Case "LIFECYCLE"
+        If UCase(sCategory) = "LIFECYCLE/APPROVALS POWE..." Then
+          oPageFrame = OR_EnoviaPDT_LifecyclePoweFme
+        Else
+          oPageFrame = OR_EnoviaPDT_LifecycleFme
+        End If
+        
+        SearchProps = Array("ObjectType","className")
+        SearchValues = Array("Table","lifecycle")
+      Case "IMAGES"
+        oPageFrame = OR_EnoviaPDT_ImagesFme
+        SearchProps = Array("ObjectType","ObjectIdentifier")
+        SearchValues = Array("Form","ImageViewerForm")
+      Case "TASKS/SIGNATURES"
+        If UCase(sCategory) = "LIFECYCLE/APPROVALS POWE..." Then
+          oPageFrame = OR_EnoviaPDT_PlantsFme
+          SearchProps = "idStr"
+          SearchValues = "AEFLifecycleTaskSignaturesSummary"
+        Else
+          oPageFrame = OR_EnoviaPDT_TasksSigFme
+          SearchProps = "idStr"
+          SearchValues = "AEFLifecycleTaskSignaturesSummary"
+        End If
+      Case "APPROVALS"
+        oPageFrame = OR_EnoviaPDT_ApprovalsFme
+        SearchProps = "idStr"
+        SearchValues = "AEFLifecycleApprovalsSummary"
+      Case "ROUTES"
+        If UCase(sCategory) = "LIFECYCLE/APPROVALS POWE..." Then
+          oPageFrame = OR_EnoviaPDT_PlantsFme
+          SearchProps = "idStr"
+          SearchValues = "APPObjectRouteSummary"
+        Else
+          oPageFrame = OR_EnoviaPDT_PlantsFme ' need to check later
+          SearchProps = "idStr"
+          SearchValues = "APPObjectRouteSummary"
+        End If
+      Case "COUNTRY CLEARANCE"
+        oPageFrame = OR_EnoviaPDT_PlantsFme
+        SearchProps = "idStr"
+        SearchValues = "pgIPMCountryClearanceTable"
+      Case "SUBSTANCES & MATERIALS" ' Doesn't have unique Frame? need to test and figure out other way
+        oPageFrame = OR_EnoviaPDT_PlantsFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable" 
+      Case "COUNTRIES APPROVED" ' Doesn't have unique Frame? need to test and figure out other way
+        oPageFrame = OR_EnoviaPDT_PlantsFme
+        SearchProps = "Table"
+        SearchValues = "pgIPMPSRATable"  
+      Case "BILL OF MATERIALS", "EBOM"
+        oPageFrame = OR_EnoviaPDT_EBOMFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"  
+      Case "SUBSTITUTE PARTS IN"
+        oPageFrame = OR_EnoviaPDT_SubstitutePartsInFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"  
+      Case "MARKUPS"
+        oPageFrame = OR_EnoviaPDT_MarkupsFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"  
+      Case "SPECS & DOCUMENTS","RELATED SPECIFICATIONS" ' seems to give inaccurate timing. retest
+        oPageFrame = OR_EnoviaPDT_RelatedSpecificationsFme
+        SearchProps = "idStr"
+        SearchValues = "mx_divBody"
+      Case "REFERENCE DOCUMENTS"
+        If Ucase(sCategory) = "REFERENCE DOCUMENTS" Then ' Doesn't have unique Frame? need to test and figure out other way
+          oPageFrame = OR_EnoviaPDT_PlantsFme
+          SearchProps = "idStr"
+          SearchValues = "CPNDocumentSummary"
+        Else
+          oPageFrame = OR_EnoviaPDT_ReferenceDocumentFme
+          SearchProps = "idStr"
+          SearchValues = "BodyTable"
+        End If
+      Case "CHARACTERISTICS REFERENCE..."
+        oPageFrame = OR_EnoviaPDT_CharacteristicsReferenceFme
+        SearchProps = "idStr"
+        SearchValues = "CPNCharacteristicsDocumentSummary" 
+      Case "RELATED IAPS"' Doesn't have unique Frame? need to test and figure out other way
+        oPageFrame = OR_EnoviaPDT_PlantsFme
+        SearchProps = "idStr"
+        SearchValues = "newWindow"
+      Case "DERIVED PARTS", "DERIVED FROM"
+        oPageFrame = OR_EnoviaPDT_DerivedFromFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "WHERE USED"
+        oPageFrame = OR_EnoviaPDT_WhereUsedFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "WHERE USED SPEC"
+        oPageFrame = OR_EnoviaPDT_WhereUsedSpecFme
+        SearchProps = "idStr"
+        SearchValues = "AEFGeneralSearchResults"
+      Case "RELATED PART"
+        oPageFrame = OR_EnoviaPDT_RelatedPartFme
+        SearchProps = Array("ObjectType","className")
+        SearchValues = Array("Table","list")
+      Case "REFERENCED BY"
+        oPageFrame = OR_EnoviaPDT_ReferencedByFme
+        SearchProps = "idStr"
+        SearchValues = "AEFGeneralSearchResults"
+      Case "CLASSIFICATION POWERVIEW", "CLASSIFICATION BOM"
+        oPageFrame = OR_EnoviaPDT_ClassificationBOMFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "CHANGE MANAGEMENT","CHANGE ORDER"
+        oPageFrame = OR_EnoviaPDT_ChangeOrderFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "CHANGE REQUEST"
+        oPageFrame = OR_EnoviaPDT_ChangeRequestFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "CHANGE LEGACY"
+        oPageFrame = OR_EnoviaPDT_ChangeLegacyFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "MULTIPLE OWNERSHIP ACCESS"
+        If Ucase(sCategory) = "MULTIPLE OWNERSHIP ACCESS" Then
+          oPageFrame = OR_EnoviaPDT_PlantsFme
+        Else
+          oPageFrame = OR_EnoviaPDT_MultipleOwnershipAccessFme
+        End If
+        
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "DISCUSSIONS"
+        If uCase(sCategory) = "DISCUSSIONS" Then
+          oPageFrame = OR_EnoviaPDT_PlantsFme
+          SearchProps = "idStr"
+          SearchValues = "APPDiscussionsList"
+        Else
+          oPageFrame = OR_EnoviaPDT_DiscussionsFme
+          SearchProps = "idStr"
+          SearchValues = "BodyTable"
+        End If
+      Case "ISSUES"
+        If Ucase(sCategory) = "ISSUES" Then
+          oPageFrame = OR_EnoviaPDT_PlantsFme
+        Else
+          oPageFrame = OR_EnoviaPDT_IssuesFme
+        End If
+        
+        SearchProps = "idStr"
+        SearchValues = "IssueList"
+          
+      Case "WEIGHTS & DIMENSIONS"
+        oPageFrame = OR_EnoviaPDT_WeightsDimensionsFrm
+        SearchProps = "idStr"
+        SearchValues = "pgVPDPackingUnitWeightAndDimensionsTable"
+      Case "RELATED ATS" ' Doesn't have unique Frame? need to test and figure out other way
+        oPageFrame = OR_EnoviaPDT_PlantsFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "RELATED ACS" ' Doesn't have unique Frame? need to test and figure out other way
+        oPageFrame = OR_EnoviaPDT_PlantsFme
+        SearchProps = "idStr"
+        SearchValues = "newWindow"
+      Case "PROJECTS"' Doesn't have unique Frame? need to test and figure out other way
+        oPageFrame = OR_EnoviaPDT_PlantsFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "IP SECURITY SETTINGS", "IP CLASSES"
+        oPageFrame = OR_EnoviaPDT_IPClassesFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+      Case "SECURITY CLASSES"
+        oPageFrame = OR_EnoviaPDT_SecurityClassesFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"
+       Case "SUBSCRIPTIONS"' Doesn't have unique Frame? need to test and figure out other way
+        oPageFrame = OR_EnoviaPDT_RefDocFrm
+        SearchProps = Array("ObjectType","className")
+        SearchValues = Array("Table","list")
+      Case "COMPONENT MATERIALS"
+        oPageFrame = OR_EnoviaPDT_RefDocFrm
+        SearchProps = Array("ObjectType","contentText")
+        SearchValues = Array("Table","Weight U of M")
+      Case "PLANTS"' Doesn't have unique Frame? need to test and figure out other way
+        oPageFrame = OR_EnoviaPDT_PlantsFme
+        SearchProps = "idStr"
+        SearchValues = "bodyTable"
+      Case "MANUFACTURER EQUIVALENTS"
+        oPageFrame = OR_EnoviaPDT_ManufacturerEquivalentsFme
+        SearchProps = "idStr"
+        SearchValues = "CPCMEPSummary"
+      Case "SUPPLIER EQUIVALENTS"
+        oPageFrame = OR_EnoviaPDT_SupplierEquivalentsFme
+        SearchProps = "idStr"
+        SearchValues = "CPCSEPSupplierEquivalentParts"  
+      Case "STARTING MATERIALS"
+        oPageFrame = OR_EnoviaPDT_RelatedATSFme
+        SearchProps = "idStr"
+        SearchValues = "bodyTable"
+      Case "MATERIALS PRODUCED"' Doesn't have unique Frame? need to test and figure out other way
+        oPageFrame = OR_EnoviaPDT_PlantsFme
+        SearchProps = "idStr"
+        SearchValues = "bodyTable"
+      Case "COUNTRIES OF SALE"
+        oPageFrame = OR_EnoviaPDT_CountriesOfSaleFra
+        SearchProps = Array("ObjectType","className")
+        SearchValues = Array("Table","form")
+      Case "ALTERNATE PARTS"
+        oPageFrame = OR_EnoviaPDT_AlternatePartsFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable"  
+      Case "ALTERNATE PART FOR"
+        oPageFrame = OR_EnoviaPDT_AlternatePartForFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable" 
+      Case "PRIMARY ALTERNATE WHERE U..."
+        oPageFrame = OR_EnoviaPDT_PrimaryAlternateFme
+        SearchProps = "idStr"
+        SearchValues = "BodyTable" 
+      Case Else
+        Log.Message("No defined frame for page: "&sPageName)
+        Exit Function
+    End Select
+    
+    aqPerformance.Start(transName)
+    If WaitForBody(oPageFrame, SearchProps, SearchValues, sURL, "") = False Then
+      Log.Warning("Body did not appear for page: "&sPageName)
+    Else
+      'Log.Message(transName&": "&aqPerformance.Value(transName)/1000)
+      Call LogPerformance(transName, false, "")
+    End If
+  End If
+  
+End Function
+
+' Check if part type has this Category or tab
+Function EnoviaPDT_CheckCategoryOrTab(sName)
+  
+  For j = 0 to UBound(g_pdt_aCategoriesTabs)
+    If g_pdt_aCategoriesTabs(j,0) = sName Or g_pdt_aCategoriesTabs(j,1) = sName Then
+      EnoviaPDT_CheckCategoryOrTab = True
+      Exit Function
+    End If
+  Next
+
+  EnoviaPDT_CheckCategoryOrTab = False
+  
+End Function
+
+' Get tabs by category
+Function EnoviaPDT_GetTabsByCategory(sCategory)
+  
+  Dim aReturnArray(), i, bFlag
+  
+  i=0
+  For j = 0 to UBound(g_pdt_aCategoriesTabs)
+    ' Find category from first dimension and loop through until we hit the next category. Category will remain null until then
+    If Ucase(sCategory) = Ucase(g_pdt_aCategoriesTabs(j,0)) And g_pdt_aCategoriesTabs(j,0) <> "" Then
+      bFlag = True
+    ElseIf Ucase(sCategory) <> Ucase(g_pdt_aCategoriesTabs(j,0)) And g_pdt_aCategoriesTabs(j,0) <> "" Then
+      bFlag = False
+    End If
+    
+    If bFlag = True And g_pdt_aCategoriesTabs(j,1) <> "" Then
+      ' Attributes category is a tab. 
+      If Ucase(sCategory) = "ATTRIBUTES" and i=0 Then
+        ReDim Preserve aReturnArray(i)
+        aReturnArray(i)  = "Attributes"
+        i=i+1
+      End If
+      
+      ReDim Preserve aReturnArray(i)
+      aReturnArray(i)  = g_pdt_aCategoriesTabs(j,1)
+      i=i+1
+    End If
+  Next
+  
+  EnoviaPDT_GetTabsByCategory = aReturnArray
+  
+End Function
+
+' Get test case id. returns ID sequence 
+Function EnoviaPDT_GetTestCaseID()
+  TestCaseID = TestCaseID+1
+  EnoviaPDT_GetTestCaseID = TestCaseID
+End Function
+
+' Get alm id by test case id
+Function EnoviaPDT_GetAlmID(nTestCaseID)
+  For i=1 to UBound(aAlmIDArray)
+    If aAlmIDArray(i,0) = nTestCaseID Then
+      EnoviaPDT_GetAlmID = aAlmIDArray(i,1)
+      Exit Function
+    End If
+  Next 
+  
+  EnoviaPDT_GetAlmID = "NA"
+  
+End Function
+
+' Set ALM IDs in global array
+Function EnoviaPDT_SetAlmIDs(aAlmIDs)
+
+  dim i
+  
+  If InStr(aAlmIDs,";") > 0 Then
+    a=Split(aAlmIDs,";")
+    for each x in a
+      i=i+1
+      aAlmIDArray(i,0) = i
+      aAlmIDArray(i,1) = x
+    next
+  End If
+End Function
+
+' Function to search and open Formulation part and Formulation process that are created with Formulation
+Function EnoviaPDT_OpenFormulationPart(PartType)
+  On Error Resume Next
+  
+  Dim GcasCode, sPartNum, FormulaGcasCode, aCodes
+  
+  FormulaGcasCode = EnoviaPDT_GetGcasByPartType("Formulation")
+  
+  ' Formulations hasn't been created. Lets create one
+  If FormulaGcasCode = "" Then
+    Call Enovia_OpenPlusMenu(OR_EnoviaMenu_ProductSpecificationLnk, OR_EnoviaMenu_CreateProductDataLnk)
+    MaximizeByCaption("CreateProductData")
+        
+    ' Wait for page
+    Set objType = objGetObject(OR_EnoviaPDT_TypeCmb,g_CreatePage_URL,30000)
+    Set objType = Nothing
+        
+    call EnoviaPDT_CreateFillAttributesData("Create","Formulation")
+    
+    ' Save new Formulation gcas
+    FormulaGcasCode = EnoviaPDT_GetGcasCode()
+    call EnoviaPDT_SetPartType("Formulation",FormulaGcasCode)
+  Else
+    ' split away the revision
+    aCodes = String_Split(FormulaGcasCode," ", "")
+    
+    ' Find existing Formulation and open it
+    Enovia_SearchAndOpen(aCodes(0))
+    ' Wait for page load
+    Set sPartNum = objGetObject(OR_EnoviaPDT_PartNumberEle,"",30000)
+    Set sPartNum = Nothing
+  End If
+  
+  ' Navigate to tab and open part type
+  Call EnoviaPDT_NavigateTabsAndLinks("","Formulation Parts and Pro...")
+  call Enovia_GridSearchAndClick("Type", PartType,"Name")
+  
+  Call WaitPageLoad("")
+  
+  ' Save Formulation process or part gcas
+  GcasCode = EnoviaPDT_GetGcasCode()
+  call EnoviaPDT_SetPartType(PartType,GcasCode)
+  
+  If GcasCode = "" Then
+    g_isBlocked = True
+  End If
+  
+End Function
+
+'Handling Type Ahead Node
+Function EnoviaPDT_ForTypeAheadNodeClick()
+  Dim objTypeAhead_TextNode
+  
+  Set objTypeAhead_TextNode = objGetObject(OR_EnoviaPDT_TypeAheadTxtNd,"",3000)
+  If (objTypeAhead_TextNode Is Nothing) = False Then
+    objTypeAhead_TextNode.Click
+  End if
+  
+  Set objTypeAhead_TextNode = Nothing
+  Delay 3000
+
+End Function
+
+'This function handles Alert popups
+Function EnoviaPDT_HandlingAlertWindow(AlertMsg)
+  Set objAlert = objGetObject(OR_EnoviaPDT_AlertWnd,"","")
+  Set objAlertOK = objGetObject(OR_EnoviaPDT_AlertOKBtn,"","")
+  If AlertMsg <> "" Then
+    If objAlert.Exists and instr(1,objAlert.Message,AlertMsg,1)  Then   'Check if Alert pop up is displayed and the Alert Message has field Name
+      AlertCount = AlertCount+1
+      Delay 1000
+      EnoviaPDT_HandlingAlertWindow = True  
+    else
+      EnoviaPDT_HandlingAlertWindow = False   
+    End If
+  End If
+  objAlertOK.Click
+End Function
+
+' Functions checks if we need to click edit or do other tasks to make tab ready for validations
+' And waits for page to load
+Function EnoviaPDT_EnableTabForValidation(sTabName)
+  On Error Resume Next
+  
+  Dim objEditButton, objWaitFor, objShowChar,stransName
+  
+  Select Case sTabName
+    Case "Attributes"
+      stransName="Load Edit Attributes"
+      Set objEditButton = objGetObject(OR_EnoviaTB_EditIconBtn,"","")
+      
+      If Not (objEditButton Is Nothing) Then
+        aqPerformance.Start(stransName)
+        objEditButton.Click
+        Set objEditButton = Nothing
+      End if
+      
+      Set objEditButton = objGetObject(OR_EnoviaPDT_TitleX,"",20000)
+      If (objEditButton is Nothing) = False Then
+        Log.Message stransName&" : "&aqPerformance.Value(stransname)/1000&" seconds"
+        Call LogPerformance(stransName, false, "")
+      end if
+      Set objEditButton = Nothing
+      
+    Case "Notes"
+      Set objEditButton = objGetObject(OR_EnoviaTB_EditIconBtn,"","")
+      
+      If Not (objEditButton Is Nothing) Then
+        objEditButton.Click
+        Set objEditButton = Nothing
+      End if
+      
+      Set objEditButton = objGetObject(OR_EnoviaPDT_EditIconDisabledBtn,"",20000)
+      Set objEditButton = Nothing
+    
+    Case "Tables"
+      Set objShowChar = objGetObject(OR_EnoviaPDT_TablesShowCharacteristicsCmb,"","")
+      If Not (objShowChar Is Nothing) Then
+        objShowChar.Clickitem "Local"
+        Set objShowChar = Nothing
+        
+        Set objEditButton = objGetObject(OR_EnoviaPDT_TablesEditImg,"",20000)
+        If Not (objEditButton Is Nothing) Then
+          objEditButton.Click
+          Set objEditButton = Nothing
+        End if    
+        
+        Set objEditButton = objGetObject(OR_EnoviaPDT_EditIconDisabledBtn,"",20000)
+        Set objEditButton = Nothing
+      End If
+    Case Else
+      EnoviaPDT_EnableTabForValidation = True
+      
+  End Select
+    Set stransName=Nothing
+End Function
+
+' Function to map tab name from index page to spreadsheet tabs
+' Spreadsheet tab names cannot contain certain words or special characters
+Function EnoviaPDT_MapSpreadsheetNames(sTabName)
+  On Error Resume Next
+    
+  Select Case sTabName
+    Case "History"
+      EnoviaPDT_MapSpreadsheetNames = "Hist"
+    Case "Tasks/Signatures"
+      EnoviaPDT_MapSpreadsheetNames = "Tasks Signatures"
+    Case Else
+      EnoviaPDT_MapSpreadsheetNames = sTabName
+  End Select
+    
+End Function
+
+' function to replace/remove special characters from PDT spreadsheets.
+Function EnoviaPDT_ReplaceSpecialChars(sInput)
+  On Error Resume Next
+  
+  Dim sReturnValue
+  
+  sReturnValue = sInput
+  sReturnValue = Replace(sReturnValue,"…","...")
+  sReturnValue = Trim(sReturnValue)
+  
+  EnoviaPDT_ReplaceSpecialChars = sReturnValue
+End Function
+
+' Set part type into dictionary
+Function EnoviaPDT_SetPartType(PartType, PartValue)
+  On Error Resume Next
+       
+  ArraySize = ArraySize+1
+    
+  PartTypeArray(ArraySize,0) = PartType
+  PartTypeArray(ArraySize,1) = PartValue
+    
+  If Err.Number = 0 Then
+    EnoviaPDT_SetPartType = True
+  Else
+    EnoviaPDT_SetPartType  = False
+    Log.Message(Err.Description)
+  End If
+  
+End Function 
+
+'Function prints out all part types and their gcas codes that were created during run
+Function EnoviaPDT_PrintAllCreatedParts()
+  On Error Resume Next
+  
+  Dim aHeaders,sOutputFileName
+  
+  ' Print in the log
+  For i = 0 to UBound(PartTypeArray)
+    If PartTypeArray(i,0) <> "" Then
+      Log.Message(PartTypeArray(i,0)&" "&PartTypeArray(i,1))
+    End If
+  Next
+  
+  ' Write same in excel file
+  aHeaders = Array("Part Type","GcasCode")
+  
+  'create suffix
+  sTime = replace(now(), "/","")
+  sTime = replace(sTime, " ","_")
+  sTime = replace(sTime, ":","")
+  
+  sOutputFileName = g_pdf_PDFViewTemplatePath&"GcasCodes_"&sTime&".xlsx"
+  
+  Call Excel_WriteArrayInExcel(aHeaders, PartTypeArray, sOutputFileName)
+  
+  EnoviaPDT_ClearVariable sOutputFileName
+  
+End Function 
+
+'Function returns first gcas code from array that matches with part type
+Function EnoviaPDT_GetGcasByPartType(PartType)
+  On Error Resume Next
+  For i = 0 to UBound(PartTypeArray)
+    If PartTypeArray(i,0) = PartType Then
+      EnoviaPDT_GetGcasByPartType = PartTypeArray(i,1)
+      Exit Function
+    End If
+  Next
+End Function 
+
+' Gets gcas code after creating the part. 
+Function EnoviaPDT_GetGcasCode()
+  On Error Resume Next
+  
+  Dim objGcasCode
+  Set objGcasCode = objGetObject(OR_EnoviaPDT_GcasCodeLbl,"",60000)
+  
+  EnoviaPDT_GetGcasCode = objGcasCode.ContentText
+  Set objGcasCode = Nothing
+End Function 
+
+' Navigate to link and tab under it. Can only click link or tab. 
+' Returns true or false based on did it do the click
+Function EnoviaPDT_NavigateTabsAndLinks(LinkName,TabName)
+  On Error Resume Next
+  
+  Dim objLink, objTab,SearchProps, nWaitTime, bClicked
+  
+  bClicked = False
+  
+  ' Action bar and its tabs are not really links or tabs. Instead action bar tabs are buttons on the action bar 
+  ' visible on Product data symmary page  
+  If TabName = "Copy" Then
+    Set objLink = objGetObject(OR_EnoviaTB_CopyBtn,"","")
+    objLink.Click()
+    Set objLink = Nothing
+    bClicked = True
+  ElseIf TabName = "Revise" Then ' don't see this button anywhere now
+   ' Set objLink = objGetObject(OR_EnoviaTB_ReviseBtn,"","")
+    'objLink.Click()
+    'Set objLink = Nothing
+  ElseIf TabName = "Subscribe" Then
+    Set objLink = objGetObject(OR_EnoviaTB_SubscribeBtn,"","")
+    objLink.Click()
+    Set objLink = Nothing
+    bClicked = True
+  ' Tables Weigth is in combobox on tables tab
+  ElseIf TabName = "Tables Weight" Then
+    Set objShowChar = objGetObject(OR_EnoviaPDT_TablesShowCharacteristicsCmb,"","")
+    If Not (objShowChar Is Nothing) Then
+      objShowChar.Clickitem "Local"
+      Set objShowChar = Nothing
+    End If
+    ' need to enable editing before changing the combobox 
+    Set objEditButton = objGetObject(OR_EnoviaPDT_TablesEditImg,"",10000)
+    If Not (objEditButton Is Nothing) Then
+      objEditButton.Click
+      Set objEditButton = Nothing
+    End if 
+        
+    Set objLink = objGetObject(OR_EnoviaPDT_TablesCharacCmb,"","")
+    objLink.ClickItem("Weight Characteristic")
+    
+    Set objLink = Nothing
+    bClicked = True
+  ElseIf TabName ="Substitutes" Then
+    SearchProps = Array("WEBOBJECT", "contentText~ObjectType~VisibleOnScreen", TabName&"~Cell~True", "")
+    Set objTab = objGetObject(SearchProps,"",nWaitTime)
+    If Not (objTab is nothing) Then
+      objTab.Click()
+      aSubProps = Array("WEBOBJECT", "contentText~ObjectType~VisibleOnScreen", "View Substitutes...~Link~True", "")
+      Set oViewSubstitue = objGetObject(aSubProps,"",nWaitTime)
+      If Not (oViewSubstitue is nothing) Then
+        oViewSubstitue.click
+        bClicked = True
+      End If
+    End If    
+  Else
+    If Not LinkName = "" Then
+      SearchProps = Array("WEBOBJECT", "contentText~ObjectType~VisibleOnScreen", LinkName&"~Label~True", "")
+      Set objLink = objGetObject(SearchProps,"",500)
+      
+      If Not (objLink is nothing) Then
+        objLink.Click()
+        bClicked = True
+      End If
+      
+      Set objLink = Nothing
+    End If
+  
+    If Not TabName = "" Then
+      
+    ' If we haven't clicked link in same call can assume that tab is already visible. (reduces time if tab is missing)
+      If bClicked = False Then
+        nWaitTime = 500
+      End If
+      
+      SearchProps = Array("WEBOBJECT", "contentText~ObjectType~VisibleOnScreen", TabName&"~Cell~True", "")
+      Set objTab = objGetObject(SearchProps,"",nWaitTime)
+      
+      If Not (objTab is nothing) Then
+        objTab.Click()
+        bClicked = True
+      ' Need to add code to see if tab was not found, we need to look for >> sign to see if its under it and click it
+      Else
+        ArrowProps = Array("WEBOBJECT", "ObjectIdentifier~ObjectType~VisibleOnScreen", "utilTabsetArrow_gif~Image~True", "")
+        Set ArrowTab = objGetObject(ArrowProps,"",nWaitTime)
+        If Not (ArrowTab is nothing) Then
+          ArrowTab.Click()
+          SearchProps = Array("WEBOBJECT", "contentText~ObjectType~VisibleOnScreen", TabName&"~Link~True", "")
+          Set objTab = objGetObject(SearchProps,"",nWaitTime)
+          If Not (objTab is nothing) Then
+            objTab.Click()
+            bClicked = True
+          End If
+        End If 
+      End If
+      'objTab.Click()
+      
+      Set objTab = Nothing
+    End If
+  End If
+  
+  If Err.Number = 0 And bClicked = True Then
+    EnoviaPDT_NavigateTabsAndLinks = True
+  Else
+    EnoviaPDT_NavigateTabsAndLinks = False
+  End If
+  
+End Function
+
+' Returns array of all links and tabs mentioned on PDT spreadsheet first page
+' Array format(x,y): 
+'  Link
+'       tab
+'       tab
+'  Link
+
+Function EnoviaPDT_GetTabsAndLinks(strPartType)
+  On Error Resume Next
+  
+  'strPartType = "Virtual Intermediate"
+  
+  const xlCellTypeVisible = &Hc 'TO select only cells that are visible
+  Dim arrRecords(150,1), arrRecordsReturn(), FindCellName, oExcel, oWorkSheet
+  
+  sFilePath = g_pdt_FileLocation&strPartType
+   
+  Set oExcel = CreateObject("Excel.Application")
+  oExcel.Workbooks.Open sFilePath
+  ' tabs and link are found from first sheet
+  Set oWorkSheet = oExcel.Worksheets(1) '.Item("Ancillary Raw Material Part")
+  
+  If strPartType = "Virtual Intermediate" Then
+    FindCellName = "Formula"
+  ElseIf strPartType = "Formulation" Or strPartType = "Formulation Part" Then
+    FindCellName = "Attributes"
+  Else 
+    FindCellName = "Action Bar"
+  End if
+  
+  Set FoundCell = oWorkSheet.cells(oWorkSheet.Rows.count,oWorkSheet.Columns.count).SpecialCells(xlCellTypeVisible).Find(FindCellName)   'Get Column Number For passed column name
+  FoundColumn = FoundCell.Column
+  FoundRow = FoundCell.Row
+  
+  x = 0
+  
+  For i=0 to 150
+    If oWorkSheet.cells(FoundRow+i,FoundColumn).Value = "Categories" And strPartType <> "Virtual Intermediate" Then
+      FoundColumn = FoundColumn+1
+    End If 
+    
+    If oWorkSheet.cells(FoundRow+i,FoundColumn).Value <> "" OR oWorkSheet.cells(FoundRow+i,FoundColumn+1).Value <> "" Then
+      arrRecords(x,0) = oWorkSheet.cells(FoundRow+i,FoundColumn).Value
+      arrRecords(x,1) = oWorkSheet.cells(FoundRow+i,FoundColumn+1).Value
+      x = x+1
+    End If
+    
+    ' No more values 
+    If oWorkSheet.cells(FoundRow+i,FoundColumn).Value = "" And oWorkSheet.cells(FoundRow+i,FoundColumn+1).Value = "" _
+    And oWorkSheet.cells(FoundRow+i+1,FoundColumn).Value = "" And oWorkSheet.cells(FoundRow+i+1,FoundColumn+1).Value = "" Then
+      Exit For
+    End If
+  Next
+  
+  oExcel.DisplayAlerts = False
+  oExcel.Workbooks.Close
+  oExcel.Quit
+  Set oWorkSheet = Nothing
+  Set oExcel = Nothing
+  
+    ' Resize return array to match actual record count
+  ReDim Preserve arrRecordsReturn(x-1,1)
+  
+  For j = 0 to UBound(arrRecordsReturn)
+    ' Remove underscores and replace special chars.
+    arrRecordsReturn(j,0) = EnoviaPDT_ReplaceSpecialChars(arrRecords(j,0)) 
+    arrRecordsReturn(j,1) = EnoviaPDT_ReplaceSpecialChars(arrRecords(j,1))
+  Next 
+  EnoviaPDT_GetTabsAndLinks = arrRecordsReturn
+  
+  EnoviaPDT_ClearVariable arrRecordsReturn
+  EnoviaPDT_ClearVariable arrRecords
+  EnoviaPDT_ClearVariable FindCellName
+End Function 
+
+
+'Purpose: Function to Clean up the variables
+'Input: Variable to be cleaned up
+'Output: None
+Function EnoviaPDT_ClearVariable(ByRef Var)
+
+  If IsObject(Var) Then
+    Set Var = Nothing
+  elseIf IsArray(Var) Then
+    Erase Var
+    Set Var = Nothing  
+  End If
+  
+  Var = Empty  
+
+End Function

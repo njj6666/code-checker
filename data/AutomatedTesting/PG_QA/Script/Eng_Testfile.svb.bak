@@ -1,0 +1,35 @@
+﻿'USEUNIT WinObjectLib
+'USEUNIT GlobalVars
+
+Sub Test1
+
+ Set jp2launcher = Sys.Process("jp2launcher")
+ 
+ Set Eng_UserName = jp2launcher.Find("JavaClassName","JTextField", 60)
+ Eng_UserName.SetText "plmperfeng.im"
+ 
+ Set Eng_PW = jp2launcher.Find("JavaClassName","JPasswordField", 60)
+ Eng_PW.SetText "Faster010"
+ 
+ Set Eng_OkButton = jp2launcher.Find("AWTComponentAccessibleName","Ok", 60)
+ Eng_OkButton.Click
+End Sub
+
+' test with framework lib
+Sub Test2
+  g_strWinProcessType = "jp2launcher"
+  
+  OR_Eng_UserName = Array("WINOBJECT", "JavaClassName", "JTextField")
+  OR_Eng_PW = Array("WINOBJECT", "JavaClassName", "JPasswordField")
+  OR_Eng_OkButton = Array("WINOBJECT", "AWTComponentAccessibleName", "Ok")
+  
+  Set Eng_UserName = objGetWinObject(OR_Eng_UserName,"")
+  Eng_UserName.SetText "plmperfeng.im"
+  
+  Set Eng_PW = objGetWinObject(OR_Eng_PW,"")
+  Eng_PW.SetText "Faster010"
+  
+  Set Eng_OkButton = objGetWinObject(OR_Eng_OkButton,"")
+  Eng_OkButton.Click
+  
+End Sub 

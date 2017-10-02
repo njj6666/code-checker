@@ -1,0 +1,89 @@
+﻿'USEUNIT CSSUtils
+'USEUNIT CSS_SearchTS
+'USEUNIT CSS_CreateTS
+'USEUNIT ExcelLib
+
+Sub EnoviaDSM_Set6_001_OriginateTAMUandPROS()
+   On Error Resume Next 
+   
+   'used to fill the search filter
+   Dim sTSSearchType
+   DIM sTSSearchSegment
+   Dim sTSOwningGBU
+   sTSSearchType = "TARGET ACCEPTABLE MARGINAL UNACCEPTABLE"
+   sTSSearchSegment = "All Other Surface Care"
+   sTSOwningGBU = ""
+   
+   'Step1-----Login CSS
+   'open CSS home page
+    If Log_UpdateIsBlocked() = False Then      
+      Call CSS_LaunchCSS(sEnv)
+    End If
+    
+    'fill the username and password, Click ok to login CSS
+    If Log_UpdateIsBlocked() = False Then
+      If Not CSS_Login(sUser) Then
+         Log.Error("Cannot login into Enovia!")
+         Runner.Stop
+       End If
+     End If 
+  'Step1----- End  
+  
+  'Step2----- search from CSS Search
+  'Open Search window from Technical Standards
+  Call CSS_ExecuteSearchfromTS()
+  'fill the search filter
+  Call CSSTSSearch_SelectType(sTSSearchType)
+  Call CSSTSSearch_selectSegment(sTSSearchSegment)
+  Call CSSTSSearch_selectOwningGBU(sTSOwningGBU)
+  'Click search button in search page
+  Call CSSTSSearch_clickSearch()
+
+  'check the result returned
+  'result check need to be added here, using delay instead for workaround temporary - Yong
+  AqUtils.Delay(2000)
+  'Step2----- End
+  
+  'Step3-----copy to create new
+  'Click the product data from the search result list to open - Yong
+
+  'Click Copy to create new button
+  Call CSSTS_ExecuteCopyToCreateNew()
+  'Fill the attribute and click ok to create new product data
+  Call CSSTS_CompleteCopytoCreateNew("TAMU_IPM_FOP_PC")
+  'log the new created data into excel
+  
+'  Step3-----end
+  
+ ' get product data url
+  strInputDataFilePath=g_strInputDataFilePath&strSetName&"_DSM.xlsx"
+  strTAMUForCopyUrl =Excel_SearchAttributeInputValue(strInputDataFilePath, "TSNAMEURL", "URL", "Set6001_TAMUForCopy")
+  Sys.Process("iexplore").ToUrl strTAMUForCopyUrl  
+  'action-copy to create new
+  Call CSS_CopyToCreateNew()
+  Call CSS_Confirm_OK()
+  Call CSS_CopyToCreateProductData("TAMU_IPM_FOP_PC","6","Target Acceptable Marginal Unacceptable")
+'  open product data
+  
+  Sys.Process("iexplore").ToUrl strNewUrl
+  strNewUrl = Replace(strNewUrl , "Tab", "ViewTab")
+   Call CSS_CopyToCreateNew()
+   Call CSS_Confirm_OK()
+   Call CSS_CopyToCreateProductData("TAMU_IPM_FOP_MPP_PC")
+   
+   'create new TS for PROS
+   Call CSS_ExecuteCreateNewTS()
+   Call CSSCreateTS_ChooseStandardType("PROS",false)
+   Call CSSCreateTS_CreateUnSTRTS("PROS_IPM_RMP")
+   
+   'create new TS for TAMU
+   Call CSS_ExecuteCreateNewTS()
+   Call CSSCreateTS_ChooseStandardType("TAMU",false)
+   Call CSSCreateTS_CreateUnSTRTS("TAMU_IPM_RMP_MRMP")
+   'logout css
+   Call CSS_Logout()
+  
+End Sub
+function test
+  Call ENOVIADSM_Set6_001_OriginateTAMUandPROS("csstest","ab7918test")
+End Function 

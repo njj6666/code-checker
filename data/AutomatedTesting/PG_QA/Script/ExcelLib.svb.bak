@@ -1,0 +1,867 @@
+﻿'USEUNIT StringLib
+'USEUNIT EnoviaPDT_PDTUtils
+'USEUNIT GlobalVars
+
+' Function will read multiple columns into 2D array. Starts from first column's row.
+' Ignores hidden rows, and rows if leading TWO columns are empty
+Function Excel_GetMultipleColumnValues(sSheetName,sSheetLocation,aColumnNames, bStopOnEmptyCell)
+  On Error Resume Next
+  
+  const xlCellTypeVisible = &Hc 'TO select only cells that are visible
+  Dim arrFieldArray(), aFoundColumns(), aReturnArray()
+  
+  Set oExcel = CreateObject("Excel.Application")
+  oExcel.Workbooks.Open sSheetLocation
+  If Excel_ChecksheetExists(oExcel,sSheetName) Then
+    Set oWorkSheet = oExcel.Worksheets.Item(sSheetName)
+  else  
+    Log.Warning "Sheet "&sSheetName&" does not exist in the specified file"
+    Exit Function
+  End If
+  
+  nColumnCount = UBound(aColumnNames)
+  Redim Preserve aFoundColumns(nColumnCount)
+  
+  For x=0 to nColumnCount
+    Set oFoundCell = oWorkSheet.cells(oWorkSheet.Rows.count,oWorkSheet.Columns.count).SpecialCells(xlCellTypeVisible).Find(aColumnNames(x))
+    aFoundColumns(x) = oFoundCell.Column
+    If x=0 Then
+      nFoundRow = oFoundCell.Row+1
+    End If
+  Next
+  
+  nRowCount = oWorkSheet.cells(oWorkSheet.Rows.count,aFoundColumns(0)).End(-4162).Row
+  
+  Redim Preserve arrFieldArray(100,nColumnCount)
+  i=0
+  For j = 0 to nRowCount
+    ' stops looping when empty cell is found for leading column
+    If bStopOnEmptyCell = True Then
+      If Trim(oWorkSheet.cells(nFoundRow+j,aFoundColumns(0)).Value) = "" Then
+        Exit For
+      Else
+        For z=0 to nColumnCount
+          arrFieldArray(i,z) = Trim(oWorkSheet.cells(nFoundRow+j,aFoundColumns(z)).Value)
+        Next
+        i=i+1
+      End If
+    Else ' Default: ignores hidden rows and rows that first two leading columns are empty
+      If oWorkSheet.Rows(nFoundRow+j).Hidden = False And Trim(oWorkSheet.cells(nFoundRow+j,aFoundColumns(0)).Value) <> "" _
+      And Trim(oWorkSheet.cells(nFoundRow+j,aFoundColumns(1)).Value) <> "" Then  'Ignore hidden rows, and rows if leading two columns are empty
+          For z=0 to nColumnCount
+            arrFieldArray(i,z) = Trim(oWorkSheet.cells(nFoundRow+j,aFoundColumns(z)).Value)
+          Next
+          i=i+1
+      End If
+    End If
+  Next 
+  
+  Redim Preserve aReturnArray(i-1,nColumnCount)
+  
+  For h=0 to Ubound(aReturnArray)
+    For k=0 to nColumnCount
+      aReturnArray(h,k) = arrFieldArray(h,k)
+    next
+  Next
+  
+  oExcel.DisplayAlerts = False
+  oExcel.Workbooks.Close
+  oExcel.Quit
+  Set oWorkSheet = Nothing
+  Set oExcel = Nothing
+  
+  Excel_GetMultipleColumnValues = aReturnArray
+End Function
+
+' Writes header and data into worksheet. Excel needs to be opened in calling function
+Function Excel_WriteWorkSheet(oWorkSheet, aHeaders, aColumns, bWriteNullLeading)
+    ' Write Headers
+  For i=0 to UBound(aHeaders)
+    oWorkSheet.cells(1,i+1).NumberFormat ="@"
+    oWorkSheet.cells(1,i+1).Value = aHeaders(i)
+  Next
+  
+  ' Write Data
+  For j=0 to (UBound(aColumns))+1
+    z = 2+j
+    If bWriteNullLeading = False And aColumns(z-2,0) = "" Then
+      z = z-1
+    Else
+      For g=0 to Ubound(aColumns,2)
+        oWorkSheet.cells(z,g+1).NumberFormat ="@"
+        oWorkSheet.cells(z,g+1).Value = aColumns(z-2,g)
+      Next
+    End If
+  Next
+End Function
+
+' Function will write 1D and 2D arrays into excel.
+Function Excel_WriteArrayInExcel(aHeaders, aColumns, sOutputFileName)
+  On Error Resume Next
+  
+  Dim oExcel, oWorkSheet
+  
+  Set oExcel = CreateObject("Excel.Application")
+  Set oWorkbook = oExcel.Workbooks.Add()
+  Set oWorksheet = oWorkbook.Worksheets(1)
+  
+  Call Excel_WriteWorkSheet(oWorkSheet, aHeaders, aColumns, True)
+  
+    ' Save as New
+  oExcel.DisplayAlerts = False
+  oWorkbook.SaveAs(sOutputFileName)
+  
+  ' Close excel and cleanup variables
+  oExcel.Workbooks.Close
+  oExcel.Quit
+End Function
+
+' Function reads column values and and writes values based on outputValue dictionary items. 
+' Input Parameters: 
+'   aSheetNames = array that contains tabs that we want to write data. 
+'   sSheetLocation = Location of excel template
+'   sReadColumn = column name that we read from template
+'   sWriteColumn = Column name where we write inputs
+'   oOutputValues = Dictionary that contains columns and their values
+'   sOutputFileName = full filepath where we save our results. Function doesn't overwrite template but save as new
+Function Excel_ReadWriteColumnValues(aSheetNames,sSheetLocation,sReadColumn, sWriteColumn, oOutputValues, sOutputFileName)
+  On Error Resume Next
+  
+  Dim oExcel, oWorkSheet, oFoundInputCell, oFoundOutputCell, nFoundColumn, nFoundRow, nRowCount,sInputField, SheetNotFound
+  
+  const xlCellTypeVisible = &Hc 'TO select only cells that are visible
+  
+  Set oExcel = CreateObject("Excel.Application")
+  oExcel.Workbooks.Open sSheetLocation
+  
+  For j=0 to Ubound(aSheetNames)
+    SheetNotFound = True
+    
+    If Excel_ChecksheetExists(oExcel,aSheetNames(j)) Then 'Check Sheet exists in Workbook
+      Set oWorkSheet = oExcel.Worksheets.Item(aSheetNames(j))
+    else  
+      Log.Warning "Sheet "&aSheetNames(i)&" does not exist in the specified file"
+      SheetNotFound = False
+    End If
+  
+    If SheetNotFound = True Then
+      ' Find columns that we want to read and write
+      Set oFoundInputCell = oWorkSheet.cells(oWorkSheet.Rows.count,oWorkSheet.Columns.count).SpecialCells(xlCellTypeVisible).Find(sReadColumn)
+      Set oFoundOutputCell= oWorkSheet.cells(oWorkSheet.Rows.count,oWorkSheet.Columns.count).SpecialCells(xlCellTypeVisible).Find(sWriteColumn)
+  
+      nRowCount = oWorkSheet.cells(oWorkSheet.Rows.count,oFoundInputCell.Column).End(-4162).Row 'Get the last row with data
+  
+      For i=1 to nRowCount
+        If oWorkSheet.Rows(oFoundInputCell.Row+i).Hidden = False Then 
+          sInputField = Ucase(oWorkSheet.cells(oFoundInputCell.Row+i,oFoundInputCell.Column))
+          ' Write in output field
+          If sInputField <> "" Then 
+            ' Write values from output dictionary. inputFieldname as a key
+            oWorkSheet.cells(oFoundInputCell.Row+i,oFoundOutputCell.Column).Value = oOutputValues(sInputField)
+          End If
+        End If
+      Next
+    End If
+  Next
+  
+  ' Save as New
+  oExcel.DisplayAlerts = False
+  oWorkSheet.SaveAs(sOutputFileName)
+  
+  ' Close excel and cleanup variables
+  oExcel.Workbooks.Close
+  oExcel.Quit
+  
+  EnoviaPDT_ClearVariable oExcel
+  EnoviaPDT_ClearVariable oWorkSheet
+  EnoviaPDT_ClearVariable oFoundInputCell
+  EnoviaPDT_ClearVariable oFoundOutputCell
+  EnoviaPDT_ClearVariable nFoundRow
+  EnoviaPDT_ClearVariable nRowCount
+  EnoviaPDT_ClearVariable sInputField
+End Function
+
+'Description  : Function to get all values in a Column by column Name 
+'Inputs       : SheetName - Name of the sheet in excel workbook
+'             : SheetLocation - Location of the excel workbook
+'             : sColumnName - Column Name being searched for
+'Output       : Returns all the column values in an array
+'Author       : Sandeep
+
+Function Excel_GetColumnValues (sSheetName,sSheetLocation,sColumnName)
+
+  On Error Resume Next
+  Dim oExcel, oWorkSheet, oFoundCell, nFoundColumn, nFoundRow, nRowCount, oFoundFieldCell, nFieldColumn,_
+  nMandatoryColumn, iRow, arrFieldArray 
+  
+  const xlCellTypeVisible = &Hc 'TO select only cells that are visible
+  
+  Set oExcel = CreateObject("Excel.Application")
+  oExcel.Workbooks.Open sSheetLocation
+  
+  If Excel_ChecksheetExists(oExcel,sSheetName) Then 'Check Sheet exists in Workbook
+    Set oWorkSheet = oExcel.Worksheets.Item(sSheetName)
+  else  
+    Log.Warning "Sheet "&sSheetName&" does not exist in the specified file"
+    'Exit Function
+  End If
+  '******************************************************************************************
+  bAttrflag  = False  
+  If  Ucase(sSheetName) = "ATTRIBUTES" And (Trim(Ucase(sColumnName ))=Trim(Ucase( "Field" )) or Trim(Ucase(sColumnName ))=Trim(Ucase( "Editable" ))) Then
+          sColumnName_Above_Field = "Attributes"
+          Set oFoundCell = oWorkSheet.cells(oWorkSheet.Rows.count,oWorkSheet.Columns.count).SpecialCells(xlCellTypeVisible).Find(sColumnName_Above_Field,,,1)   'Get Column Number For passed column name
+          If oFoundCell Is Nothing Then
+             Log.Warning "Column Name "&sColumnName_Above_Field&" is not Found in excel sheet"
+             Excel_GetColumnValues = ""
+          Else
+                if Trim(Ucase(sColumnName ))<>Trim(Ucase( "Field" ))then
+                  Set oFoundCell1 = oWorkSheet.cells(oWorkSheet.Rows.count,oWorkSheet.Columns.count).SpecialCells(xlCellTypeVisible).Find(sColumnName,,,1)
+                  nFoundColumn_1 = oFoundCell1.Column
+                else
+                  nFoundColumn_1 = oFoundCell.Column
+                end if
+                nFoundRow_1 = oFoundCell.Row+1                
+                If  (Trim(Ucase(oWorkSheet.cells(nFoundRow_1,nFoundColumn_1))) = Trim(Ucase("Field")) or Trim(Ucase(oWorkSheet.cells(nFoundRow_1,nFoundColumn_1))) = Trim(Ucase("Editable"))) Then
+                     bAttrflag  = True                    
+                End If                    
+          End If   
+  Else
+           Set oFoundCell = oWorkSheet.cells(oWorkSheet.Rows.count,oWorkSheet.Columns.count).SpecialCells(xlCellTypeVisible).Find(sColumnName,,,1)   'Get Column Number For passed column name       
+  End If
+  '**********************************************************************************
+ 
+  If oFoundCell Is Nothing Then   'If Column Name does not exist in Specified Sheet
+    Log.Warning "Column Name "&sColumnName&" is not Found in excel sheet"
+    Excel_GetColumnValues = ""
+  else 
+  If  bAttrflag  =  True Then
+          nFoundColumn =nFoundColumn_1
+          nFoundRow = nFoundRow_1+1
+  elseIf  bAttrflag  =  false and  Ucase(sSheetName) = "ATTRIBUTES" and  (Trim(Ucase(sColumnName ))=Trim(Ucase( "Field" )) or Trim(Ucase(sColumnName ))=Trim(Ucase( "Editable" )))Then
+          Log.Warning  " The "&sColumnName&" Column Name is not available in Attributes sheet" 
+  else
+          nFoundColumn = oFoundCell.Column
+          nFoundRow = oFoundCell.Row+1
+  End If
+  
+    nRowCount = oWorkSheet.cells(oWorkSheet.Rows.count,nFoundColumn).End(-4162).Row 'Get the last row with data
+    ReDim arrFieldArray(nRowCount - nFoundRow)
+    
+    If sColumnName = "Mandatory" Then
+      Set oFoundFieldCell = oWorkSheet.cells(oWorkSheet.Rows.count,oWorkSheet.Columns.count).SpecialCells(xlCellTypeVisible).Find("Field")
+      nFieldColumn = oFoundFieldCell.Column  
+      i=0
+      For iRow = nFoundRow to nRowCount
+        If oWorkSheet.Rows(iRow).Hidden = False Then  'Ignore hidden rows
+          If Ucase(oWorkSheet.cells(iRow,nFoundColumn))= "YES" Then
+            If oWorkSheet.cells(iRow,nFieldColumn) = "Originator" Then     'In Application, Originator field has a Colon
+              oWorkSheet.cells(iRow,nFieldColumn) = "Originator:"
+            End If
+            arrFieldArray(i) = Replace(Trim(oWorkSheet.cells(iRow,nFieldColumn)),"*","")
+            i=i+1
+          End If
+        End If
+      Next
+    else
+      Set oFoundFieldCell = oWorkSheet.cells(oWorkSheet.Rows.count,oWorkSheet.Columns.count).SpecialCells(xlCellTypeVisible).Find("Mandatory")  'Get Column Number For Type
+      nMandatoryColumn = oFoundFieldCell.Column
+      i=0
+      For iRow = nFoundRow to nRowCount
+        If oWorkSheet.Rows(iRow).Hidden = False Then  'Ignore hidden rows
+          If oWorkSheet.cells(iRow,nMandatoryColumn) <> "" Then 'To Avoid all rows that do not represent Fields 
+            If oWorkSheet.cells(iRow,nFoundColumn) = "Originator" and Ucase(sSheetName) = "ATTRIBUTES" Then     'In Application, Originator field has a Colon
+              oWorkSheet.cells(iRow,nFoundColumn) = "Originator:"
+            End If
+            arrFieldArray(i) = Replace(Trim(oWorkSheet.cells(iRow,nFoundColumn)),"*","")
+            i=i+1
+          End If
+        End If
+      Next    
+    End If
+  
+    Redim Preserve arrFieldArray(i-1)
+    Excel_GetColumnValues = arrFieldArray  
+  End If
+  
+  oExcel.DisplayAlerts = False
+  oExcel.Workbooks.Close
+  oExcel.Quit  
+  
+  EnoviaPDT_ClearVariable oExcel
+  EnoviaPDT_ClearVariable oWorkSheet
+  EnoviaPDT_ClearVariable oFoundCell
+  EnoviaPDT_ClearVariable nFoundColumn
+  EnoviaPDT_ClearVariable nFoundRow
+  EnoviaPDT_ClearVariable nRowCount
+  EnoviaPDT_ClearVariable oFoundFieldCell
+  EnoviaPDT_ClearVariable nFieldColumn
+  EnoviaPDT_ClearVariable nMandatoryColumn
+  EnoviaPDT_ClearVariable iRow
+  EnoviaPDT_ClearVariable arrFieldArray
+  
+End Function
+
+'Desciption : Function to Check if sheet exists in Excel workbook
+'Inputs     : Excel Object pointing to the workbook,sheetToFind
+'Output     : Boolean, Sheet exists or not
+'Author     : Sandeep
+
+Function Excel_ChecksheetExists(oExcel,ssheetToFind)
+  Dim bsheetExists
+  
+  bsheetExists = False
+  For Each sheet In oExcel.Worksheets
+    If ssheetToFind = sheet.name Then
+        bsheetExists = True
+        Exit For
+    End If
+  Next 
+  Excel_ChecksheetExists = bsheetExists
+  
+  EnoviaPDT_ClearVariable bsheetExists
+End Function
+
+'Description  : Function to Dictionary object with Field Names as Keys and Inputs as Value
+'Inputs       : SheetName,SheetLocation,Column Name containing Field Names and Column Name containing Input text
+'Output       : Dictionary Object with the mapping
+'Author       : Sandeep
+
+Function Excel_CreateDictionaryForInput(sSheetName,sSheetLocation,sFieldName,sInputFieldName)
+  On Error Resume Next
+  
+  Dim oExcel, oWorkSheet, oInputDict, oFoundCell, nFoundColumn, nFoundRow, nRowCount, oFoundInputCell,_
+  aNoOfChar, nInputColumn
+  
+  const xlCellTypeVisible = &Hc 'TO select only cells that are visible
+  Set oInputDict = CreateObject("Scripting.Dictionary") 'Dictionary Object to store Field Names as Keys and Inputs as Value
+  
+  Set oExcel = CreateObject("Excel.Application")
+  oExcel.Workbooks.Open sSheetLocation
+  
+  If Excel_ChecksheetExists(oExcel,sSheetName) Then 'Check Sheet exists in Workbook
+    Set oWorkSheet = oExcel.Worksheets.Item(sSheetName)
+  else  
+    Log.Warning "Sheet "&sSheetName&" does not exist in the specified file"
+    Exit Function
+  End If
+  
+  Set oFoundCell = oWorkSheet.cells(oWorkSheet.Rows.count,oWorkSheet.Columns.count).SpecialCells(xlCellTypeVisible).Find(sFieldName) '"Field"   'Get Column Number For Field column
+  nFoundColumn = oFoundCell.Column
+  nFoundRow = oFoundCell.Row+1
+  
+  nRowCount = oWorkSheet.cells(oWorkSheet.Rows.count,nFoundColumn).End(-4162).Row 'Get the last row with data
+  
+  Set oFoundInputCell = oWorkSheet.cells(oWorkSheet.Rows.count,oWorkSheet.Columns.count).SpecialCells(xlCellTypeVisible).Find(sInputFieldName,,,1)  '"Input"  'Get Column Number For Input column
+  If (oFoundInputCell IS Nothing) = False Then 'Ignore If Input Column is not in the Sheet
+    nInputColumn = oFoundInputCell.Column
+  End If  
+  
+  i=0
+  
+  ReDim arrFieldArray(nRowCount - nFoundRow)
+  For iRow = nFoundRow to nRowCount
+    If oWorkSheet.Rows(iRow).Hidden = False Then  'Ignore hidden rows
+      If (oFoundInputCell IS Nothing) = False Then 'To Avoid all rows that do not represent Fields
+        If oWorkSheet.cells(iRow,nInputColumn) <> "" Then 'Ignore If Input Column is not in the Sheet          
+          If oWorkSheet.cells(iRow,nFoundColumn) = "Originator" and Ucase(sSheetName) = "ATTRIBUTES" Then     'In Application, Originator field has a Colon
+            oWorkSheet.cells(iRow,nFoundColumn) = "Originator:"
+          End If
+          If instr(Trim(oWorkSheet.cells(iRow,nInputColumn)),"GENERATE") Then  'If Input text has GENERATE keyword, generate string of given length 
+            aNoOfChar = Split(Trim(oWorkSheet.cells(iRow,nInputColumn)),";")
+            oWorkSheet.cells(iRow,nInputColumn) = String_StrByLength(aNoOfChar(1)) 'Get string of given length
+          End If           
+          oInputDict.add Replace(Trim(oWorkSheet.cells(iRow,nFoundColumn)),"*",""),Trim(oWorkSheet.cells(iRow,nInputColumn))  'Add Field Name as Key and Input Text as Value
+          i=i+1
+        End If 
+      End If
+    End If
+  Next 
+  
+  oExcel.DisplayAlerts = False
+  oExcel.Workbooks.Close
+  oExcel.Quit
+  
+  Set Excel_CreateDictionaryForInput = oInputDict 'Return Dictionary Object
+  
+  EnoviaPDT_ClearVariable oExcel
+  EnoviaPDT_ClearVariable oWorkSheet
+  EnoviaPDT_ClearVariable oInputDict
+  EnoviaPDT_ClearVariable oFoundCell
+  EnoviaPDT_ClearVariable nFoundColumn
+  EnoviaPDT_ClearVariable nFoundRow
+  EnoviaPDT_ClearVariable nRowCount
+  EnoviaPDT_ClearVariable oFoundInputCell
+  EnoviaPDT_ClearVariable aNoOfChar
+  EnoviaPDT_ClearVariable nInputColumn
+  
+End Function
+
+' Function to read and return all column values from excel, exluding hidden rows.
+Function Excel_GetAnyColumnValues(sSheetName,sSheetLocation,sColumnName)
+  On Error Resume Next
+  
+  const xlCellTypeVisible = &Hc 'TO select only cells that are visible
+  Dim arrFieldArray()
+  
+  Set oExcel = CreateObject("Excel.Application")
+  oExcel.Workbooks.Open sSheetLocation
+  If Excel_ChecksheetExists(oExcel,sSheetName) Then
+    Set oWorkSheet = oExcel.Worksheets.Item(sSheetName)
+  else  
+    Log.Warning "Sheet "&sSheetName&" does not exist in the specified file"
+    Exit Function
+  End If
+    
+  Set oFoundCell = oWorkSheet.cells(oWorkSheet.Rows.count,oWorkSheet.Columns.count).SpecialCells(xlCellTypeVisible).Find(sColumnName)
+  nFoundColumn = oFoundCell.Column
+  nFoundRow = oFoundCell.Row+1
+  nRowCount = oWorkSheet.cells(oWorkSheet.Rows.count,nFoundColumn).End(-4162).Row
+  i=0
+  For j = 0 to nRowCount
+    If oWorkSheet.Rows(nFoundRow+j).Hidden = False And Trim(oWorkSheet.cells(nFoundRow+j,nFoundColumn).Value) <> "" Then  'Ignore hidden rows
+        Redim Preserve arrFieldArray(i+1)
+        arrFieldArray(i) = Trim(oWorkSheet.cells(nFoundRow+j,nFoundColumn).Value)
+        i=i+1
+    End If
+  Next 
+  
+  Redim Preserve arrFieldArray(i-1)
+  
+  oExcel.DisplayAlerts = False
+  oExcel.Workbooks.Close
+  oExcel.Quit
+  Set oWorkSheet = Nothing
+  Set oExcel = Nothing
+  
+  Excel_GetAnyColumnValues = arrFieldArray
+End Function
+
+' Function to read all columns from excel sheet
+' Returns an array of values
+Function Excel_ReadExcelSheet (FilePath, SheetName)
+  On Error Resume Next
+  
+  Dim objDriver, nColumnCount, arrTempArray(), arrReturnArray(), i
+  Set objDriver = DDT.ExcelDriver(FilePath, SheetName)
+  nColumnCount = objDriver.ColumnCount-1
+  
+  i = 0
+  ReDim Preserve arrTempArray(999,nColumnCount)
+  
+  While Not objDriver.EOF()
+    For j = 0 to nColumnCount
+      arrTempArray(i,j) = objDriver.Value(j)
+    Next
+    i = i+1
+    DDT.CurrentDriver.Next()
+  WEnd
+   
+  DDT.CloseDriver(objDriver.Name)
+  
+  ' Build actual return array
+  ReDim Preserve arrReturnArray(i-1,nColumnCount)
+  
+  For n = 0 to Ubound(arrTempArray)
+      
+    For x = 0 to nColumnCount
+      arrReturnArray(n,x) = arrTempArray(n,x)
+    Next
+    
+  Next
+  
+  Excel_ReadExcelSheet = arrReturnArray
+  
+End Function 
+
+'##################################################################################################################
+'Script/Function/Sub Name     : objOpenADODBConnectionToExcel
+'Description                  : To Open required ADODB connections to various excels
+'Arguments                    : m_strExcelFileName: File Name of the Excel Workbook
+'Return Value                 : Connection Object - Returns the Connection Object
+'Author                       : Pramod Rao
+'Creation Date                : 24 -March- 2014
+'Special Conditions           : If the Excel workbook is not found then report error & Exit
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function objOpenADODBConnectionToExcel(m_strExcelFileName)
+    
+    'Declare Variables
+    Dim objConn, objFile
+     
+    'Create a FileSystemObject
+    Set objFile = CreateObject("Scripting.FileSystemObject")
+   
+    'check if excel file exists, if not report error and exit
+    If Not objFile.FileExists(m_strExcelFileName) Then
+      'Log.Error "Error: File not found: " & m_strExcelFileName, "Error opening excel"
+      Exit Function
+    Else
+      'Else create the ADODB.Connection and Open the connection
+      Set objConn = CreateObject("ADODB.Connection")
+      'Connection String
+      objConn.ConnectionString = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & m_strExcelFileName & ";Extended Properties=""Excel 12.0 Xml;HDR=YES;""" 'IMEX=1
+      objConn.Open
+      'objConn.CursorLocation = adUseClient
+    End If
+       
+    'Destroy the objects
+    Set objFile = Nothing
+   
+    'Return the Connection Object
+    Set objOpenADODBConnectionToExcel = objConn
+   
+    'Reltease memory from the objec
+    Set objConn = Nothing
+End Function
+'#################################################################################################################
+'Script/Function/Sub Name     : arrGetObjInfoFromXL
+'Description                  : To read and initialize the Object Information from Excel (Xpath or property values)
+'Arguments                    : m_ocnnObjectRepositoryExcel:Connection object to the Object Repository
+'                             : m_strFindString: The object in the repository to read
+'Return Value                 : Array - Returns an array of the object information
+'Author                       : Pramod Rao
+'Creation Date                : 03 -June- 2016
+'Special Conditions           : NA
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function arrGetObjInfoFromXL(m_strFindString)
+
+    Dim objExcel
+    Dim strSheetName
+    Dim arrTempValues(3)
+    Dim strTempValue
+    Dim objWorkbook, objWorkSheet
+    Dim FoundCells, FoundCell
+    
+    'open the excel application
+    Set objExcel = CreateObject("Excel.Application")
+    Set objWorkbook = objExcel.Workbooks.Open (g_strObjectRepositoryFilePath)
+    Set objWorkSheet = objWorkbook.Sheets(strSheetName)
+    Set FoundCells = objWorkSheet.Range("A:A")
+    Set FoundCell = FoundCells.Find(m_strFindString)
+
+    'Set FoundCell = FoundCells.Find(what:=WHAT_TO_FIND, lookat:=xlWhole)
+    ''Msgbox (objWorkSheet.cells(FoundCell.Row,FoundCell.Column).Value)
+
+    'handle object not being found in the repo
+    If (FoundCell Is Nothing) Then Log.Error m_strFindString & " was not found in the Object repository"
+     
+    'get the find method
+    strTempValue = objWorkSheet.cells(FoundCell.Row,FoundCell.Column + 1).Value
+    If IsNull(strTempValue) Then
+        arrTempValues(0) = ""
+    Else
+        arrTempValues(0) = strTempValue
+    End If
+    
+    'get the xpath query or property name
+    strTempValue = objWorkSheet.cells(FoundCell.Row,FoundCell.Column + 2).Value
+    If IsNull(strTempValue) Then
+        arrTempValues(1) = ""
+    Else
+        arrTempValues(1) = strTempValue
+    End If
+     
+    'get the property value
+    strTempValue = objWorkSheet.cells(FoundCell.Row,FoundCell.Column + 3).Value
+    If IsNull(strTempValue) Then
+        arrTempValues(2) = ""
+    Else
+        arrTempValues(2) = strTempValue
+    End If
+    
+    'get the tag name
+    strTempValue = objWorkSheet.cells(FoundCell.Row,FoundCell.Column + 4).Value
+    If IsNull(strTempValue) Then
+        arrTempValues(3) = ""
+    Else
+        arrTempValues(3) = strTempValue
+    End If
+    
+    ''objExcel.Quit
+    objExcel.Workbooks.Close
+    objExcel.Quit
+    Set objWorkSheet = Nothing
+    Set objWorkbook = Nothing
+    Set objExcel = Nothing
+        
+    'return the values
+    arrGetObjInfoFromXL = arrTempValues
+    Err.Clear
+End Function
+
+'############################################
+'Search key word from in excel file and return key word's value
+'Created by Amanda
+'###########################################
+Function Excel_SearchValue(m_strFilePath,m_SheetName,m_SearchKeyWord)
+    Dim objExcel, objWorkbook, objWorkSheet,FoundCells,FoundCell,strTempValue
+    
+    'open the excel application
+    Set objExcel = CreateObject("Excel.Application")
+    'log.Message m_strFilePath
+    Set objWorkbook = objExcel.Workbooks.Open (m_strFilePath)
+    Set objWorkSheet = objWorkbook.Sheets(m_SheetName)
+    Set FoundCells = objWorkSheet.Range("A:A")
+    Set FoundCell = FoundCells.Find(m_SearchKeyWord)
+    
+    'handle object not being found in the repo
+    If (FoundCell Is Nothing) Then Log.Error m_SearchKeyWord & " was not found in the Input Parameter"
+     
+    'get the find method
+    strTempValue = objWorkSheet.cells(FoundCell.Row,FoundCell.Column + 1).Value
+    
+    'Quit Excel
+    objExcel.Workbooks.Close
+    objExcel.Quit
+    Set objWorkSheet = Nothing
+    Set objWorkbook = Nothing
+    Set objExcel = Nothing
+    
+    'return key word's value
+    Excel_SearchValue = strTempValue
+        
+End Function
+
+'********Created By Marvin
+'********Insert Value into excel at next row
+Function Excel_InsertValue(strWriteExcelPath,strSheetName,strColumnValue_01,strColumnValue_02)
+    Dim objExcel, objWorkbook, objWorkSheet, rowCount
+    Set objExcel = CreateObject("Excel.Application")
+    Set objWorkbook = objExcel.Workbooks.Open (strWriteExcelPath)
+    Set objWorkSheet = objWorkbook.Sheets(strSheetName)
+    rowCount = objWorkSheet.UsedRange.Rows.Count
+    'log.Message rowCount
+    objWorkSheet.Cells(rowCount+1,1).Value = strColumnValue_01
+    objWorkSheet.Cells(rowCount+1,2).Value = strColumnValue_02
+    objWorkbook.Save
+    objExcel.Quit
+End Function 
+
+
+'############################################
+'Search value fro create new standard in CSS
+'Created by Sun.XJ
+'###########################################
+Function Excel_SearchAttributeInputValue(m_strFilePath,m_SheetName,m_strAttribute, m_strData)
+    Dim objExcel, objWorkbook, objWorkSheet,FoundRow,FoundColumn,FoundCell_Attribute,FoundCell_Data,strTempValue
+    
+    'open the excel application
+    Set objExcel = CreateObject("Excel.Application")
+    'log.Message m_strFilePath
+    Set objWorkbook = objExcel.Workbooks.Open (m_strFilePath)
+    Set objWorkSheet = objWorkbook.Sheets(m_SheetName)
+    Set FoundColumn = objWorkSheet.Rows(1)
+    Set FoundRow = objWorkSheet.Columns(1)
+    Set FoundCell_Attribute = FoundColumn.Find(m_strAttribute)
+    Set FoundCell_Data = FoundRow.Find(m_strData)
+    
+    'handle object not being found in the repo
+    If (FoundCell_Attribute Is Nothing) Then Log.Error m_Attribute & " was not found in the Input Parameter"
+    If (FoundCell_Data Is Nothing) Then Log.Error m_Attribute & " was not found in the Input Parameter"
+    'get the find method
+    strTempValue = objWorkSheet.cells(FoundCell_Data.Row, FoundCell_Attribute.Column).Value
+    
+    'Quit Excel
+    objExcel.Workbooks.Close
+    objExcel.Quit
+    Set objWorkSheet = Nothing
+    Set objWorkbook = Nothing
+    Set objExcel = Nothing
+    
+    'return key word's value
+    Excel_SearchAttributeInputValue = strTempValue
+    Log.Event  "Get Attribute value :" & strTempValue
+End Function
+
+
+'********Created By Xiaoji
+'********Insert Value into excel at specified row
+Function Excel_InsertValueIntoSpecifiedCell(strWriteExcelPath,strSheetName,strRowName,strColumnName,strValue)
+    Dim objExcel, rowCounr, objWorkbook, objWorkSheet,FoundRow,FoundColumn,FoundCell_Attribute,FoundCell_Data,strTempValue
+    
+    'open the excel application
+    Set objExcel = CreateObject("Excel.Application")
+    'log.Message m_strFilePath
+    Set objWorkbook = objExcel.Workbooks.Open (strWriteExcelPath)
+    Set objWorkSheet = objWorkbook.Sheets(strSheetName)
+    Set FoundColumn = objWorkSheet.Rows(1)
+    Set FoundRow = objWorkSheet.Columns(1)
+    Set FoundCell_Attribute = FoundColumn.Find(strColumnName)
+    Set FoundCell_Data = FoundRow.Find(strRowName)
+    rowCount = objWorkSheet.UsedRange.Rows.Count
+    'handle object not being found in the repo
+    If (FoundCell_Attribute Is Nothing) Then Log.Error m_Attribute & " was not found in the Input Parameter"
+    'If row name not exits
+    If (FoundCell_Data Is Nothing) Then 
+    Log.EVENT m_Attribute & " was not found in the Input Parameter, Create new One"  
+    objWorkSheet.Cells(rowCount+1,1).Value = strRowName
+    objWorkSheet.Cells(rowCount+1,2).Value = strValue
+    Else
+    objWorkSheet.cells(FoundCell_Data.Row, FoundCell_Attribute.Column).Value = strValue
+    End If
+    objWorkbook.Save
+    objExcel.Workbooks.Close
+    objExcel.Quit
+End Function
+
+
+'############################################
+'Search key word from in excel file and return PDT's value, PDT's value is a array, it has nine elements.
+'The excel sheet name is "PDT"
+'Created by Amanda
+'###########################################
+Function Excel_SearchPDTValue(m_strFilePath,m_SearchKeyWord)
+    Dim objExcel, objWorkbook, objWorkSheet,FoundCells,FoundCell,strTempValue
+    Dim arrPDT(8)
+    
+    'open the excel application
+    Set objExcel = CreateObject("Excel.Application")
+    'log.Message m_strFilePath
+    Set objWorkbook = objExcel.Workbooks.Open (m_strFilePath)
+    'hard code - Yong
+    Set objWorkSheet = objWorkbook.Sheets("PDT")
+    Set FoundCells = objWorkSheet.Range("A:A")
+    Set FoundCell = FoundCells.Find(m_SearchKeyWord)
+
+    'handle object not being found in the repo
+    If (FoundCell Is Nothing) Then Log.Error m_SearchKeyWord & " was not found in the Input Parameter"
+     
+    'get the type
+    strTempValue = objWorkSheet.cells(FoundCell.Row,FoundCell.Column + 1).Value
+    If IsNull(strTempValue) Then
+        arrPDT(0) = ""
+    Else
+        arrPDT(0) = strTempValue
+    End If
+    
+    'get the stage
+    strTempValue = objWorkSheet.cells(FoundCell.Row,FoundCell.Column + 2).Value
+    If IsNull(strTempValue) Then
+        arrPDT(1) = ""
+    Else
+        arrPDT(1) = strTempValue
+    End If
+    
+    'get the title
+    strTempValue = objWorkSheet.cells(FoundCell.Row,FoundCell.Column + 3).Value
+    If IsNull(strTempValue) Then
+        arrPDT(2) = ""
+    Else
+        arrPDT(2) = strTempValue
+    End If
+    
+    'get the description
+    strTempValue = objWorkSheet.cells(FoundCell.Row,FoundCell.Column + 4).Value
+    If IsNull(strTempValue) Then
+        arrPDT(3) = ""
+    Else
+        arrPDT(3) = strTempValue
+    End If
+    
+    'get the segment
+    strTempValue = objWorkSheet.cells(FoundCell.Row,FoundCell.Column + 5).Value
+    If IsNull(strTempValue) Then
+        arrPDT(4) = ""
+    Else
+        arrPDT(4) = strTempValue
+    End If
+    
+    'get the PrimaryOrgnization
+    strTempValue = objWorkSheet.cells(FoundCell.Row,FoundCell.Column + 6).Value
+    If IsNull(strTempValue) Then
+        arrPDT(5) = ""
+    Else
+        arrPDT(5) = strTempValue
+    End If
+    
+    'get the ChangeTemplateDisplay
+    strTempValue = objWorkSheet.cells(FoundCell.Row,FoundCell.Column + 7).Value
+    If IsNull(strTempValue) Then
+        arrPDT(6) = ""
+    Else
+        arrPDT(6) = strTempValue
+    End If
+    
+    'get the CO
+    strTempValue = objWorkSheet.cells(FoundCell.Row,FoundCell.Column + 8).Value
+    If IsNull(strTempValue) Then
+        arrPDT(7) = ""
+    Else
+        arrPDT(7) = strTempValue
+    End If
+    
+    'get the SecurityCategoryClassification
+    strTempValue = objWorkSheet.cells(FoundCell.Row,FoundCell.Column + 9).Value
+    If IsNull(strTempValue) Then
+        arrPDT(8) = ""
+    Else
+        arrPDT(8) = strTempValue
+    End If
+    
+    'Quit Excel
+    objExcel.Workbooks.Close
+    objExcel.Quit
+    Set objWorkSheet = Nothing
+    Set objWorkbook = Nothing
+    Set objExcel = Nothing
+    
+    'return key word's value
+    Excel_SearchPDTValue = arrPDT
+    Err.Clear    
+End Function
+
+
+'##################################################################################################################
+'Function Name                : Excel_GetBatchValues
+'Description                  : To get some values, the place of value is under the row of keyword 
+'Arguments                    : strSheetName, Excel's sheet name
+'                               nAmounts, the amout of value, default value is 1
+'Return Value                 : value array
+'Author                       : Amanda Li
+'Creation Date                : 19 - Sep -2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function Excel_GetBatchValues(m_strFilePath,strSheetName,m_SearchKeyWord,nAmounts)
+    Dim objExcel, objWorkbook, objWorkSheet,FoundCells,FoundCell,strTempValue
+    Dim arrValue()
+    
+    'open the excel application
+    Set objExcel = CreateObject("Excel.Application")
+    'log.Message m_strFilePath
+    Set objWorkbook = objExcel.Workbooks.Open (m_strFilePath)
+    Set objWorkSheet = objWorkbook.Sheets(strSheetName)
+    Set FoundCells = objWorkSheet.Range("A:A")
+    Set FoundCell = FoundCells.Find(m_SearchKeyWord)
+    
+    'handle object not being found in the repo
+    If (FoundCell Is Nothing) Then Log.Error m_SearchKeyWord & " was not found in the Input Parameter"
+    
+    If VarType(nAmounts) = 8 Then
+      nAmounts = CINT(nAmounts)
+    End If   
+    
+    nCounts = nAmounts - 1
+    ReDim arrValue(nCounts)
+  
+    For i = 0 to nAmounts - 1
+      strTempValue = objWorkSheet.cells(FoundCell.Row + 1,FoundCell.Column + i + 1).Value
+      arrValue(i) =  strTempValue
+    Next
+      
+   
+    'Quit Excel
+    objExcel.Workbooks.Close
+    objExcel.Quit
+    Set objWorkSheet = Nothing
+    Set objWorkbook = Nothing
+    Set objExcel = Nothing
+    
+    'return key word's value
+    Excel_GetBatchValues = arrValue
+    Err.Clear 
+End Function 

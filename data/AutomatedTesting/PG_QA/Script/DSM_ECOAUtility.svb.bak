@@ -1,0 +1,128 @@
+﻿'USEUNIT GlobalVars
+'USEUNIT WebKeywords
+'USEUNIT WebObjectLib
+'USEUNIT WindowsUtility
+'USEUNIT OR_Enovia
+'USEUNIT TR_EnoviaUtils
+'USEUNIT ExcelLib
+'USEUNIT GlobalVars
+'USEUNIT LogLib
+'USEUNIT StringLib
+'USEUNIT CSS_OBJClass
+'USEUNIT WebMailLib
+
+
+Function ECOA_LoginWebMail(Identifier,environment)
+''for debug
+'  g_strBrowserType = c_IExplorer
+'  g_strURL = "https://webmail.pg.com/owa/"
+  On Error Resume Next
+  Dim oCurObj   
+  g_strURL = GetURL(environment)
+  Call TR_EnoviaUtils_LaunchBrowser()
+  Delay(5000)
+  'Set oCurObj = objGetObject(OR_WEBMail_SecurityWarnning,g_WebMail_Homepage,"")
+  'If oCurObj.Exists Then
+    'oCurObj.Click
+  'End If
+  'Delay(20000)
+  
+  arrCreds = GetCredentials(Identifier)
+  
+  UserNameEdt.SetText(arrCreds(0)) 
+  PasswordEdt.SetText(arrCreds(1)) 
+  SignBnt.Click
+End Function
+
+Function ECOA_CreateNewMail(m_strAttFilePath,m_MailSubject,m_SentToAddress)
+'for debug
+g_strBrowserType = c_IExplorer
+
+  On Error Resume Next
+  Dim oCurObj  
+  
+  Set oCurObj = objGetObject(OR_WEBMail_NewItem,g_WebMail_Homepage,"")
+  oCurObj.Click
+  
+  'Set SendTo
+  Set oCurObj = objGetObject(OR_WEBMail_SendTo,g_WebMail_NewItemPage,"")
+  oCurObj.Keys m_SentToAddress
+  'Set Subject
+  Set oCurObj = objGetObject(OR_WEBMail_Subject,g_WebMail_NewItemPage,"")
+  oCurObj.Keys m_MailSubject
+  'Set Attachment
+  Set oCurObj = objGetObject(OR_WEBMail_Attachment,g_WebMail_NewItemPage,"")
+  oCurObj.Click
+  Delay(5000)
+  'Open Attachment
+  'strAttFilePath = "C:\TestCompleteWork\Resources\COA_91929167.001.xls"
+  Sys.Browser(g_strBrowserType).Window("*", "Open", 1).Window("ComboBoxEx32", "", 1).Window("ComboBox", "", 1).Window("Edit", "", 1).Keys m_strAttFilePath
+  Sys.Browser(g_strBrowserType).Window("*", "Open", 1).Window("Button", "&Open", 1).Click
+  Delay(5000)
+  
+  'Send Mail
+  Set oCurObj = objGetObject(OR_WEBMail_SendBnt,g_WebMail_NewItemPage,"")
+  oCurObj.Click
+  Set oCurObj = Nothing
+End Function
+
+Function ECOA_CloseWebMail()
+  On Error Resume Next
+  Dim oCurObj
+  Set oCurObj = objGetObject(OR_WEBMail_SignOut,g_WebMail_Homepage,"")
+  oCurObj.Click
+  Set oCurObj = Nothing
+End Function
+
+Function ECOA_CheckECOAMail(m_strECOAFileName)
+''for debug
+'m_strECOAFileName = "COA_CA25_91930271.002_Published_CCCNPMPM10329Y"
+'g_strBrowserType = c_IExplorer
+  On Error Resume Next
+  Dim oCurObj, oMailList1st, oMailList2nd, oMailContent, isFindMail, strEmailContent
+  Dim str1stMail, str2ndMail
+  Set oMailList1st = Sys.Browser(g_strBrowserType).Page(g_WebMail_Homepage).Panel("divNavHostBody").Panel("divMainPage").Panel("divMainViewPane").Panel("divMainView").Panel("*").Panel("divVw").Panel("divLVRPContainer").Panel("divLVContainer").Panel("divLV").Panel("divVLV").Panel("divList").Panel("divViewport").Panel("divChnk").Panel("divVLVIL").Panel("gc").Panel("divVLVIL").Panel("vr").Panel("divSubject")
+  Set oMailList2nd = Sys.Browser(g_strBrowserType).Page(g_WebMail_Homepage).Panel("divNavHostBody").Panel("divMainPage").Panel("divMainViewPane").Panel("divMainView").Panel("*").Panel("divVw").Panel("divLVRPContainer").Panel("divLVContainer").Panel("divLV").Panel("divVLV").Panel("divList").Panel("divViewport").Panel("divChnk").Panel("divVLVIL").Panel("gc").Panel("divVLVIL").Panel("vr_2").Panel("divSubject")
+  
+  isFindMail = 0
+  'Filter Email List
+  Set oCurObj = objGetObject(OR_WEBMail_SearchBox,g_WebMail_Homepage,"")
+  oCurObj.Keys "ecoatest.im@pg.com"
+  Set oCurObj = objGetObject(OR_WEBMail_SearchBnt,g_WebMail_Homepage,"")
+  oCurObj.Click
+  Delay(5000)
+  
+  'Search ECOA Response mail
+  str1stMail = oMailList1st.contentText
+  str2ndMail = oMailList2nd.contentText
+  If Instr(str1stMail,"COA Processing Response") Then
+    Log.Message("Found ECOA response email!")
+    oMailList1st.Click
+    isFindMail = 1
+  ElseIf Instr(str2ndMail,"COA Processing Response")   Then
+    Log.Message("Found ECOA response email!")
+    oMailList2nd.Click
+    isFindMail = 1
+  Else
+    Log.Error("Can't find ECOA automatic email!")
+  End If
+  
+  'Check Mail's content
+  If isFindMail = 1 Then
+    Set oMailContent = Sys.Browser(g_strBrowserType).Page(g_WebMail_Homepage).Panel("divNavHostBody").Panel("divMainPage").Panel("divMainViewPane").Panel("divMainView").Panel("*").Panel("divVw").Panel("divLVRPContainer").Panel("divRPContainer").Panel("divRP").Panel("ifRP").Panel("divConversationBody").Panel("divItmPrtsScr").Panel("divItmPrts").Panel("divIP0").Panel("divExp").Panel("divBdy").Panel(0).Panel(0).TextNode(0)
+    strEmailContent = oMailContent.contentText
+    If Instr(strEmailContent,m_strECOAFileName) And Instr(strEmailContent,"The COA was inserted into the queue and it will be validated") Then
+      Log.Message("Testing ECOA Successed!")
+      ECOA_CheckECOAMail = True
+    Else
+      Log.Message("Testing ECOA Failed!")
+      ECOA_CheckECOAMail = False
+    End If
+  End If
+  
+  Set oCurObj = Nothing
+  Set oMailList1st = Nothing
+  Set oMailList2nd = Nothing
+  Set oMailContent = Nothing
+End Function
+

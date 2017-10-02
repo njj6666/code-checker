@@ -1,0 +1,173 @@
+﻿'USEUNIT GlobalVars	
+'USEUNIT LogLib	
+'USEUNIT OR_Enovia	
+'USEUNIT WindowsUtility	
+'USEUNIT EnoviaUtils	
+'USEUNIT WebObjectLib
+'USEUNIT EnoviaSearch_PopulateSearchModel
+                                              	
+Dim SearchRecord                            
+                                                                            	                                                          
+Function EnoviaSearch_PeripheralTC3_Steps()	
+                                                                                      
+  Call LogStep("EnoviaSearch_PeripheralTC3_Step1", "The Object(s) should be displayed in the Search Results Window.","")
+  Call LogStep("EnoviaSearch_PeripheralTC3_Step2", "A Save as Window should open with a Text box for typing the name and Radio Buttons for Selecting any Previous names","")
+  Call LogStep("EnoviaSearch_PeripheralTC3_Step3", "The Results should be Saved and should replace the previous Search Results with that name.","")
+  Call LogStep("EnoviaSearch_PeripheralTC3_Step4", "The Search Results Pane should refresh and should display the results of Step-2","")
+  
+  Call LogTestCase("Save your Specific Search Results with a Different Name", "TC-03_Named Search_Toolbar Save As","47695")
+	                                                                                                                             
+End Function	
+                                                                          
+                                                                   
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC3_Step1
+'Description                  : Searches for a record
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+                                                            
+Function EnoviaSearch_PeripheralTC3_Step1()	
+                                                     
+    'Searches "CUP-00000037" in the application
+    SearchRecord = EnoviaSearch_ReadTestCasesData("TC-03_Named Search_Toolbar Save As","Search")
+    Call Enovia_SearchStuff(SearchRecord)
+    
+    'Switching to Real time mode
+    Sys.Refresh
+    'Create object of Switch Query Button 
+    Set objSwitchQueryButton = objGetObject(OR_EnoviaSearch_SwitchQueryButton,"",3000)
+    If objSwitchQueryButton.title = "Switch to RealTime Search" Then
+      objSwitchQueryButton.Click () 
+      Sys.Refresh
+      objSwitchQueryButton.Refresh
+      Call objSwitchQueryButton.WaitProperty("title","Switch to Indexed Search",7000) 
+      If objSwitchQueryButton.title = "Switch to RealTime Search" Then
+        Call Err.raise(64983,"EnoviaSearch_PeripheralTC3_Step1","Real Time Search not changed to Indexed Search")
+      End If
+    End If
+    Set objSwitchQueryButton = Nothing
+    
+    'create object for search button
+    Set SearchButton = objGetObject(OR_EnoviaSearch_TC17_Search,"",3000)
+    SearchButton.click()
+    aqUtils.Delay 10000,"Waiting for the page refresh after search."
+          
+    'Get the EnoviaNameSearch_HandlingAlertWindow function to handle Alert Box Window
+     Call EnoviaSearch_AlertWindow("")        
+                                                                      
+End Function	                                         
+	                                                                      
+                                                                              
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC3_Step2
+'Description                  : opens saveas page
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	                                                                             
+Function EnoviaSearch_PeripheralTC3_Step2()	                        
+        
+    'Create object for Save Query button
+    Set objSaveQuery = objGetObject(OR_EnoviaSearch_TC19_SavedQueries,"","")
+    objSaveQuery.Click()
+    Set objSaveQuery=nothing
+    
+    'Create object for SaveAs Label
+    Set objSaveAs = objGetObject(OR_EnoviaSearch_TC19_SavedASRecord,"",3000)
+    objSaveAs.Click()
+    Set objSaveAs=nothing
+                                                    
+    'Create object for radio button
+    Set objSelectradioButton = objGetObject(OR_EnoviaSearch_TC19_SelectRadioButton,g_SaveAsPage_URL,3000)	
+    If objSelectradioButton.VisibleOnScreen = False Then
+      Call Err.raise (64984,"EnoviaSearch_PeripheralTC3_Step2","Radio button not available in saveAswindow") 
+    End If
+    Set objSelectradioButton=nothing
+                                                         
+    'Create object for name field
+    Set objSelectNameTextbox = objGetObject(OR_EnoviaSearch_TC19_NameSave,g_SaveAsPage_URL,3000)	
+    If objSelectNameTextbox.VisibleOnScreen = False Then
+      Call Err.raise (64985,"EnoviaSearch_PeripheralTC3_Step2","NameTextbox not available in saveAswindow")
+    End If
+    Set objSelectNameTextbox=nothing
+                                                                                                                  
+End Function	                                                  
+                                                                      	                                                                                                         
+                                                                                              
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC3_Step3
+'Description                  : code check the radio button selected
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+                                                   
+Function EnoviaSearch_PeripheralTC3_Step3()	
+                                                                     
+    'Create object for radio button
+    Set objSelectradioButton = objGetObject(OR_EnoviaSearch_TC19_SelectRadioButton,g_SaveAsPage_URL,"")
+    objSelectradioButton.Click()
+    Set objSelectradioButton=nothing
+                                                  
+    'Create object for done button
+    Set objDoneBtn = objGetObject(OR_EnoviaSearch_TC19_DoneButton,g_SaveAsPage_URL,"")
+    objDoneBtn.Click()
+    Set objDoneBtn=nothing
+    
+End Function	
+	                                                                    
+                                                                           
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC3_Step4
+'Description                  : code to check saved record displayed correctly
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	                                                                    
+Function EnoviaSearch_PeripheralTC3_Step4()	
+                                
+    Dim sValue, objSearch                                                              
+    'Create object for Save Query button
+    Set objSaveQuery = objGetObject(OR_EnoviaSearch_TC19_SavedQueries,"",4000)
+    objSaveQuery.Click()
+    Set objSaveQuery=nothing
+                                                                         
+    'Create object for savedname
+    Set objSavedRecordSelect = objGetObject(OR_EnoviaSearch_TC19_SavedRecord,"",3000)
+    objSavedRecordSelect.Click()
+    Set objSavedRecordSelect=nothing
+                                                           
+    'Create object for Namesearch field
+    Set objSearch = objGetObject(OR_EnoviaSearch_SearchEdt,"",3000)
+    sValue=objSearch.value
+    If instr(sValue,SearchRecord)=0 Then
+      Call Err.raise(64986,"EnoviaSearch_PeripheralTC3_Step4","Saved record displayed correctly")
+    End If
+
+    'Get the EnoviaNameSearch_HandlingAlertWindow function to handle Alert Box Window     
+     Call EnoviaSearch_AlertWindow("")   
+            
+End Function
+                                                
+
+

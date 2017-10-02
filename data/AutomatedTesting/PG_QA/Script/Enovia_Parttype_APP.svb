@@ -1,0 +1,29 @@
+﻿Function PartTypeapp()
+'''''''
+'1.Read Input data template for a type and store all data Testcomplete memory.
+'1.a.Read all sheet names and store in an Array.
+'	Array Name:S_InputTableSheets
+'1.b.Read Main Sheet.
+'1.b.1.Create global variables and store data.
+'	Global Variables: g_sPartType , g_sGenDocView, g_sAllInfoView,g_sCmView, g_sSupplierView 
+'1.c.Read each Sheet and store data on TC Tables.
+'	Table name Format:TC_Input_Attributes, TC_Input_Notes,.....
+'	Table Columns: Pdf_FieldName, Pdf_FieldValue, I_Orientation, GenDoc_View, AllInfo_View, Cm_View, Supplier_View
+  
+'2.Login to enovia-> Query for a part -> generate all pdf's -> logout.
+'2.a.Save PDf files to location: .....\Documents\PDF_Views\PDF_RawFiles\
+'	PDf file Name:PartName_Documenttype. Ex: 91434874_GenDoc.pdf 
+'g_sPartType , g_sGenDocView = "Yes", g_sAllInfoView,g_sCmView, g_sSupplierView 
+' Login_URl, UserName, password,PartGECNumber, 
+'3.Convert pdf to excel(one pdf).
+'3.a.Export pdf to excel.
+'	Fetch input PDf file from:\Documents\PDF_Views\PDF_RawFiles\
+'	Save Converted excel files to location:.......\Documents\PDF_Views\PDF_to_Excel_Converted\
+'	Excel file Name:PartName_Documenttype. Ex: 91434874_GenDoc.xlsx 
+'4.Read excel and store data in Testcomplete memory.
+'5.compare data with data read in Step1.
+
+
+
+
+End Function

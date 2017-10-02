@@ -1,0 +1,96 @@
+﻿'USEUNIT DBLib
+'USEUNIT EnoviaUtils
+'USEUNIT GlobalVars
+'USEUNIT LogLib
+'USEUNIT FileLib
+'USEUNIT TimeLib
+'USEUNIT WindowsUtility
+
+'USEUNIT OR_Enovia
+'USEUNIT WebKeywords
+'USEUNIT WinKeywords
+'USEUNIT WebObjectLib
+
+
+Sub Main()
+  Call Start_Regression_ExampleTestSuite( "plmqa", "pkgtest1" )
+End Sub
+
+Sub Start_Regression_ExampleTestSuite( sEnv, sUser )
+  g_strBrowserType = c_IExplorer
+
+  On Error Resume Next    
+  Call CreateEnvironment("Test Regression", sEnv, false, "Test Regression Description", false, "Regression")
+  If Log_UpdateIsBlocked() = False Then      
+      Call Enovia_LaunchEnovia( sEnv )
+   End If
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_Login( sUser )
+  End If  
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_clickOK()
+  End If
+
+  Call TC1()
+  Call TC2()
+  
+  Call CloseAllBrowserProcesses()  
+  Call CloseEnvironment()
+  
+  If Err.Number <> 0 Then
+    Call MsgBox(Err.Description)
+  End If
+
+End Sub
+
+'Normally, this would be in another script
+Sub TC1()
+  Call Click( OR_EnoviaHomepage_ProjectsLink, "", 0 )
+  aqPerformance.Start( "Projects List Loaded" )
+' Wait for Project List to appear on screen 
+  Set objProjectList = objGetObject(OR_EnoviaProjects_ProjectTable,"","")     
+  Call LogPerformance("Projects List Loaded", False, "")
+
+  Call g_currentTestCase.AddStep("Opened Project List", true, "", false, "")
+
+  Call LogProjectStep( FindProject( "Nonsense Project Name - Will Fail" ), "Nonsense Project Name - Will Fail" )
+  Call LogProjectStep( FindProject( "P-0006148" ), "P-0006148" )
+  
+  Call LogTestCase("Sample Regression Test Case", "TC-1_SAMPLE_REGRESSION_TEST_CASE","SAMPLE_ALM_ID_12345")
+End Sub
+
+Sub TC2()
+  Set proj = FindProject( "P-0006148" )
+  proj.Click
+  
+  aqPerformance.Start("Selected Project Details Loaded")
+' Wait for desired Project Details to appear on screen
+  OR_EnoviaSearch_ProdDetails = Array("WEBOBJECT", "ObjectType~contentText~VisibleOnScreen", "Panel~Project Status~True", "")
+  Set objProdDetails = objGetObject(OR_EnoviaSearch_ProdDetails,"","")     
+  Call LogPerformance("Selected Project Details Loaded", False, "")
+  Call g_currentTestCase.AddStep( "Opened Project", true, "", false, "" )
+  Call LogTestCase("Sample Regression Test Case #2", "TC-2_SAMPLE_REGRESSION_TEST_CASE","SAMPLE_ALM_ID_12346")
+
+End Sub
+
+Sub LogProjectStep( obj, S_ProjectName )
+  if isEmpty( obj ) then
+    Call g_currentTestCase.AddStep( "Searching for project: " & s_ProjectName, false, "Could not find project " & s_ProjectName, false, "")
+  else 
+    Call g_currentTestCase.AddStep( "Searching for project: " & s_ProjectName, true, "", false, "")
+  end if 
+End Sub
+
+Function FindProject( s_ProjectName )
+'Confirm we see an expected project on the screen.
+  ProjectTable_OR = Array("WEBOBJECT", "ObjectIdentifier", "treeBodyTable", "" )
+  Set objTreeBodyTable = objGetObject( projectTable_OR, "", "" )
+  Set FindProject = objTreeBodyTable.FindChild("contentText",s_ProjectName,100)
+End Function
+
+
+Sub TC_Tester()
+  g_strBrowserType = c_IExplorer
+  Call CreateEnvironment("Test Regression", sEnv, false, "Test Regression Description", false, "Regression")
+  Call TC2()
+End Sub

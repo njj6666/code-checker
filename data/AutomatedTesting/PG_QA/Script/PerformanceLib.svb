@@ -1,0 +1,371 @@
+﻿'USEUNIT DBLib 
+'USEUNIT GlobalVars
+'USEUNIT WebKeywords
+'USEUNIT WebObjectLib
+'USEUNIT RecordSetLib
+'USEUNIT LogLib
+'USEUNIT OR_Enovia
+'USEUNIT GlobalVars
+'USEUNIT TimeLib
+'USEUNIT EnoviaUtils
+'USEUNIT WindowsUtility
+'USEUNIT FileLib
+
+' Find Product Data and Full Text Search Steps
+Function FPD_FTS()
+
+      ' Click Projects Tab
+      Call Enovia_ClickProjectsTab()
+      aqPerformance.Start("Projects List Loaded")
+           
+      ' Wait for Project List to appear on screen 
+      Set objProjectList = objGetObject(OR_EnoviaProjects_ProjectTable,"","")     
+      Call LogPerformance("Projects List Loaded", False, "")
+      
+      ' Click on Desired Project (in this case: Beauty Hair Care Process Validation)                                                                 
+      OR_EnoviaPDT_SelectProject = Array("WEBOBJECT", "ObjectType~contentText~VisibleOnScreen", "Link~BEAUTY HAIR CARE PROCESS VALIDATION~True", "")
+      Set objPickProject = objGetObject(OR_EnoviaPDT_SelectProject,"","")
+      objPickProject.Click      
+      
+      aqPerformance.Start("Selected Project Details Loaded")
+      ' Wait for desired Project Details to appear on screen
+      OR_EnoviaSearch_ProdDetails = Array("WEBOBJECT", "ObjectType~contentText~VisibleOnScreen", "Panel~Project Status~True", "")
+      Set objProdDetails = objGetObject(OR_EnoviaSearch_ProdDetails,"","")     
+      Call LogPerformance("Selected Project Details Loaded", False, "")
+      
+      ' Click on Categories button
+      OR_EnoviaPDT_Categories = Array("WEBOBJECT", "ObjectType~ObjectIdentifier~VisibleOnScreen", "Image~iconActionSmallReturnToFacets_png~True", "")
+      Set objCategories = objGetObject(OR_EnoviaPDT_Categories,"","")
+      objCategories.Click
+      
+      ' Click on the People button
+      OR_EnoviaPDT_PeopleBtn = Array("WEBOBJECT", "ObjectType~contentText~VisibleOnScreen", "Label~People~True", "")
+      Set objPeopleBtn = objGetObject(OR_EnoviaPDT_PeopleBtn,"","")
+      objPeopleBtn.Click
+      
+      aqPerformance.Start("Member List Loaded")     
+      ' Wait for Member List to appear on screen
+      OR_EnoviaPDT_MemberList = Array("WEBOBJECT", "ObjectType~contentText~VisibleOnScreen", "Link~Member~True", "")
+      Set objMemberList = objGetObject(OR_EnoviaPDT_MemberList,"","")     
+      Call LogPerformance("Member List Loaded", False, "")
+      
+      ' Launch Find Product Data Search
+      Call Enovia_ExecuteFindProdDataSearch() 
+      aqPerformance.Start( "Find Product Data Search Window Opened" )
+      Log.Message("before Find Prod")
+      Set objFPDSearchBox = objGetObject(OR_EnoviaSearchFindProdData_Search, g_SearchPageURL, "300000")
+      Log.Message("after Find Prod")     
+      Call LogPerformance("Find Product Data Search Window Opened", False, "")
+      'Handle the alert window if it pops up
+      If Log_UpdateIsBlocked = False Then
+        Call EnoviaSearch_AlertWindow("")
+      End If
+      Call ClosePopupWindow()
+      
+      ' Launch Full Text Search 
+      Call Enovia_FullTextSearch()
+      aqPerformance.Start( "Full Text Search Window Opened" )
+      Log.Message("before FTS")
+      Set objFTSSearchBox = objGetObject(OR_EnoviaSearchFullText_Search, g_SearchPageURL, "300000")
+      Log.Message("after FTS")     
+      Call LogPerformance("Full Text Search Window Opened", False, "")
+      'Handle the alert window if it pops up
+      If Log_UpdateIsBlocked = False Then
+        Call EnoviaSearch_AlertWindow("")
+      End If
+      Call ClosePopupWindow()
+      
+End Function
+
+'*******************************************************************************************************************************************
+Function PDF_DownloadPopup()
+      ' Click on All Info View... in PDF Views Button
+      Set objAllInfoView = objGetObject(OR_EnoviaPDF_AllInfoView,"",300000)
+      objAllInfoView.Click
+      aqPerformance.Start("PDF Views button->All Info View Clicked")
+      
+      ' Notification Popup (Open, Save As, Cancel)
+        Set downloadBar = Sys.Browser("iexplore").Popup("View Downloads - Internet Explorer").Panel("View and track your downloads")
+        downloadBar.WaitProperty "Visible", True, 300000
+      
+      If downloadBar.Exists Then
+          If downloadBar.Visible Then
+            Log.Message("Download popup window was found")
+            Call LogPerformance("PDF Views button->All Info View Clicked", False, "")
+            ' Close the download
+            downloadbar.Button("Close").Click
+            
+             Else
+               Log.Error "Download popup window not found"
+            End If           
+       
+      End If
+End Function
+
+'*******************************************************************************************************************************************
+Function PDF_DownloadBar()
+      ' Notification Toolbar (Open, Save As, Cancel)
+      Set downloadBar = Sys.Browser("iexplore").BrowserWindow(0).Window("Frame Notification Bar").ToolBar("Notification")
+      downloadBar.WaitProperty "Visible", True, 120000
+      
+      If not downloadBar.Visible Then
+          Log.Error "The object was not found."
+        Else
+          Log.Message("Object was found")
+          Call LogPerformance("PDF Views button->All Info View Clicked", False, "")
+          'Delay(5000)
+          ' Open the PDF
+          'Sys.Browser("iexplore").BrowserWindow(0).Window("Frame Notification Bar").ToolBar("Notification").Keys("~o")
+      End If
+End Function
+
+'*******************************************************************************************************************************************
+' RTA Steps
+Function RTA()
+
+     ' Named Search of GP_PERFTEST_15X*
+      Call Enovia_SearchStuff("GP_PERFTEST_15X*")
+      aqPerformance.Start("Named Search Query Complete - GP_PERFTEST_15X")     
+      ' Wait for Result(s) to Load
+      Set objProjTable = objGetObject(OR_EnoviaRTA_Table,"","")
+      Call LogPerformance("Named Search Query Complete - GP_PERFTEST_15X", False, "GP_PERFTEST_15X*")
+      
+      ' Open RTA Project
+      Set page = Sys.Browser("iexplore").Page("https://*.pg.com*/enovia/common/emxNavigator.jsp*")
+      Set table = page.Panel("windowshade").Panel(0).Frame("windowShadeFrame").Form("full_search").Panel("pageContentDiv").Panel("windowshade_content").Panel("bd").Frame("structure_browser").Form("emxTableForm").Panel("mx_divBody").Panel("mx_divTree").Panel("mx_divTreeBody").Table("treeBodyTable")
+      Call table.Cell(1, 1).Panel(0).Table(0).Cell(0, 2).Link(0).Click
+      aqPerformance.Start("Selected RTA Project Results Loaded")
+      ' Wait for Result(s) to Load
+      Set objProjTable = objGetObject(OR_EnoviaRTA_Table,"","")
+      Call LogPerformance("Selected RTA Project Results Loaded", False, "")
+      
+      ' Click on Categories button
+      OR_Enovia_Categories = Array("WEBOBJECT", "ObjectType~ObjectIdentifier~VisibleOnScreen", "Image~iconActionSmallReturnToFacets_png~True", "")
+      Set objCategories = objGetObject(OR_Enovia_Categories,"","")
+      objCategories.Click
+      
+      ' Open Artwork Project Status
+      Set objArtwork = objGetObject(OR_EnoviaRTA_ArtworkProjStatusBtn, "", "")
+      objArtwork.Click
+      aqPerformance.Start("Artwork Project Status Results Loaded")
+      ' Wait for Result(s) to Load
+      Set objProjStatusTable = objGetObject(OR_EnoviaRTA_Table,"","")
+      Call LogPerformance("Artwork Project Status Results Loaded", False, "")
+      
+      ' Open Schedule
+      Set objSchedule = objGetObject(OR_EnoviaRTA_ScheduleBtn,"","")
+      objSchedule.Click
+      aqPerformance.Start("Schedule Results Loaded")
+      ' Wait for results to load
+      Set objScheduleTable = objGetObject(OR_EnoviaRTA_Table,"","")
+      Call LogPerformance("Schedule Results Loaded", False, "")
+      
+      'Sys.Browser("iexplore").BrowserWindow(0).Close
+End Function
+
+'*******************************************************************************************************************************************
+' DSM_InternalReader Steps
+Function DSM_InternalReader()
+      
+      ' Named Search of 60090337
+      Call Enovia_SearchStuff(60090337)
+      aqPerformance.Start("Named Search Query Complete - 60090337")
+      Set objRevisionItem = objGetObject(OR_EnoviaSearch_NamedSearchTable,"",300000)      
+      Call LogPerformance("Named Search Query Complete - 60090337", False, "60090337")
+      
+      ' Click on desired revision
+      Set page = Sys.Browser("iexplore").Page("https://*.pg.com*/enovia/common/emxNavigator.jsp*")
+      Set table = page.Panel("windowshade").Panel(0).Frame("windowShadeFrame").Form("full_search").Panel("pageContentDiv").Panel("windowshade_content").Panel("bd").Frame("structure_browser").Form("emxTableForm").Panel("mx_divBody").Panel("mx_divTree").Panel("mx_divTreeBody").Table("treeBodyTable")
+      Call table.Cell(18, 1).Panel(0).Table(0).Cell(0, 2).Link(0).Click
+      aqPerformance.Start("Selected Revision Results Loaded")
+      Set objRevisionItem = objGetObject(OR_EnoviaSearch_RevisionItem,"",300000)
+      Call LogPerformance("Selected Revision Results Loaded", False, "")
+      
+      ' Where Used
+      Set objWhereUsed = objGetObject(OR_EnoviaSearch_WhereUsed, "", "")
+      objWhereUsed.Click
+      aqPerformance.Start("Where Used Results Loaded")    
+      Set objWhereUsedTable = objGetObject(OR_EnoviaSearch_WhereUsedTable,"", "")
+      Call LogPerformance("Where Used Results Loaded",False, "")
+      
+      ' Full Text Search
+      Call Enovia_FullTextSearch()
+      aqPerformance.Start("Full Text Search Window Opened")
+      Log.Message("before FT")
+      Set objFindSplash = objGetObject(OR_EnoviaSearch_SplashGraphic, g_SearchPageURL, "300000")
+      Log.Message("after FT")     
+      Call LogPerformance("Full Text Search Window Opened", False, "")
+      'Handle the alert window if it pops up
+      If Log_UpdateIsBlocked = False Then
+        Call EnoviaSearch_AlertWindow("")
+      End If
+
+      
+      ' Search in FTS PopUp
+      Call Enovia_FTSearchStuff(SOP)
+      aqPerformance.Start("Search From Within Popup Results Loaded")
+      Set objFTSwithin = objGetObject(OR_EnoviaSearch_FTSwithin, g_SearchPageURL, "300000")
+      'OR_EnoviaSearch_FTSwithin = Array("WEBOBJECT","ObjectType~ObjectIdentifier~VisibleOnScreen","Form~emxTableForm~True")
+      Call LogPerformance("Search From Within Popup Results Loaded", False, "")
+      'Handle the alert window if it pops up
+      If Log_UpdateIsBlocked = False Then
+        Call EnoviaSearch_AlertWindow("")
+      End If
+      Call ClosePopupWindow()
+      
+      ' Name Search of 84900160
+      Call Enovia_SearchStuff(84900160)
+      aqPerformance.Start("Named Search Query Complete - 84900160")
+      Set objRevisionItem = objGetObject(OR_EnoviaSearch_NamedSearchTable,"",300000)
+      Call LogPerformance("Named Search Query Complete - 84900160", False, "84900160")
+      
+      ' Click on desired revision
+      Set page = Sys.Browser("iexplore").Page("https://*.pg.com*/enovia/common/emxNavigator.jsp*")
+      Set table = page.Panel("windowshade").Panel(0).Frame("windowShadeFrame").Form("full_search").Panel("pageContentDiv").Panel("windowshade_content").Panel("bd").Frame("structure_browser").Form("emxTableForm").Panel("mx_divBody").Panel("mx_divTree").Panel("mx_divTreeBody").Table("treeBodyTable")
+      Call table.Cell(7, 1).Panel(0).Table(0).Cell(0, 2).Link(0).Click
+      aqPerformance.Start("Selected Revision Results Loaded")
+      Set objRevisionItem = objGetObject(OR_EnoviaSearch_RevisionItem,"",300000)
+      Call LogPerformance("Selected Revision Results Loaded", False, "")
+      
+      ' Click on PDF Views Button   
+      Set objPDFOpenMenu = objGetObject(OR_EnoviaPDF_OpenMenu,"",300000)
+      objPDFOpenMenu.Click
+      
+      ' Click on All Info View... in PDF Views Button
+      Set objAllInfoView = objGetObject(OR_EnoviaPDF_AllInfoView,"",300000)
+      objAllInfoView.Click
+      aqPerformance.Start("PDF Views button->All Info View Clicked")
+
+      ' Notification Download Toolbar (Open, Save As, Cancel)
+      'Call PDF_DownloadPopup()
+      Call PDF_DownloadBar()
+      
+End Function
+
+'*******************************************************************************************************************************************
+' SLM Steps
+Function SLM()
+
+      ' Click on 3D Compass-South Button
+      'aqPerformance.Start("My Content and Simulations Apps Launched")
+      Set objSearchBtn = objGetObject(OR_EnoviaSLM_Compass, "","")
+      objSearchBtn.Click 40,50
+      'Call LogPerformance("Compass-South Click", False, "Performance")
+      
+      ' Click on Performance Study(second icon in V+R My Content and Simulation Apps)
+      Set objSLMPerformaceStudy = objGetObject(OR_EnoviaSLM_PerformaceStudy, "","")
+      objSLMPerformaceStudy.WaitProperty "VisibleOnScreen", True
+      objSLMPerformaceStudy.Click()
+      'aqPerformance.Start("Performance Study Page Loaded")
+      
+      ' Wait for list to display
+      'OR_EnoviaSLM_PerformanceStudyPage = Array("NATIVEWEBOBJECT", "idStr", "list", "DIV")
+      'OR_EnoviaSLM_PerformanceStudyPage = Array("EVALUATEXPATH",".//*[@id='list']/sp-updatepanel[1]/ps-simulation-item", "", "")
+      'Set objPerfStudyPage = objGetObject(OR_EnoviaSLM_PerformanceStudyPage, "","")
+
+      Set objPerfStudyList = Sys.Browser("iexplore").Page("https://*.pg.com/enovia/common/emxNavigator.jsp*").Panel("pageContentDiv").Frame("content")'.Panel("main").Panel(0).Panel("list")
+      objPerfStudyList.WaitProperty "Visible", True, 60000
+      Log.Message("Table Frame Loaded")    
+      
+      Delay(5000)      
+      'Call LogPerformance("Performance Study Page Loaded", False, "")    
+End Function
+  
+Function SLM_TestChris()
+  'g_strBrowserType = c_FireFox
+  'Set objGetObject = objGetPage("https://plmprod.pg.com/enovia/common/emxNavigator.jsp?ticket=ST-19236-qZA3lfaN2nLht9fat5DM-cas").NativeWebObject.Find("idstr","list", "PANEL")
+  'Set objUserID = objGetObject(OR_EnoviaLogin_UserNameEdt,"","")
+  'OR_EnoviaSLM_PerformanceStudyPage = Array("NATIVEWEBOBJECT", "idStr", "list", "Panel")
+  'OR_EnoviaSLM_PerformanceStudyPage = Array("WEBOBJECT", "class", "processlist", "")
+  OR_EnoviaSLM_PerformanceStudyPage = Array("WEBOBJECT", "id", "list", "PANEL")
+  Set objSLMAppTable = objGetObject(OR_EnoviaSLM_PerformanceStudyPage, "","")
+  'Set bob = Aliases.browser.page3dexperiencePlatform.Panel("pageContentDiv").Frame("SMA_App_Frame_PS").Panel("main").Panel(0).Panel("list")
+  'Set bob = Aliases.browser.page3dexperiencePlatform.frameSmaAppFramePs.panelMain.panelSidebar.panelList
+  'count = bob.ChildCount 
+End Function
+
+'Function getHTML()
+'  Set ie_browser = Aliases.browser 'Sys.Browser("iexplore")
+'  Set page = ie_browser.Page("*")  ' modify the URL
+'  htmlCode = page.contentDocument.documentElement.outerHTML
+'  Call Log.Message("See HTML in Additional Information pane", htmlCode)
+'End Function
+
+
+'*******************************************************************************************************************************************
+Sub ClosePopupBrowserWindow
+'  Enovia_ExecuteFindProdDataSearch()
+    Log.Message( "Caption = " & Sys.Browser(g_strBrowserType).BrowserWindow(0).WndCaption )
+    Log.Message( "Caption = " & Sys.Browser(g_strBrowserType).BrowserWindow(1).WndCaption )
+End Sub
+
+Sub TableTest
+
+  ' Find the table by xpath
+  Set page = Sys.Browser("iexplore").Page("https://plmprod.pg.com/enovia/common/emxNavigator.jsp")
+  'Set obj = page.FindChildByXPath(".//*[@id='treeBodyTable']/tbody", True)
+  Set table = page.EvaluateXPath(".//*[@id='treeBodyTable']/tbody")
+    
+  'Clicks the 18th row link
+  Call table.Cell(18, 1).Panel(0).Table(0).Cell(0, 2).Link(0).Click
+  'Call SearchAndSelectItem("", "g_ViewPage_URL", "", ".//*[@id='treeBodyTable']/tbody")
+End Sub
+
+
+' Function searches row, based on Search Column name and click results in same row that locates in Result Column
+Function EnoviaDSM_TableSearchAndClick(sSearchColumn, sSearchText, sResultColumn)
+  On Error Resume Next
+  Dim oParentobj, oHeadTable, oBodyTable, oLabel, oField, oResultLabel, oResultField, oResultLink, aNameProps
+  
+  ' Find Column from header table
+  aNameProps = Array("EVALUATEXPATH",".//*[@id='Name']","","")
+  Set oLabel = objGetObject(aNameProps,"","")
+  
+  Set oParentobj = objGetObject(OR_EnoviaPDT_TablesBodyPnl,"","")
+  
+  ' Find table that contains headers
+  Set oHeadTable = oParentobj.FindChild("objectIdentifier","treeHeadTable",10)
+  Set oBodyTable = oParentobj.FindChild("objectIdentifier","treeBodyTable",10)
+  
+  nColumnIndex=(oLabel.ColumnIndex)/2
+  
+  aPropNames = Array("ColumnIndex","contentText")
+  aPropValues = Array(nColumnIndex, sSearchText)
+  
+  Set oField = oBodyTable.FindChild(aPropNames,aPropValues,10)
+  
+  ' Find results column
+  Set oResultLabel = oHeadTable.FindChild("contentText",sResultColumn,10)
+  
+  'Value is in body table but column index is divided by two
+  nResultColumnIndex=(oResultLabel.ColumnIndex)/2
+  
+  ' Find Result column by row and column index
+  aPropNames = Array("ColumnIndex","RowIndex")
+  aPropValues = Array(nResultColumnIndex, oField.RowIndex)
+  
+  Set oResultField = oBodyTable.FindChild(aPropNames,aPropValues,10)
+  
+  Set oResultLink = oResultField.Child(0)
+  oResultLink.Click
+  
+  ' Cleanup
+  Set oParentobj = Nothing
+  Set oLabel = Nothing
+  Set oHeadTable = Nothing
+  Set oResultLabel = Nothing
+  Set oResultField = Nothing
+  Set oResultLink = Nothing
+  Set oField = Nothing
+  Set oBodyTable = Nothing
+  
+End Function
+
+Function FPD()
+  Call Enovia_ExecuteFindProdDataSearch() 
+  aqPerformance.Start( "Find Product Data Search Window Opened" )
+  Log.Message("before Find Prod")
+  Set objSearchBox = objGetObject(OR_EnoviaSearch_TextField, g_SearchPageURL, "300000")
+  Log.Message("after Find Prod")     
+  Call ClosePopupWindow()
+End Function 

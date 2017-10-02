@@ -1,0 +1,82 @@
+﻿Function getOrientation(strngfind) 
+
+    
+  'get cell from excel sheet where column name is specified as Field
+  Set Cell_Find=objWorksheet1.cells(objWorksheet1.Rows.count,objWorksheet1.Columns.count).Find("Field")
+  if Cell_Find IS Nothing Then
+      objWorkbook= Nothing
+      objWorksheet=Nothing
+      log.Message "Field is not in specified sheet"
+      Exit Function
+  Else
+    'get column no of the Field
+    Column_find=Cell_Find.Column 
+    'get cell of the given field value
+    Set Cell_Find_1 = objWorksheet1.Columns(Column_find).Find(strngfind)
+    Row_find=Cell_Find_1.Row
+    'incrementing column value by 2 to get PDF name
+    Column_find =Column_find+2 
+    LOG.Message "Orientation for given field is"
+    log.Message objWorksheet1.cells(Row_find,Column_find).Value
+    
+    objExcel.ActiveWorkbook.Close
+    objExcel.Application.Quit 
+    
+  End if
+End Function
+
+Function getPDFname(strngfind) 
+   
+'get cell from excel sheet where column name is specified as Field
+      Set Cell_Find=objWorksheet1.cells(objWorksheet1.Rows.count,objWorksheet1.Columns.count).Find("Field")
+          if Cell_Find IS Nothing Then
+          objWorkbook= Nothing
+          objWorksheet=Nothing
+          log.Message "Field is not in specified sheet"
+Exit Function
+Else
+  'get column no of the Field
+  Column_find=Cell_Find.Column 
+  'get cell of the given field value
+  Set Cell_Find_1 = objWorksheet1.Columns(Column_find).Find(strngfind)
+  Row_find=Cell_Find_1.Row
+
+  'incrementing column value by 1 to get PDF name
+  Column_find =Column_find+1 
+  'getting corresponding PDF name value
+  log.Message "PDF field name corresponding to given field"
+  log.Message objWorksheet1.cells(Row_find,Column_find).Value
+
+  objExcel.ActiveWorkbook.Close
+  objExcel.Application.Quit 
+End if
+End Function
+
+
+Function ExcelFileExistsOrNot(file_Path,sheetname)
+On Error Resume Next
+'Creating file object
+Set fso = CreateObject("Scripting.FileSystemObject")
+'Checking whether file exists in the specified path
+    If (fso.FileExists(file_Path)) Then
+        log.Message "File Exists"
+        Set objExcel = CreateObject("Excel.Application") 
+        'Opening the Excel Workbook 
+        Set objWorkbook=objExcel.Workbooks.Open(file_Path)
+        'Opening the Excel Worksheet
+        Set objWorksheet1=objWorkbook.Sheets(sheetname)
+        
+        If Err.Number=0 then
+          log.Message "Sheet Exists"
+        Else
+          log.Message "Sheet not exist" 
+        End If
+       
+    Else
+     log.Message "File not exists"
+    End If 
+        
+End Function 
+
+
+

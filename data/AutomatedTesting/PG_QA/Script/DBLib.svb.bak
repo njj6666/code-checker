@@ -1,0 +1,233 @@
+﻿'USEUNIT GlobalVars
+'USEUNIT RecordSetLib
+'USEUNIT DatabaseModels
+'USEUNIT RegressionModels
+'USEUNIT PerformanceModels
+
+Function OpenDBConnection()    
+  Set connection = ADO.CreateConnection
+  connection.ConnectionString = "DSN=performance;uid=performance"
+  connection.Open
+  If connection.State = 0 Then
+    Log.Message "Connect DB Failed"
+  End If
+  Set OpenDBConnection = connection
+End Function 
+
+Function GetURL(environmentStr)
+  On Error Resume Next
+  
+  Dim strReturn, sql
+  
+  sql = "select url from applicationurl where environment='"&environmentStr&"'"
+  Set connection = OpenDBConnection()
+  Set results = objGetRecordSet(connection, sql)
+  
+  strReturn = results.fields.item(0)				
+  GetURL = strReturn
+  
+  connection.Close  
+  Set connection = nothing
+  Set results = nothing
+End Function
+
+Function GetApplicationUrl(environmentStr)
+  On Error Resume Next
+  
+  Dim sql
+  sql = "select id, environment, url, appversionID from applicationurl where environment ='"&environmentStr&"'"
+  Set connection = OpenDBConnection()
+  Set results = objGetRecordSet(connection, sql)
+  
+  Set obj = GetApplicationURLInstance
+  obj.ID = results.fields.item(0)
+  obj.Environment = results.fields.item(1)
+  obj.URL = results.fields.item(2)
+  obj.AppVersionID = results.fields.item(3)
+  Set GetApplicationUrl = obj
+  Set obj = nothing
+  
+  connection.Close  
+  Set connection = nothing
+  Set results = nothing
+End Function
+
+Function GetMachine(strMachineName)
+  On Error Resume Next
+  
+  Dim sql
+  sql = "select ID, MachineName, NickName, IP, RegionID, ModelName from machines where MachineName ='"&strMachineName&"'"
+  Set connection = OpenDBConnection()
+  Set results = objGetRecordSet(connection, sql)
+  
+  Set obj = GetMachineInstance
+  obj.ID = results.fields.item(0)
+  obj.MachineName = results.fields.item(1)
+  obj.NickName = results.fields.item(2)
+  obj.IP = results.fields.item(3)
+  obj.RegionID = results.fields.item(4)
+  obj.ModelName = results.fields.item(5)
+  Set GetMachine = obj
+  Set obj = nothing
+  
+  connection.Close  
+  Set connection = nothing 
+  Set results = nothing
+End Function
+
+Function GetAppVer(appVersionID)
+  On Error Resume Next
+  
+  Dim sql
+  sql = "select ID, Application, Version from appversion where ID ='"&appVersionID&"'"
+  Set connection = OpenDBConnection()
+  Set results = objGetRecordSet(connection, sql)
+  
+  Set obj = GetAppVersionInstance
+  obj.ID = results.fields.item(0)
+  obj.Application = results.fields.item(1)
+  obj.Version = results.fields.item(2)
+  Set GetAppVer = obj
+  Set obj = nothing
+  
+  connection.Close  
+  Set connection = nothing 
+  Set results = nothing
+End Function
+
+Function GetRegion(regionID)
+  On Error Resume Next
+  
+  Dim sql
+  sql = "select Name from regions where ID ='"&regionID&"'"
+  Set connection = OpenDBConnection()
+  Set results = objGetRecordSet(connection, sql)
+  
+  Dim regionName
+  regionName = results.fields.item(0)
+  GetRegion = regionName
+  
+  connection.Close  
+  Set connection = nothing
+  Set results = nothing
+End Function
+
+Function GetCredentials(strIdentifier)
+  On Error Resume Next
+  
+  Dim username, password, sql, results
+  
+  sql = "select username, password from usercreds where identifier='"&strIdentifier&"'"
+  Set connection = OpenDBConnection()
+  Set results = objGetRecordSet(connection, sql)
+  
+  username = results.fields.item(0)
+  password = results.fields.item(1)
+  
+  GetCredentials = Array(username, password)
+  
+  connection.Close  
+  Set connection = nothing 
+  Set results = nothing
+End Function
+
+Function WriteRegRunInfo(regLog)  
+  
+  sql = regLog.CreateUpdateSQL()
+  Set connection = OpenDBConnection()
+  
+  Set results = objGetRecordSet(connection, sql)
+  Set results = nothing
+  
+  Set results = objGetRecordSet(connection, "SELECT LAST_INSERT_ID();")
+  regId = results.fields.item(0)
+  Set results = nothing
+  
+  For Each testCase in regLog.TestCases.Items()
+    Call WriteRegTestCaseInfo(connection, testCase, regId)
+  Next
+  
+  connection.Close  
+  Set connection = nothing  
+  
+End Function 
+
+Function WriteRegTestCaseInfo(connection, testCase, regId)
+
+  sql = testCase.CreateUpdateSQL(regId)
+  
+  Set results = objGetRecordSet(connection, sql)
+  Set results = nothing
+  
+  Set results = objGetRecordSet(connection, "SELECT LAST_INSERT_ID();")
+  testCaseId = results.fields.item(0)
+  Set results = nothing
+  
+  nStepNumber = 1
+  For Each testStep in testCase.Steps.Items()
+    sStepName = "TC" & testCase.Name & " Step" & nStepNumber
+    Call WriteRegStepsInfo(connection, testStep, testCaseId, nStepNumber, sStepName)
+    nStepNumber = nStepNumber + 1
+  Next
+   
+End Function 
+
+Function WriteRegStepsInfo(connection, testStep, testCaseId, nStepNumber, sStepName)
+    
+  sql = testStep.CreateUpdateSQL(testCaseId, nStepNumber, sStepName)
+  
+  Set results = objGetRecordSet(connection, sql)
+  Set results = nothing
+  
+End Function 
+
+Function WriteRunLog(runLog)  
+  
+  sql = runLog.CreateUpdateSQL()
+  Set connection = OpenDBConnection()
+  
+  Set results = objGetRecordSet(connection, sql)
+  Set results = nothing
+  
+  Set results = objGetRecordSet(connection, "SELECT LAST_INSERT_ID();")
+  runId = results.fields.item(0)
+  Set results = nothing
+  
+  If IsNull(runLog.RunDetails) = false Then
+    If runLog.RunDetails.Count > 0 Then
+      nCount = 1
+      For Each runDetail in runLog.RunDetails.Items()
+        Call WriteRunDetails(connection, runDetail, runId, nCount)
+        nCount = nCount + 1
+      Next
+    End If
+  End If
+  
+  connection.Close  
+  Set connection = nothing  
+  
+End Function 
+
+Function WriteRunDetails(connection, runDetail, runId, nStepNumber)
+    
+  sql = runDetail.CreateUpdateSQL(runId, nStepNumber)
+  
+  Set results = objGetRecordSet(connection, sql)
+  Set results = nothing
+  
+End Function 
+
+'This will return a sql safe string with problem characters escaped
+Function EscapeSQL(sql)
+  If IsArray(sql) Then
+       sTestList = Join(sql,",")
+       sql = sTestList
+   End If 
+  
+  safeSQL = Replace(sql,"\","\\")
+  safeSQL = Replace(safeSQL,"'","\'")
+  safeSQL = Replace(safeSQL,"%","\%")
+  EscapeSQL = safeSQL
+End Function 
+
+

@@ -1,0 +1,62 @@
+﻿' Gets the current date/time in the EST Time Zone
+' This does not compensate for daylight savings and 
+' needs to be manually adjusted for it twice a year
+' Returns - DateTime object
+Function GetCurrentESTTime()
+  Dim offset, estTimeOffset, localTimeOffset, totalTimeOffset, estTime
+  estTimeOffset = -4  
+  localTimeOffset = GetTimeZoneOffset()
+  totalTimeOffset = localTimeOffset - estTimeOffset
+  estTime = aqDateTime.AddHours(aqDateTime.Now, totalTimeOffset)
+  GetCurrentESTTime = estTime
+End Function
+
+Function GetCurrentTime()
+  GetCurrentTime = aqDateTime.Now
+End Function
+
+' Gets the local time zone offset accounting for daylight savings time
+' Returns the offset in hours (ex. -4)
+Function GetTimeZoneOffset()
+    Const sComputer = "."
+
+    Dim oWmiService : Set oWmiService = _
+        GetObject("winmgmts:{impersonationLevel=impersonate}!\\" _
+                  & sComputer & "\root\cimv2")
+
+    Set cItems = oWmiService.ExecQuery("SELECT * FROM Win32_ComputerSystem")
+
+    For Each oItem In cItems
+        GetTimeZoneOffset = oItem.CurrentTimeZone / 60
+        Exit For
+    Next
+    Set oWmiService = nothing
+End Function
+
+' Converts the passed in date/time object into a string format that is compatible
+' with the database
+Function GetSqlDateTimeString(dateTime)
+  GetSqlDateTimeString = aqConvert.DateTimeToFormatStr(dateTime, "%Y-%m-%d %H:%M:%S")
+End Function 
+
+' Gets the current date/time and converts into a string displaying the time in
+' Hour:Minutes:Seconds format (24 hour format)
+Function GetTimeString24HourFormat()
+    dateTime = aqDateTime.Now
+    GetTimeString24HourFormat = aqConvert.DateTimeToFormatStr(dateTime, "%H:%M:%S")
+End Function
+
+' Gets the current date/time and randomizes concatenates with an ID string to
+' appear in the dashboard
+Function GetDateAndId()
+  d = Now()
+  Randomize
+  id = Int(10000*Rnd+1)
+  GetDate = Year( d ) & "-" & Month( d ) & "-" & Day( d ) & "-" & Hour( d ) & "-" & id
+End Function
+
+
+'get current timestamp
+Function TimeStamp()
+  TimeStamp = year(Now)&""&Month(Now)&""&day(Now)&""&Hour(Now)&""&Minute(Now)&""&Second(Now)
+End Function

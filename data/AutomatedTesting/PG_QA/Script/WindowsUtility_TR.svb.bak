@@ -1,0 +1,6 @@
+﻿'USEUNIT GlobalVars
+
+Function WindowsLaunchBrowser_TR()
+  Sys.Process(g_strBrowserType).ToUrl URL
+  'WaitFor Login Page 
+End Function 

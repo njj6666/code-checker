@@ -1,0 +1,165 @@
+﻿'USEUNIT EnoviaSearch_PopulateSearchModel
+'USEUNIT EnoviaSearchModels
+'USEUNIT OR_Enovia
+'USEUNIT LogLib
+'USEUNIT WindowsUtility
+'USEUNIT EnoviaUtils
+'USEUNIT GlobalVars
+'USEUNIT WebObjectLib
+
+Private g_dblWaitTime 
+
+Sub Main()
+ 
+  sFilePath = aqFileSystem.GetFolderInfo(aqFileSystem.GetCurrentFolder).ParentFolder.ParentFolder.Path&"Files\Search\"&"SearchSpecification_FullText_Sumana"&".xlsx" 
+  Set oModel = EnoviaSearch_ReadExcel_Name(sFilePath,"Full Text")
+  Call EnoviaSearch_NamedSearch(oModel)
+
+End Sub
+
+Function EnoviaFullTextSearch_NamedSearch(oModel)
+
+  Call EnoviaFulltextSearch_SelectAndSearch(oModel)
+  'Call EnoviaFullTextSearch_Details(oModel,oModel,oModel,oModel,oModel,oModel,oModel,oModel,oModel)
+
+End Function
+
+Function EnoviaFulltextSearch_SelectAndSearch(sSearchType)
+
+  On Error Resume Next
+  Dim objsearchType
+  
+  If sSearchType = "Full Text" Then
+  
+  Set objsearchType=objGetObject(OR_EnoviaSearch_SearchDrp,"","")
+  objsearchType.Click()
+  
+  Set objsearchTypeSelect=objGetObject(OR_EnoviaSearchFullText_SearchDrp,"","")
+  objsearchTypeSelect.Click()
+  End If
+  
+  If Err.Number = 0 Then
+     EnoviaFulltextSearch_SelectAndSearch = True
+  Else
+    EnoviaFulltextSearch_SelectAndSearch  = False
+  End If
+
+  Set objsearchType = Nothing
+  Set objsearchTypeSelect = Nothing
+    
+End Function
+  
+Function EnoviaFullTextSearch_Details(sValue,sType,sLimit,sState,sSecurity,sBusiness,sPlant,sStandards,sRevision)
+  On Error Resume Next
+  
+  Dim objSearchVal,objPageSize,objType,objTypeInput,objTypeSelect,objTypeSubmit
+  Dim objState,objStateInput,objSelectState,objsubmitState
+  Dim objSecurity,objInputSecurity,objSelectSecurity,objsubmitSecurity
+  Dim objBusiness,objBusinessInput,objBusinessSelect,objsubmitBusiness
+  Dim objPlant,objPlantInput,objPlantSelect,objsubmitPlant
+  Dim objStandards,objStandardsInput,objStandardsSelect,objsubmitStandards
+  Dim objRevision,objRevisionInput
+  
+  m_strPageURL = "https://plmtest.pg.com/enovia/common/emxFullSearch.jsp?"
+   
+  Set objSearchVal = objGetObject(OR_EnoviaSearchFullText_SearchEdt,m_strPageURL,"")
+  objSearchVal.SetText(sValue.EnS_CommonModel.SearchValue)
+  
+  Set objPageSize = objGetObject(OR_EnoviaSearchFullText_PagesizeEdt,m_strPageURL,"")
+  objPageSize.SetText(sLimit.EnS_CommonModel.LimitResults)
+  
+  Set objType = objGetObject(OR_EnoviaSearchFullText_TypePnl,m_strPageURL,"")
+  objType.Click()
+  Set objTypeInput = objGetObject(OR_EnoviaSearchFullText_TypeEdt,m_strPageURL,"")
+  objTypeInput.SetText(sType.EnS_CommonModel.sType)
+  Set objTypeSelect = objGetObject(OR_EnoviaSearchFullText_TypeDrp,m_strPageURL,"")
+  objTypeSelect.ClickItem(sType.EnS_CommonModel.sType)
+  Set objTypeSubmit = objGetObject(OR_EnoviaSearchFullText_TypeBtn,m_strPageURL,"")
+  objTypeSubmit.ClickButton()
+  
+  Set objState = objGetObject(OR_EnoviaSearchFullText_StatePnl,m_strPageURL,"")
+  objState.Click()
+  Set objStateInput = objGetObject(OR_EnoviaSearchFullText_StateEdt,m_strPageURL,"")
+  objStateInput.SetText(sState.EnS_CommonModel.State)
+  Set objSelectState=objGetObject(OR_EnoviaSearchFullText_StateDrp,m_strPageURL,"")
+  objSelectState.ClickItem(sState.EnS_CommonModel.State)
+  Set objsubmitState = objGetObject(OR_EnoviaSearchFullText_StateBtn,m_strPageURL,"")
+  objsubmitState.ClickButton()
+  
+  Set objSecurity = objGetObject(OR_EnoviaSearchFullText_SecurityPnl,m_strPageURL,"")
+  objSecurity.Click()
+  Set objInputSecurity = objGetObject(OR_EnoviaSearchFullText_SecurityEdt,m_strPageURL,"")
+  objInputSecurity.SetText(sSecurity.SecCatClassification)
+  Set objSelectSecurity = objGetObject(OR_EnoviaSearchFullText_SecurityDrp,m_strPageURL,"")
+  objSelectSecurity.ClickItem(sSecurity.SecCatClassification)
+  Set objsubmitSecurity = objGetObject(OR_EnoviaSearchFullText_SecurityBtn,m_strPageURL,"")
+  objsubmitSecurity.ClickButton()
+  
+  Set objBusiness = objGetObject(OR_EnoviaSearchFullText_BusinessPnl,m_strPageURL,"")
+  objBusiness.Click()
+  Set objBusinessInput = objGetObject(OR_EnoviaSearchFullText_BusinessEdt,m_strPageURL,"")
+  objBusinessInput.SetText(sBusiness.CSSBusinessCat)
+  Set objBusinessSelect = objGetObject(OR_EnoviaSearchFullText_BusinessDrp,m_strPageURL,"")
+  objBusinessSelect.ClickItem(sBusiness.CSSBusinessCat)
+  Set objsubmitBusiness = objGetObject(OR_EnoviaSearchFullText_BusinessBtn,m_strPageURL,"")
+  objsubmitBusiness.ClickButton()
+  
+  Set objPlant = objGetObject(OR_EnoviaSearchFullText_PlantPnl,m_strPageURL,"")
+  objPlant.Click()
+  Set objPlantInput = objGetObject(OR_EnoviaSearchFullText_PlantEdt,m_strPageURL,"")
+  objPlantInput.SetText(sPlant.Plant)
+  Set objPlantSelect = objGetObject(OR_EnoviaSearchFullText_PlantDrp,m_strPageURL,"")
+  objPlantSelect.ClickItem(sPlant.Plant)
+  Set objsubmitPlant = objGetObject(OR_EnoviaSearchFullText_PlantBtn,m_strPageURL,"")
+  objsubmitPlant.ClickButton()
+  
+  Set objStandards = objGetObject(OR_EnoviaSearchFullText_StandardsPnl,m_strPageURL,"")
+  objStandards.Click()
+  Set objStandardsInput = objGetObject(OR_EnoviaSearchFullText_StandardsEdt,m_strPageURL,"")
+  objStandardsInput.SetText(sStandards.OwningStandardsOffice)
+  Set objStandardsSelect = objGetObject(OR_EnoviaSearchFullText_StandardsDrp,m_strPageURL,"")
+  objStandardsSelect.ClickItem(sStandards.OwningStandardsOffice)
+  Set objsubmitStandards = objGetObject(OR_EnoviaSearchFullText_StandardsBtn,m_strPageURL,"")
+  objsubmitStandards.ClickButton()
+  
+  Set objRevision = objGetObject(OR_EnoviaSearchFullText_RevisionPnl,m_strPageURL,"500")
+  objRevision.Click()
+  Set objRevisionInput = objGetObject(OR_EnoviaSearchFullText_RevisionEdt,m_strPageURL,"500")
+  objRevisionInput.Keys(sRevision.Revision)
+  
+   If Err.Number = 0 Then
+     EnoviaFullTextSearch_Details = True
+  Else
+    EnoviaFullTextSearch_Details  = False
+  End If
+  
+      Set objSearchVal = Nothing
+      Set objPageSize = Nothing
+      Set objType = Nothing
+      Set objTypeInput = Nothing
+      Set objTypeSelect = Nothing
+      Set objTypeSubmit = Nothing
+      Set objState = Nothing
+      Set objStateInput = Nothing
+      Set objSelectState = Nothing
+      Set objsubmitState = Nothing
+      Set objSecurity = Nothing
+      Set objInputSecurity = Nothing
+      Set objSelectSecurity = Nothing
+      Set objsubmitSecurity = Nothing
+      Set objBusiness = Nothing
+      Set objBusinessInput = Nothing
+      Set objBusinessSelect = Nothing
+      Set objsubmitBusiness = Nothing
+      Set objPlant = Nothing
+      Set objPlantInput = Nothing
+      Set objPlantSelect = Nothing
+      Set objsubmitPlant = Nothing
+      Set objStandards = Nothing
+      Set objStandardsInput = Nothing
+      Set objStandardsSelect = Nothing
+      Set objsubmitStandards = Nothing
+      Set objRevision = Nothing
+      Set objRevisionInput = Nothing  
+  
+End Function  

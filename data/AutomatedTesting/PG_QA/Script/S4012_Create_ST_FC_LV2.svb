@@ -1,0 +1,36 @@
+﻿'USEUNIT CSSUtils
+'USEUNIT CSS_SearchTS
+'USEUNIT CSS_CreateTS
+'USEUNIT ExcelLib
+
+Sub EnoviaDSM_Set4_017_Create_UNFC()
+'   On Error Resume Next 
+'   
+'   
+'   'Step1-----Login CSS
+'   'open CSS home page
+'    If Log_UpdateIsBlocked() = False Then      
+'      Call CSS_LaunchCSS(sEnv)
+'    End If
+'    
+'    'fill the username and password, Click ok to login CSS
+'    If Log_UpdateIsBlocked() = False Then
+'      If Not CSS_Login(sUser) Then
+'         Log.Error("Cannot login into Enovia!")
+'         Runner.Stop
+'       End If
+'     End If 
+  'Step1----- End  
+
+   
+   'create new TS for UN_FC_LV3
+   Call CSS_ExecuteCreateNewTS()
+   Call CSSCreateTS_ChooseStandardType("FC",false)
+   Call CSSCreateTS_CreateUnSTRTS("UN-FC-S4-LV3-002")
+   
+   
+   
+'  'logout css
+'   Call CSS_Logout()
+  
+End Sub

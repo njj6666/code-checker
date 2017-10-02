@@ -1,0 +1,2244 @@
+﻿'USEUNIT EnoviaSearch_PopulateSearchModel
+'USEUNIT EnoviaSearchModels
+'USEUNIT OR_Enovia
+'USEUNIT LogLib
+'USEUNIT WindowsUtility
+'USEUNIT EnoviaUtils
+'USEUNIT GlobalVars
+'USEUNIT WebObjectLib
+'USEUNIT WinKeywords
+'USEUNIT DBLib 
+'USEUNIT GlobalVars
+'USEUNIT RecordSetLib
+'USEUNIT EnoviaSearch_PopulateSearchModel
+
+'TC-17_Named Search_Limit(in GeneralSearch_TestCases_Rev3 file)
+'***********************************TestCase 16*******************************************************
+
+'OR_Enovia
+OR_EnoviaSearch_TC17_LimitNumber = Array("NATIVEWEBOBJECT", "idStr", "QueryLimit", "INPUT")
+OR_EnoviaSearch_TC17_LimitSearch = Array("NATIVEWEBOBJECT", "idStr", "mx_btn-search", "INPUT")
+OR_EnoviaSearch_TC17_Rows = Array("WEBOBJECT", "idStr~ObjectIdentifier", "treeBodyTable~treeBodyTable", "")
+
+
+Function Start_EnoviaSearch_NamedSearch_Limit()
+  
+    On Error Resume Next
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'Code To search a Record
+    If Log_UpdateIsBlocked() = False Then
+        Call Enovia_SearchStuff("CUP*")
+    End If
+    aqutils.delay(30000)
+    'Code to handle a Pop Up
+    Call EnoviaSearch_HandlingAlert("Object Find Limit")
+    'Code to enter limit Number within the range
+    Call Limit_ToBeEnteredWithInRange("13")
+    'Code to enter limit Number out of range
+    Call Limit_ToBeEnteredOutOfRange("10000")
+    'Enovia_Logout()
+    Call CloseEnvironment()
+  
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+  
+End Function 
+'********************************************End Testcase*****************************************
+
+
+
+'TC-18_Named Search_MaxLimit_10000(in GeneralSearch_TestCases_Rev3 file)
+'********************************************Testcase 17******************************************
+Function Start_EnoviaSearch_NamedSearch_MaxLimit_2000()
+  
+    On Error Resume Next
+
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'Code To search a Record
+    If Log_UpdateIsBlocked() = False Then
+        Call Enovia_SearchStuff("CUP*")
+    End If
+    aqutils.delay(30000)
+    'Code to handle a Pop Up
+    Call EnoviaSearch_HandlingAlert("Object Find Limit")
+    'Code to enter limit Number out of range
+    Call Limit_ToBeEnteredOutOfRange("10001")
+    Call EnoviaSearch_HandlingAlert("Please Enter a valid query limit")
+    'Enovia_Logout()
+    Call CloseEnvironment()
+  
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+  
+End Function 
+
+
+'********************************************End Testcase*****************************************
+
+'TC-04_Named Search_Toolbar Delete/Add To Collections(in Peripheral_TestCases_Rev2 file)
+'********************************************Testcase 18******************************************
+'OR_Enovia
+OR_EnoviaSearch_TC18_SelectRecord = Array("WEBOBJECT", "ObjectIdentifier~ObjectType~VisibleOnScreen", "chkList~Checkbox~True", "")
+OR_EnoviaSearch_TC18_DeletIcon = Array("WEBOBJECT", "ObjectIdentifier~namePropStr", "iconActionDelete_png~iconActionDelete.png", "")
+OR_EnoviaSearch_TC18_AlertWindow = Array("WEBOBJECT", "ObjectType", "Confirm", "")
+  
+Function Start_EnoviaSearch_NamedSearch_ToolbarDelete()
+  
+    On Error Resume Next
+    
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'Code To search a Record
+    If Log_UpdateIsBlocked() = False Then
+        Call Enovia_SearchStuff("FPP-00001327")
+    End If
+    aqutils.delay(30000)
+    
+    'Code to Delete a Record
+    Call DeleteRecord()
+    
+    'Enovia_Logout()
+    Call CloseEnvironment()
+  
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+  
+End Function 
+
+
+'********************************************End Testcase*****************************************
+
+
+'TC-02_Named Search_Toolbar Save (in Peripheral_TestCases_Rev2 file)
+'TC-03_Named Search_Toolbar Save As (in Peripheral_TestCases_Rev2 file)
+'automated as per old doc both testcase are combined if needed I will split on monday it takes just 10 mins
+
+'********************************************Testcase 19******************************************
+'OR_Enovia
+OR_EnoviaSearch_TC19_SavedQueries = Array("WEBOBJECT", "ObjectIdentifier~namePropStr~ObjectType~VisibleOnScreen", "iconActionSaveSearch_png~iconActionSaveSearch.png~Image~True", "")
+OR_EnoviaSearch_TC19_Save = Array("WEBOBJECT", "contentText~ObjectType", "Save...~Label", "")
+OR_EnoviaSearch_TC19_DoneButton = Array("WEBOBJECT", "ObjectLabel~ObjectType", "Done~Button", "")
+OR_EnoviaSearch_TC19_NameSave = Array("NATIVEWEBOBJECT", "idStr", "txtName", "INPUT")
+OR_EnoviaSearch_TC19_SavedRecord = Array("WEBOBJECT", "contentText~ObjectType~VisibleOnScreen", "NameOfRecord...~Label~True", "")
+OR_EnoviaSearch_TC19_SavedASRecord = Array("WEBOBJECT", "contentText~ObjectType~VisibleOnScreen", "Save As...~Label~True", "")
+OR_EnoviaSearch_TC19_SelectRadioButton = Array("WEBOBJECT", "ObjectIdentifier~ObjectType~wChecked~value", "savedSearchName~RadioButton~False~NameOfRecord", "")
+OR_EnoviaSearch_TC19_DeleteSavedName = Array("WEBOBJECT", "contentText~ObjectType", "Named Search~Label", "")
+OR_EnoviaSearch_TC19_FavoriteSearches= Array("WEBOBJECT", "contentText~ObjectType", "My Favorite Searches...~Label", "")
+OR_EnoviaSearch_TC19_DeleteSavedRecordName= Array("WEBOBJECT", "namePropStr~ObjectType", "buttonChannelClose.gif~Image", "")
+OR_EnoviaSearch_TC19_CancelSearches= Array("WEBOBJECT", "contentText~ObjectType", "Cancel~Button", "")
+OR_EnoviaSearch_TC19_PanelSearches= Array("WEBOBJECT", "classname~ObjectType", "menu-content~Panel", "")
+OR_EnoviaSearch_TC19_SelectCollectionName = Array("NATIVEWEBOBJECT", "idStr", "rmbrow-0,1", "INPUT")
+OR_EnoviaSearch_TC_SearchEdt = Array("NATIVEWEBOBJECT", "idStr", "GlobalNewTEXT", "INPUT") 
+
+Function Start_EnoviaSearch_NamedSearch_ToolbarSave()
+  
+    On Error Resume Next
+    
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'Searches "CUP-00002411" in the application
+    If Log_UpdateIsBlocked() = False Then
+        Call Enovia_SearchStuff("CUP-00002411")
+    End If
+    aqutils.delay(10000)
+    'Code to save a records
+   ' Dim Savename
+   ' Savename=RandomNumber(0, 1000)
+    Call SavedQueries()
+    'Searches "CUP-00000027" in the application
+    If Log_UpdateIsBlocked() = False Then
+        Call Enovia_SearchStuff("CUP-00000027")
+    End If
+    Call SelectSavedRecord()
+    'Searches "CUP-00000037" in the application
+    If Log_UpdateIsBlocked() = False Then
+        Call Enovia_SearchStuff("CUP-00000037")
+    End If
+    'code to perform saveAs operation on record
+    Call SaveAs()
+    'code to delete saved name of record
+    Call DeleteSavedname()
+    
+    'Enovia_Logout()
+    Call CloseEnvironment()
+  
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+   End If
+  
+End Function 
+
+
+'********************************************End Testcase*****************************************
+
+
+'TC-04_Named Search_Toolbar Delete/Add To Collections((in Peripheral_TestCases_Rev2 file))
+
+'********************************************Testcase 20******************************************
+'OR_Enovia
+OR_EnoviaSearch_TC20_AddCollection = Array("WEBOBJECT", "namePropStr~ObjectType~VisibleOnScreen", "iconSmallCollection.gif~Image~True", "")
+OR_EnoviaSearch_TC20_NewCollection = Array("WEBOBJECT", "contentText~ObjectType~VisibleOnScreen", "New / Add to Collections~Label~True", "")
+OR_EnoviaSearch_TC20_CollectionName = Array("WEBOBJECT", "ObjectIdentifier~ObjectType", "setName~Textbox", "")
+OR_EnoviaSearch_TC20_CollectionDescription = Array("WEBOBJECT", "ObjectIdentifier~ObjectType", "setDescription~Textarea", "")
+OR_EnoviaSearch_TC20_ChildObjectsForCheckbox = Array("WEBOBJECT", "ObjectIdentifier~ObjectType", "setRadio~Checkbox", "")
+OR_EnoviaSearch_TC20_CheckboxForClipboard = Array("WEBOBJECT", "ObjectIdentifier~ObjectType~value", "checkAll~Checkbox~on", "")
+OR_EnoviaSearch_TC20_CollectionLink = Array("WEBOBJECT", "contentText~ObjectType", "Collections~Label", "")
+OR_EnoviaSearch_TC20_CollectionNameDelete = Array("WEBOBJECT", "ObjectIdentifier~ObjectType~checked", "deleteRadio~RadioButton~False", "")
+
+Function Start_EnoviaSearch_NamedSearch_ToolbarAddToCollections()
+    On Error Resume Next
+    
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'Searches "CUP-00002411" in the application
+    If Log_UpdateIsBlocked() = False Then
+        Call Enovia_SearchStuff("CUP-00000106")
+    End If
+    aqutils.delay(8000)
+    'Code to add collection
+    Call AddToCollection()
+    'Code to check the list of collection objects created
+    Call DeleteAddCollection()
+    'Enovia_Logout()
+    Call CloseEnvironment()
+  
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+   End If
+   
+End Function
+'********************************************End Testcase*****************************************
+
+
+'TC-13_Full Text Search_Refinement_Page_Size(in FullTextSearch_TestCases_Rev3)
+'********************************************Testcase 13******************************************
+'OR_Enovia
+OR_EnoviaSearch_TC13_FullSearchText_Label = Array("WEBOBJECT", "contentText~ObjectType", "Full Text Search...~Label", "")
+
+Function FullTextSearch_Refinement_Page_Size()
+    On Error Resume Next
+   
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'code to search for FullTextSearch
+    Call FullTextSearch_SearchText("90711920")
+    'Code to change page size
+    Call FullTextSearch_Page_Size_Text("0")
+    'Code to handle Alert message
+    Call EnoviaSearch_HandlingAlert("Page size cannot be 0 or less.")
+    'Code to change page size
+    Call FullTextSearch_Page_Size_Text("10000")
+    'Code to check whether record exists
+    Call aqObject.CheckProperty(Aliases.browser.pageSearch.formFullSearch.frameStructureBrowser.formEmxtableform.tableBodytable.cellIllustration, "ColumnIndex", cmpEqual, 2)
+    'Code to change page size
+    Call FullTextSearch_Page_Size_Text("10001")
+    'Code to handle Alert message
+    Call EnoviaSearch_HandlingAlert("Maximum allowed page size")
+    
+    'Enovia_Logout()
+    Call CloseEnvironment()
+  
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+End Function
+'********************************************End Testcase*****************************************
+
+
+'TC-22_Find Product Data_Refinement_Page_Size
+'********************************************Testcase 13******************************************
+'OR_Enovia
+OR_EnoviaSearch_TC13_FullSearchText_Label = Array("WEBOBJECT", "contentText~ObjectType", "Full Text Search...~Label", "")
+
+Function FindProductData_Refinement_Page_Size()
+
+    On Error Resume Next
+   
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'code to search for Find product data
+    Call FindProductData_Toolbar_Searchdata("Test")
+   'Code to change page size
+    Call FullTextSearch_Page_Size_Text("10001")
+    'Code to handle Alert message
+    Call EnoviaSearch_HandlingAlert("Maximum allowed page size")
+    
+    'Enovia_Logout()
+    Call CloseEnvironment()
+  
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+    
+End Function
+'********************************************End Testcase*****************************************
+
+
+'TC-08_Full Text Search_Toolbar_Save(in Peripheral_TestCases_Rev2 file)
+'********************************************Testcase 08******************************************
+
+Function Peripheral_FullTextSearch_Toolbar_Save()
+
+    On Error Resume Next
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'code to search for FullTextSearch
+    Call FullTextSearch_SearchText("90711920")
+    'Code to save a records
+    Call Peripheral_SavedQueries()
+    'Code to search Full text
+    Call Peripheral_SearchFulltext("91156591")
+    'Select already saved record
+    Call Peripheral_SelectSavedRecord("90711920")
+    Call CloseEnvironment()
+    'Enovia_Logout()
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+     
+End Function
+
+
+'********************************************End Testcase*****************************************
+
+'TC-09_Full Text Search_Toolbar_Save As(in Peripheral_TestCases_Rev2 file)
+'********************************************Testcase 09******************************************
+
+Function Peripheral_FullTextSearch_Toolbar_SaveAs()
+
+    On Error Resume Next
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'code to search for FullTextSearch
+    Call FullTextSearch_SearchText("91156727")
+    'Code to perform save as operation
+    Call Peripheral_SaveAs("91156727")
+    Call CloseEnvironment()
+    'Enovia_Logout()
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+     
+End Function
+
+
+'********************************************End Testcase*****************************************
+
+
+
+'TC-16_GS/FTS/FPD_Toolbar Delete your Saved Search(in Peripheral_TestCases_Rev2 file)
+'********************************************Testcase 17******************************************
+
+Function Peripheral_GSFTSFPD_ToolbarDeleteyourSavedSearch()
+
+    On Error Resume Next
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'code to delete the saved name
+    Call DeleteSavedname()
+    Call CloseEnvironment()
+    'Enovia_Logout()
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+     
+End Function
+
+
+'********************************************End Testcase*****************************************
+
+
+'OR_Enovia
+OR_EnoviaSearch_TC6_RowGroupingButton = Array("WEBOBJECT", "namePropStr~ObjectIdentifier~ObjectType~VisibleOnScreen", "iconActionGroupBy.png~iconActionGroupBy_png~Image~True", "")
+OR_EnoviaSearch_TC6_rowGouping1 = Array("NATIVEWEBOBJECT", "idStr", "rowGouping1", "SELECT")
+OR_EnoviaSearch_TC6_rowGouping2 = Array("NATIVEWEBOBJECT", "idStr", "rowGouping2", "SELECT")
+OR_EnoviaSearch_TC6_rowGouping3 = Array("NATIVEWEBOBJECT", "idStr", "rowGouping3", "SELECT")
+OR_EnoviaSearch_TC6_RowGroupingItem = Array("WEBOBJECT", "Name~ObjectIdentifier~VisibleOnScreen", "PagePopup(0)~https://*.pg.com*/enovia/common/emxIndentedTable.jsp~True", "")
+OR_EnoviaSearch_TC6_ApplyButton = Array("NATIVEWEBOBJECT", "idStr", "ApplyButton", "INPUT")
+
+'TC-06_Named Search_Row Grouping (in Peripheral_TestCases_Rev2 file)
+'********************************************Testcase 6******************************************
+
+Function Peripheral_NamedSearch_RowGrouping()
+
+    On Error Resume Next
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'Searches "CUP-00000027" in the application
+    If Log_UpdateIsBlocked() = False Then
+        Call Enovia_SearchStuff("CUP-00000123")
+    End If
+    'create code for RowGrouping
+    Call Peripheral_RowGrouping()
+    Call CloseEnvironment()
+    'Enovia_Logout()
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+     
+End Function
+
+
+'********************************************End Testcase*****************************************
+
+
+
+
+'having issue yet to complete
+'********************************************Testcase 7******************************************
+
+'OR_Enovia
+OR_EnoviaSearch_TC7_RowGroupingClose = Array("WEBOBJECT", "namePropStr~ObjectIdentifier~ObjectType~VisibleOnScreen", "iconActionClosePanel.png~iconActionClosePanel_png~Image~True", "")
+OR_EnoviaSearch_TC7_ToolImage = Array("WEBOBJECT", "namePropStr~ObjectIdentifier~ObjectType~VisibleOnScreen", "iconSmallAdministration.png~iconSmallAdministration_png~Image~True", "")
+OR_EnoviaSearch_TC7_MassPromoteCommand = Array("WEBOBJECT", "contentText~ObjectType~VisibleOnScreen", "Mass Promote~Label~True", "")
+
+
+
+Function Peripheral_NamedSearch_ToolbarMassPromoteDemote()
+
+'    'On Error Resume Next
+'    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+'    'Searches "CUP-00000027" in the application
+    If Log_UpdateIsBlocked() = False Then
+        Call Enovia_SearchStuff("CA-0011950")
+    End If
+    'create code for MassPromoteDemote
+    Call NamedSearch_MassPromoteDemote()
+  
+'    Call CloseEnvironment()
+'    'Enovia_Logout()
+'    If Err.Number <> 0 Then
+'        Call MsgBox(Err.Description)
+'    End If
+     
+End Function
+
+
+'This testcase is not available in new document
+'*******pending due to application issue need to check on monday***********
+'need to check with data available in plmtest this is tested in plmtraing so need to change the data
+'********************************************Testcase 10******************************************
+
+Function FullTextSearch_ToolbarAddToCollections()
+
+    'On Error Resume Next
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'Searches "91156737" in the application
+    Call FullTextSearch_SearchText("91156737")
+    
+    aqutils.delay(8000)
+    'Code to add collection
+    Call ToolbarAddToCollections()
+    'Code to check the list of collection objects created
+    Call FullSearch_DeleteAddCollection()
+  
+    Call CloseEnvironment()
+    'Enovia_Logout()
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+     
+End Function
+
+
+'********************************************End Testcase*****************************************
+'OR_Enovia
+OR_EnoviaSearch_TC_ProductSpec_SearchDrp = Array("EVALUATEXPATH",".//*[@id='CPNSearch']/label","","")  
+OR_EnoviaSearch_TC_FindProdData_SearchDrp = Array("WEBOBJECT", "contentText~ObjectType", "Find Product Data...~Label", "")
+
+'TC-14_Find Product Data_Toolbar_Save(in Peripheral_TestCases_Rev2 file)
+'need to test with data available in plmtest, this is tested in plmtraining
+'********************************************Testcase 15******************************************
+
+Function FindProductData_Toolbar_Save()
+
+    'On Error Resume Next
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'code to search record in find product data
+    Call FindProductData_Toolbar_Searchdata("00008_18684")
+    'Code to save a records
+    Call Peripheral_SavedQueries()
+    'Code to search Full text
+    Call FindProductData_Searchdata()
+    'Select already saved record
+    Call Peripheral_SelectSavedRecord("00008_18684")
+    Call CloseEnvironment()
+    'Enovia_Logout()
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+     
+End Function
+
+
+'********************************************End Testcase*****************************************
+
+
+'TC-15_Find Product Data_Toolbar_Save As(in Peripheral_TestCases_Rev2 file)
+
+'need to test with data available in plmtest, this is tested in plmtraining
+'********************************************Testcase 16******************************************
+
+Function FindProductData_Toolbar_SaveAs()
+
+    On Error Resume Next
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'code to search for FullTextSearch
+    Call FindProductData_Toolbar_Searchdata("00002_4420")
+    'Code to perform save as operation
+    Call Peripheral_SaveAs("00002_4420")
+    Call CloseEnvironment()
+    'Enovia_Logout()
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+'     
+End Function
+
+
+'********************************************End Testcase*****************************************
+
+
+'TC-19_Find Product Data_Toolbar Row Grouping(in Peripheral_TestCases_Rev2 file)
+'need to test with data available in plmtest, this is tested in plmtraining
+'********************************************Testcase 20******************************************
+
+'OR_Enovia
+OR_EnoviaSearch_TC7_RowGroupingClose = Array("WEBOBJECT", "namePropStr~ObjectIdentifier~ObjectType~VisibleOnScreen", "iconActionClosePanel.png~iconActionClosePanel_png~Image~True", "")
+
+
+Function FindProductData_ToolbarRowGrouping()
+
+    On Error Resume Next
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'code to search for FullTextSearch
+    Call FindProductData_Toolbar_Searchdata("00005_21253")
+    'create code for RowGrouping
+    Call FindProductData_RowGrouping()
+    Call CloseEnvironment()
+    'Enovia_Logout()
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+     
+End Function
+
+
+'********************************************End Testcase*****************************************
+
+'TC-11_Full Text Search_Toolbar Row Grouping(in Peripheral_TestCases_Rev2 file)
+'need to test with data available in plmtest, this is tested in plmtraining
+'********************************************Testcase 12******************************************
+
+Function FullTextSearch_ToolbarRowGrouping()
+
+    On Error Resume Next
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'Searches "91156737" in the application
+    Call FullTextSearch_SearchText("90509853")
+    'create code for RowGrouping
+    Call FindProductData_RowGrouping()
+    Call CloseEnvironment()
+    'Enovia_Logout()
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+     
+End Function
+
+
+'********************************************End Testcase*****************************************
+
+
+'///////'Facing small technical issue looking into it(in Peripheral_TestCases_Rev2 file)
+'TC-12_Full Text Search_Toolbar Export/Sort
+
+'********************************************Testcase 13******************************************
+
+'OR Enovia
+OR_EnoviaSearch_TC13_ExportCommand = Array("WEBOBJECT", "contentText~ObjectType~VisibleOnScreen", "Export~Label~True", "")
+OR_EnoviaSearch_TC13_MultiColumn = Array("WEBOBJECT", "contentText~ObjectType~VisibleOnScreen", "Multi Column Sorting~Link~True", "")
+OR_EnoviaSearch_TC13_MultiFirstColumn = Array("NATIVEWEBOBJECT", "idStr", "firstColumn", "SELECT")
+OR_EnoviaSearch_TC13_MultiSecondColumn = Array("NATIVEWEBOBJECT", "idStr", "secondColumn", "SELECT")
+OR_EnoviaSearch_TC13_MultiThirdColumn = Array("NATIVEWEBOBJECT", "idStr", "thirdColumn", "SELECT")
+
+Function FullTextSearch_ToolbarExportSort()
+
+    'On Error Resume Next
+    'Code to login to enovia application
+    'Call Enovia_LoginToApplication()
+    'Searches "91156737" in the application
+    'Call FullTextSearch_SearchText("Test")
+    'create code for exporting data
+'    Call Fullsearchtext_ExportSort()
+'    Call EnoviaFullTextSearch_RowCountFromExcel() 
+'    Call CheckingDataInExcel()
+'    Call DeleteExcel()
+    Call Tocheckthesorting()
+    'Call CloseEnvironment()
+    'Enovia_Logout()
+    'If Err.Number <> 0 Then
+        'Call MsgBox(Err.Description)
+    'End If
+     
+End Function
+
+
+'********************************************End Testcase*****************************************
+
+
+
+'TC-17_Find Product Data_Toolbar Add To Collections(in Peripheral_TestCases_Rev2 file)
+'********************************************Testcase 18******************************************
+
+'OR Enovia
+
+
+Function FindProductData_ToolbarAddToCollections()
+
+    On Error Resume Next
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'code to search for FullTextSearch
+    Call FindProductData_Toolbar_Searchdata("00005_21253")
+    'code for add to collection in find product search
+    Call FindProductdataAddToCollection()
+    'code to delete the added collection
+    Call DeleteAddCollection()
+    Call CloseEnvironment()
+    Enovia_Logout()
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+     
+End Function
+
+
+'********************************************End Testcase*****************************************
+
+
+
+'TC-05_Named Search_Toolbar View(in Peripheral_TestCases_Rev2 file)
+'********************************************Testcase 05******************************************
+
+'OR Enovia
+OR_EnoviaSearch_TC05_ViewButton = Array("WEBOBJECT", "namePropStr~ObjectIdentifier~VisibleOnScreen~ObjectType", "iconActionSystemColumns.gif~iconActionSystemColumns_gif~True~Image", "")
+OR_EnoviaSearch_TC05_NameField = Array("NATIVEWEBOBJECT", "idStr", "txtCustomTextBox", "INPUT")
+OR_EnoviaSearch_TC05_AvailableColumn = Array("NATIVEWEBOBJECT", "idStr", "AvailableColumn", "SELECT")
+OR_EnoviaSearch_TC05_ArrowRight = Array("NATIVEWEBOBJECT", "idStr", "Rightmove", "IMG")
+OR_EnoviaSearch_TC05_VisibleColumn = Array("NATIVEWEBOBJECT", "idStr", "VisibleColumn", "SELECT")
+OR_EnoviaSearch_TC05_ButtonUP = Array("WEBOBJECT", "namePropStr~ObjectIdentifier~VisibleOnScreen~ObjectType", "buttonArrangeUp.gif~buttonArrangeUp_gif~True~Image", "")
+OR_EnoviaSearch_TC05_ViewArrowSelection = Array("WEBOBJECT", "className~ObjectType~title", "menu-arrow~Cell~View", "")
+OR_EnoviaSearch_TC05_EditViewtable = Array("WEBOBJECT", "contentText~ObjectType~VisibleOnScreen", "Edit Current Table View...~Label~True", "")
+OR_EnoviaSearch_TC05_DeleteViewtable = Array("WEBOBJECT", "contentText~ObjectType~VisibleOnScreen", "Delete Current Table View~Label~True", "")
+OR_EnoviaSearch_TC_AlertOKBtn = Array("WEBOBJECT", "ObjectType~ObjectIdentifier", "Button~OK", "")
+
+Function NamedSearch_ToolbarView()
+
+    'On Error Resume Next
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'code to search a record
+    If Log_UpdateIsBlocked() = False Then
+        Call Enovia_SearchStuff("CUP-00000150")
+    End If
+    'code to create view tabl
+    Call NamedSearch_View("Siree")
+    'code for edit and delete view
+    Call NamedSearch_ViewEditDelete("s") 
+    'Call CloseEnvironment()
+    'Enovia_Logout()
+    'If Err.Number <> 0 Then
+        'Call MsgBox(Err.Description)
+    'End If
+     
+End Function
+
+
+'********************************************End Testcase*****************************************
+
+'TC-10_Full Text Search_Toolbar View(in Peripheral_TestCases_Rev2 file)
+'********************************************Testcase 10******************************************
+
+'OR Enovia
+OR_EnoviaSearch_TC_FullText_SearchEdt = Array("NATIVEWEBOBJECT", "idStr", "txtTextSearch", "INPUT") 
+OR_EnoviaSearch_TC_SSearchRefreshCmd = Array("NATIVEWEBOBJECT", "idStr", "mx_btn-search", "A")
+
+Function FullTextSearch_ToolbarView()
+
+    'On Error Resume Next
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+     'Searches "91156737" in the application
+    Call FullTextSearch_SearchText("Test")
+    'code to create view table
+    Call FullTextSearch_View("Siree")
+    'code for edit and delete view
+    Call FullTextSearch_ViewEditDelete("s") 
+    Call CloseEnvironment()
+    'Enovia_Logout()
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+     
+End Function
+
+
+'********************************************End Testcase*****************************************
+
+
+
+
+
+'TC-18_Find Product Data_Toolbar View(in Peripheral_TestCases_Rev2 file)
+'********************************************Testcase 18******************************************
+
+'OR Enovia
+'OR_EnoviaSearch_TC_FindProdData_SearchDrp = Array("EVALUATEXPATH",".//*[@id='AEFGlobalSearchHolder']/div[2]/div/div[2]/ul/li[5]/ul/li[1]/a/label","","")
+OR_EnoviaSearch_TC_FindProdData_SearchEdt = Array("NATIVEWEBOBJECT", "idStr", "txtTextSearch","INPUT")
+
+Function FindProduct_ToolbarView()
+
+    On Error Resume Next
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'code to search for FullTextSearch
+    Call FindProductData_Toolbar_Searchdata("Test")
+    'code to create view table
+    Call FullTextSearch_View("Siree")
+    'code for edit and delete view
+    Delay 20000
+    Call FullTextSearch_ViewEditDelete("s") 
+    Call CloseEnvironment()
+    'Enovia_Logout()
+    If Err.Number <> 0 Then
+        Call MsgBox(Err.Description)
+    End If
+     
+End Function
+
+
+'********************************************End Testcase*****************************************
+
+
+'##################################################################################################################
+'Function Name                : FullTextSearch_View
+'Description                  : Code  for FullTextSearch view
+'Author                       : Shireesha Monduti
+'Creation Date                : 05.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+
+Function FullTextSearch_View(ViewName)
+
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp?"
+    Set ViewButton = objGetObject(OR_EnoviaSearch_TC05_ViewButton,m_strPageURL,"")
+    ViewButton.Click()   
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxCustomizeTablePopup.jsp?"   
+    'Create object for name field
+    Set NameField = objGetObject(OR_EnoviaSearch_TC05_NameField,m_strPageURL,"")
+    NameField.SetText(ViewName)
+    'Create object to select a value from list
+    Set AvailableColumn = objGetObject(OR_EnoviaSearch_TC05_AvailableColumn,m_strPageURL,"")
+    Sys.HighlightObject(AvailableColumn)
+    AvailableColumn.click()
+    'SendKeys to press backspace
+     Set oWshell = CreateObject("WScript.Shell")  
+                  Delay 500 
+                  oWshell.SendKeys "{DOWN}" 
+                  Set oWshell = Nothing
+
+    'Create object for arrow
+    Set ArrowRight = objGetObject(OR_EnoviaSearch_TC05_ArrowRight,m_strPageURL,"")
+    ArrowRight.Click()
+    'Create object to select item in visible list
+    Set VisibleColumn = objGetObject(OR_EnoviaSearch_TC05_VisibleColumn,m_strPageURL,"")
+    Sys.HighlightObject(VisibleColumn) 
+    VisibleColumn.Click()
+    'SendKeys to press backspace
+     Set oWshell = CreateObject("WScript.Shell")  
+                  Delay 500 
+                  oWshell.SendKeys "{DOWN}" 
+                  Set oWshell = Nothing
+    'create object for up arrow
+    Set ButtonUP = objGetObject(OR_EnoviaSearch_TC05_ButtonUP,m_strPageURL,"")
+    ButtonUP.Click()    
+    'create object for name
+    Set MultiFirst = objGetObject(OR_EnoviaSearch_TC13_MultiFirstColumn,m_strPageURL,"")
+    MultiFirst.ClickItem("Name")
+    'create object for Type
+    Set MultiSecond = objGetObject(OR_EnoviaSearch_TC13_MultiSecondColumn,m_strPageURL,"")
+    MultiSecond.ClickItem("Type")
+    'create object for State
+    Set MultiThird = objGetObject(OR_EnoviaSearch_TC13_MultiThirdColumn,m_strPageURL,"")
+    MultiThird.ClickItem("State")
+    'Creat object for Done Button
+    Set DoneButton = objGetObject(OR_EnoviaSearch_TC19_DoneButton,m_strPageURL,"")
+    DoneButton.Click()
+End Function
+
+
+
+
+
+'##################################################################################################################
+'Function Name                : FullTextSearch_ViewEditDelete
+'Description                  : Code  for FullTextSearch view delete
+'Author                       : Shireesha Monduti
+'Creation Date                : 05.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function FullTextSearch_ViewEditDelete(EditName)
+
+     m_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp?"
+    'Create object for Viewselection
+    Set Viewselection = objGetObject(OR_EnoviaSearch_TC05_ViewArrowSelection,m_strPageURL,"")
+    Viewselection.Click()
+    'create object for edit view table
+    Set ViewEdit = objGetObject(OR_EnoviaSearch_TC05_EditViewtable,m_strPageURL,"")
+    ViewEdit.Click()
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxCustomizeTablePopup.jsp?"
+    'Create object for name field
+    Set NameField = objGetObject(OR_EnoviaSearch_TC05_NameField,m_strPageURL,"")
+    NameField.SetText(EditName)
+    'Create object to select a value from list
+    Set AvailableColumn = objGetObject(OR_EnoviaSearch_TC05_AvailableColumn,m_strPageURL,"")
+    Sys.HighlightObject(AvailableColumn)
+    AvailableColumn.click()
+    'SendKeys to press backspace
+     Set oWshell = CreateObject("WScript.Shell")  
+                  Delay 500 
+                  oWshell.SendKeys "{DOWN}" 
+                  Set oWshell = Nothing
+
+    'Create object for arrow
+    Set ArrowRight = objGetObject(OR_EnoviaSearch_TC05_ArrowRight,m_strPageURL,"")
+    ArrowRight.Click()
+    'Create object to select item in visible list
+    Set VisibleColumn = objGetObject(OR_EnoviaSearch_TC05_VisibleColumn,m_strPageURL,"")
+    Sys.HighlightObject(VisibleColumn) 
+    VisibleColumn.Click()
+    'SendKeys to press backspace
+     Set oWshell = CreateObject("WScript.Shell")  
+                  Delay 500 
+                  oWshell.SendKeys "{DOWN}" 
+                  Set oWshell = Nothing
+    'create object for up arrow
+    Set ButtonUP = objGetObject(OR_EnoviaSearch_TC05_ButtonUP,m_strPageURL,"")
+    ButtonUP.Click()    
+    'Creat object for Done Button
+    Set DoneButton = objGetObject(OR_EnoviaSearch_TC19_DoneButton,m_strPageURL,"")
+    DoneButton.Click()
+    Delay 10000
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp?"
+    'Create object for Viewselection
+    Set Viewselection = objGetObject(OR_EnoviaSearch_TC05_ViewArrowSelection,m_strPageURL,"")
+    Viewselection.Click()
+    'create object for delete view table
+    Set ViewDel = objGetObject(OR_EnoviaSearch_TC05_DeleteViewtable,m_strPageURL,"")
+    ViewDel.Click()
+    Call EnoviaSearch_AlertConfirmation("You have chosen to delete current view.")
+    
+End Function
+
+'##################################################################################################################
+'Function Name                : NamedSearch_View
+'Description                  : Code  for namesearch view
+'Author                       : Shireesha Monduti
+'Creation Date                : 05.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+
+Function NamedSearch_View(ViewName)
+
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxCustomizeTablePopup.jsp?"
+    Set ViewButton = objGetObject(OR_EnoviaSearch_TC05_ViewButton,"","")
+    ViewButton.Click()      
+    'Create object for name field
+    Set NameField = objGetObject(OR_EnoviaSearch_TC05_NameField,m_strPageURL,"")
+    NameField.SetText(ViewName)
+    'Create object to select a value from list
+    Set AvailableColumn = objGetObject(OR_EnoviaSearch_TC05_AvailableColumn,m_strPageURL,"")
+    Sys.HighlightObject(AvailableColumn)
+    AvailableColumn.click()
+    'SendKeys to press backspace
+     Set oWshell = CreateObject("WScript.Shell")  
+                  Delay 500 
+                  oWshell.SendKeys "{DOWN}" 
+                  Set oWshell = Nothing
+
+    'Create object for arrow
+    Set ArrowRight = objGetObject(OR_EnoviaSearch_TC05_ArrowRight,m_strPageURL,"")
+    ArrowRight.Click()
+    'Create object to select item in visible list
+    Set VisibleColumn = objGetObject(OR_EnoviaSearch_TC05_VisibleColumn,m_strPageURL,"")
+    Sys.HighlightObject(VisibleColumn) 
+    VisibleColumn.Click()
+    'SendKeys to press backspace
+     Set oWshell = CreateObject("WScript.Shell")  
+                  Delay 500 
+                  oWshell.SendKeys "{DOWN}" 
+                  Set oWshell = Nothing
+    'create object for up arrow
+    Set ButtonUP = objGetObject(OR_EnoviaSearch_TC05_ButtonUP,m_strPageURL,"")
+    ButtonUP.Click()    
+    'create object for name
+    Set MultiFirst = objGetObject(OR_EnoviaSearch_TC13_MultiFirstColumn,m_strPageURL,"")
+    MultiFirst.ClickItem("Name")
+    'create object for Type
+    Set MultiSecond = objGetObject(OR_EnoviaSearch_TC13_MultiSecondColumn,m_strPageURL,"")
+    MultiSecond.ClickItem("Type")
+    'create object for State
+    Set MultiThird = objGetObject(OR_EnoviaSearch_TC13_MultiThirdColumn,m_strPageURL,"")
+    MultiThird.ClickItem("State")
+    'Creat object for Done Button
+    Set DoneButton = objGetObject(OR_EnoviaSearch_TC19_DoneButton,m_strPageURL,"")
+    DoneButton.Click()
+End Function
+
+'##################################################################################################################
+'Function Name                : NamedSearch_ViewEditDelete
+'Description                  : Code  for namesearch view delete
+'Author                       : Shireesha Monduti
+'Creation Date                : 05.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function NamedSearch_ViewEditDelete(EditName)
+     m_strPageURL = "https://*.pg.com*/enovia/common/emxCustomizeTablePopup.jsp?"
+    'Create object for Viewselection
+    Set Viewselection = objGetObject(OR_EnoviaSearch_TC05_ViewArrowSelection,"","")
+    Viewselection.Click()
+    'create object for edit view table
+    Set ViewEdit = objGetObject(OR_EnoviaSearch_TC05_EditViewtable,"","")
+    ViewEdit.Click()
+    'Create object for name field
+    Set NameField = objGetObject(OR_EnoviaSearch_TC05_NameField,m_strPageURL,"")
+    NameField.SetText(EditName)
+    'Create object to select a value from list
+    Set AvailableColumn = objGetObject(OR_EnoviaSearch_TC05_AvailableColumn,m_strPageURL,"")
+    Sys.HighlightObject(AvailableColumn)
+    AvailableColumn.click()
+    'SendKeys to press backspace
+     Set oWshell = CreateObject("WScript.Shell")  
+                  Delay 500 
+                  oWshell.SendKeys "{DOWN}" 
+                  Set oWshell = Nothing
+
+    'Create object for arrow
+    Set ArrowRight = objGetObject(OR_EnoviaSearch_TC05_ArrowRight,m_strPageURL,"")
+    ArrowRight.Click()
+    'Create object to select item in visible list
+    Set VisibleColumn = objGetObject(OR_EnoviaSearch_TC05_VisibleColumn,m_strPageURL,"")
+    Sys.HighlightObject(VisibleColumn) 
+    VisibleColumn.Click()
+    'SendKeys to press backspace
+     Set oWshell = CreateObject("WScript.Shell")  
+                  Delay 500 
+                  oWshell.SendKeys "{DOWN}" 
+                  Set oWshell = Nothing
+    'create object for up arrow
+    Set ButtonUP = objGetObject(OR_EnoviaSearch_TC05_ButtonUP,m_strPageURL,"")
+    ButtonUP.Click()    
+    'Creat object for Done Button
+    Set DoneButton = objGetObject(OR_EnoviaSearch_TC19_DoneButton,m_strPageURL,"")
+    DoneButton.Click()
+    Delay 10000
+    'Create object for Viewselection
+    Set Viewselection = objGetObject(OR_EnoviaSearch_TC05_ViewArrowSelection,"","")
+    Viewselection.Click()
+    'create object for delete view table
+    Set ViewDel = objGetObject(OR_EnoviaSearch_TC05_DeleteViewtable,"","")
+    ViewDel.Click()
+    Call EnoviaSearch_AlertConfirmation("You have chosen to delete current view.")
+    
+End Function
+'##################################################################################################################
+'Function Name                : FindProductdataAddToCollection
+'Description                  : code to add to collection for find product data
+'Author                       : Shireesha Monduti
+'Creation Date                : 04.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function FindProductdataAddToCollection()
+      
+      m_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp?"
+     'Create object for selecting a record
+     Set SelectRecord = objGetObject(OR_EnoviaSearch_TC18_SelectRecord,m_strPageURL,"")
+     SelectRecord.Click()
+     'Creat object for Add collection
+     Set AddCollection = objGetObject(OR_EnoviaSearch_TC20_AddCollection,m_strPageURL,"")
+     AddCollection.Click()
+     Delay 5000
+     'Creat object for New/Add to Collections label
+     Set AddTOCollectionLabel = objGetObject(OR_EnoviaSearch_TC20_NewCollection,m_strPageURL,"")
+     AddTOCollectionLabel.Click()
+     Delay 10000
+     m_strPageURL = "https://*.pg.com*/enovia/common/emxCollectionsSelectCreateDialogFS.jsp"
+     'Creat object for CollectionsName
+     Set CollectionName = objGetObject(OR_EnoviaSearch_TC20_CollectionName,m_strPageURL,"")
+     CollectionName.Click()
+     'SendKeys to press backspace
+     Set oWshell = CreateObject("WScript.Shell")  
+                  Delay 500 
+                  oWshell.SendKeys "{BACKSPACE}" 
+                  Set oWshell = Nothing
+     'Creat object for CollectionsName
+     Set CollectionNames = objGetObject(OR_EnoviaSearch_TC20_CollectionName,m_strPageURL,"")
+     CollectionNames.SetText("Diffname")
+     'Creat object for CollectionDescription
+     Set Collectiondescripion = objGetObject(OR_EnoviaSearch_TC20_CollectionDescription,m_strPageURL,"")
+     Collectiondescripion.Click()
+     Collectiondescripion.Keys("Diffname")
+     'Creat object for selecting All check boxes
+     Set CheckboxForClipboard = objGetObject(OR_EnoviaSearch_TC20_CheckboxForClipboard,m_strPageURL,"")
+     CheckboxForClipboard.Click()
+     'Creat object for Done Button
+     Set DoneButton = objGetObject(OR_EnoviaSearch_TC19_DoneButton,m_strPageURL,"")
+     DoneButton.Click()
+     EnoviaSearch_HandlingAlert("Selected")
+     Set SelectRecord = nothing
+     Set AddCollection = nothing
+     Set AddTOCollectionLabel = nothing
+     Set CollectionName = nothing 
+     Set CollectionNames = nothing
+     Set Collectiondescripion = nothing
+     Set CheckboxForClipboard = nothing 
+     Set DoneButton = nothing 
+     
+End Function
+
+
+
+'##################################################################################################################
+'Function Name                : Fullsearchtext_ExportSo
+'Description                  : code to export the data
+'Author                       : Shireesha Monduti
+'Creation Date                : 04.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function Fullsearchtext_ExportSort()
+
+     'm_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp?"
+     'Create object to get the rowcount of records displayed
+    Set objLimitRowCount=objGetObject(OR_EnoviaSearch_TC17_Rows,m_strPageURL,"")
+    Dim rowCountName                                      
+    rowCount = objLimitRowCount.rowCount
+     'Create object for toolimage
+     Set ToolImage = objGetObject(OR_EnoviaSearch_TC7_ToolImage,m_strPageURL,10000)
+     ToolImage.Click()
+    'Create object for export command
+     Set ExportCommand = objGetObject(OR_EnoviaSearch_TC13_ExportCommand,m_strPageURL,"")
+     ExportCommand.Click()
+     Delay 5000
+     Call EnoviaFullTextSearch_DowloadData() 
+     'create object for saving the export
+     Set ToolImage = objGetObject(OR_EnoviaSearch_TC7_ToolImage,m_strPageURL,"")
+     ToolImage.Click()
+     'create object for multicolumn
+     Set MultiColumn = objGetObject(OR_EnoviaSearch_TC13_MultiColumn,m_strPageURL,"")
+     MultiColumn.Click()
+     aqutils.delay(9000)
+     m_strPageURL = "
+     'create object for multicolumn
+     Set MultiFirst = objGetObject(OR_EnoviaSearch_TC13_MultiFirstColumn,m_strPageURL,"")
+     MultiFirst.ClickItem("Name")
+     'create object for multicolumn
+     Set MultiSecond = objGetObject(OR_EnoviaSearch_TC13_MultiSecondColumn,m_strPageURL,"")
+     MultiSecond.ClickItem("Type")
+     'create object for multicolumn
+     Set MultiThird = objGetObject(OR_EnoviaSearch_TC13_MultiThirdColumn,m_strPageURL,"")
+     MultiThird.ClickItem("State")
+     'create object for done button
+     Set DoneButton = objGetObject(OR_EnoviaSearch_TC19_DoneButton,m_strPageURL,"")
+     DoneButton.Click()
+     Fullsearchtext_ExportSort=rowCount
+End Function
+
+
+'##################################################################################################################
+'Function Name                : EnoviaFullTextSearch_DowloadData
+'Description                  : code to export the data
+'Author                       : Shireesha Monduti
+'Creation Date                : 06.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function EnoviaFullTextSearch_DowloadData()                                         
+                                                                                 
+    Set s1=Sys.Browser("iexplore").Browserwindow(0)                               
+    Set frame=s1.findChild("WndClass","Frame Notification Bar",9)                              
+    Set Namevalue = frame.FindChild("ObjectIdentifier","Notification_bar_Text",2)               
+    Sys.HighlightObject(Namevalue) 
+    Set objdownbtn=frame.findChild("WndClass","DirectUIHWND",5) 
+     'Set objdownbtn=frame.findChild("Name","UIAObject(1)",5) 
+    Sys.HighlightObject(objdownbtn) 
+    objdownbtn.Click  (objdownbtn.Width)*0.878, (objdownbtn.Height)*0.6                                                          
+    Delay(3000)                                                              
+    Sys.Keys "[Down][Enter]"                                                                         
+    Delay 2000                                                                    
+    Set objwnd = Sys.Process(g_strBrowserType).window("*","Save As")                          
+    Set objEdit = objwnd.FindChild("WndClass","Edit",5)  
+    'SendKeys to press backspace
+     Set oWshell = CreateObject("WScript.Shell")  
+                  Delay 500 
+                  oWshell.SendKeys "{BACKSPACE}" 
+                  Set oWshell = Nothing
+   objEdit.SetText("D:\Siree1")                                      
+   '  objEdit.Keys foldinfo&filename                                                                                            
+    Set objsavebtn = objwnd.FindChild("WndCaption","&Save")                         
+    objsavebtn.Click  
+                                                                                                                                                          
+End Function 
+
+
+'##################################################################################################################
+'Function Name                : EnoviaFullTextSearch_RowCountFromExcel
+'Description                  : code to get RowCountFromExcel
+'Author                       : Shireesha Monduti
+'Creation Date                : 06.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+
+Function EnoviaFullTextSearch_RowCountFromExcel()
+    
+      Path="D:\Siree1"
+      Set objexl  = Createobject("Excel.application")
+      objexl.visible = False
+      set objwkb = objexl.workbooks.open(path)
+      set objsht = objwkb.sheets(1)
+      ExcelRowCount=objsht.usedrange.rows.count
+      ActualExcelRowCount = ExcelRowCount-2  
+      EnoviaFullTextSearch_RowCountFromExcel= ActualExcelRowCount
+      objwkb.Close
+      objexl.Quit
+
+End Function
+
+
+Function CheckingDataInExcel()
+
+    
+    ExcelRowCount=Fullsearchtext_ExportSort()
+    ApplicationRowCount=EnoviaFullTextSearch_RowCountFromExcel()
+    
+    If ApplicationRowCount=ExcelRowCount Then
+      Log.Message "Pass"
+    Else
+      Log.Message "Fail"
+    End IF
+
+End Function
+
+Function DeleteExcel()
+
+    Dim FSO
+    'Dim sFile As String
+    'Source File Location
+    sFile = "D:\Siree1.csv"   'You can change this Loaction
+    'Set Object
+    Set FSO = CreateObject("Scripting.FileSystemObject")
+    'Check File Exists or Not
+    If FSO.FileExists(sFile) Then
+    'If file exists, It will delete the file from source location
+     FSO.DeleteFile sFile, True
+    End If
+    
+End Function
+
+Function Tocheckthesorting()
+   
+  
+    Set oExcel = createobject("excel.application")
+        
+    'Open  a workbook "Siree1"
+    Set oWorkbook1= oExcel.Workbooks.Open("D:\Siree1.csv")
+
+    Set  omysheet1=oWorkbook1.Worksheets(1)
+    
+    iRowCnt = omysheet1.UsedRange.Rows.Count
+           
+    iColNo_Name = fnGetColumnNumber(omysheet1,"Name")
+    iColNo_State = fnGetColumnNumber(omysheet1,"State")
+    iColNo_Type = fnGetColumnNumber(omysheet1,"Type")
+    
+    blnSort = True
+    For i = 4 to iRowCnt-1
+        For j = i+1 to iRowCnt
+          If strComp(cStr(omysheet1.Cells(i,iColNo_Name).Value),cStr(omysheet1.Cells(j,iColNo_Name).Value)) = -1 Then
+          
+          ElseIf strComp(cStr(omysheet1.Cells(i,iColNo_Name).Value),cStr(omysheet1.Cells(j,iColNo_Name).Value)) = 0 Then
+          
+                If strComp(cStr(omysheet1.Cells(i,iColNo_Type).Value),cStr(omysheet1.Cells(j,iColNo_Type).Value)) = -1 Then
+          
+                ElseIf strComp(cStr(omysheet1.Cells(i,iColNo_Type).Value),cStr(omysheet1.Cells(j,iColNo_Type).Value)) = 0 Then
+                    If strComp(cStr(omysheet1.Cells(i,iColNo_State).Value),cStr(omysheet1.Cells(j,iColNo_State).Value)) = -1 Then
+          
+                    ElseIf strComp(cStr(omysheet1.Cells(i,iColNo_State).Value),cStr(omysheet1.Cells(j,iColNo_State).Value)) = 0 Then
+                    
+                    Else
+                        blnSort = False   
+                    End If
+                Else
+                    blnSort = False
+                End If  
+          Else
+             blnSort = False   
+          End If
+        Next
+    Next
+    
+    oWorkbook1.Close
+    Set oExcel = Nothing
+    
+End Function
+
+ 
+
+
+
+Function fnGetColumnNumber(ws,sCol)
+     iColCnt = ws.UsedRange.Columns.Count
+     For i = 1 to iColCnt
+        If Ucase(ws.Cells(3,i)) =Ucase(sCol) Then
+          fnGetColumnNumber = i
+          Exit For
+        End If
+     Next
+     
+End Function
+
+
+'##################################################################################################################
+'Function Name                : EnoviaFullTextSearch_Deletefile
+'Description                  : Delete a file
+'Author                       : Shireesha Monduti
+'Creation Date                : 04.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function  EnoviaFullTextSearch_Deletefile(Var1)
+                                                                                                              
+    Set objPDF = Javaclasses.org_apache_pdfbox_pdmodel.PDDocument.load_3("D:\Users\venkkuma\Downloads\"&Var1)
+                                                                                         
+    Set textStripperObj = JavaClasses.org_apache_pdfbox_util.PDFTextStripper.newInstance()
+    text = textStripperObj.getText_2(objPDF)
+                                                                           
+    Stringtofind = "CUP"                                      
+                                                                                             
+    If (aqString.Find(text, Stringtofind)> -1) Then                                 
+        Log.Message "The document contains the string: " &Stringtofind                      
+    Else                                                                         
+        Log.Warning("The document does not contain the specified string ")              
+    End If
+      
+    sDeleteStatus = aqFileSystem.DeleteFile("D:\Users\venkkuma\Downloads\"&Var1)
+      
+    IF sDeleteStatus = True then
+      Log.Warning "The PDF file " +Var1 + "has been deleted Successfully from the Folder " 
+    else
+     Log.Warning "The PDF file has not been deleted from the Folder " 
+    end if
+              
+    If Err.Number = 0 Then
+       EnoviaFullTextSearch_SearchStringIPDF_Deletefile = True
+    Else
+       EnoviaFullTextSearch_SearchStringIPDF_Deletefile  = False
+    End If
+                         
+End Function
+
+'##################################################################################################################
+'Function Name                : NamedSearch_MassPromoteDemote
+'Description                  : Performs the row grouping
+'Author                       : Shireesha Monduti
+'Creation Date                : 04.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function NamedSearch_MassPromoteDemote()
+
+
+     'Create object for selecting a record
+     Set SelectRecord = objGetObject(OR_EnoviaSearch_TC18_SelectRecord,"","")
+     SelectRecord.Click()
+     'Create object for toolimage
+     Set ToolImage = objGetObject(OR_EnoviaSearch_TC7_ToolImage,"","")
+     ToolImage.Click()
+     'Create object for toolimage
+     Set Promote = objGetObject(OR_EnoviaSearch_TC7_MassPromoteButton,"","")
+     Promote.Click()
+     Delay 3000
+     Call aqObject.CheckProperty(Aliases.browser.pageMassPromoteDemoteErrorReport.frameErrorreport.textnode1Of1ObjectSSuccessfullyC, "contentText", cmpEqual, "1 of 1 object(s) successfully completed. 0 object(s) Failed.")
+     'Create object for toolimage
+     Set Close = objGetObject(OR_EnoviaSearch_TC7_CloseButton,g_ErrorReporting_URL,"")
+     Close.Click()
+     Call aqObject.CheckProperty(Aliases.browser.page3dexperiencePlatform.frameWindowshadeframe.formFullSearch.frameStructureBrowser.formEmxtableform.tableBodytable.cellInWork, "ColumnIndex", cmpEqual, 3)
+     'Create object for toolimage
+     Set ToolImage = objGetObject(OR_EnoviaSearch_TC7_ToolImage,"","")
+     ToolImage.Click()
+     'Create object for toolimage
+     Set Demote = objGetObject(OR_EnoviaSearch_TC7_MassDemoteButton,"","")
+     Demote.Click()
+     Delay 3000
+     Call aqObject.CheckProperty(Aliases.browser.pageMassPromoteDemoteErrorReport.frameErrorreport.textnode1Of1ObjectSSuccessfullyC, "contentText", cmpEqual, "1 of 1 object(s) successfully completed. 0 object(s) Failed.") 
+     'Create object for toolimage
+     Set Close = objGetObject(OR_EnoviaSearch_TC7_CloseButton,g_ErrorReporting_URL,"")
+     Close.Click()
+     Delay 3000
+     Call aqObject.CheckProperty(Aliases.browser.page3dexperiencePlatform.frameWindowshadeframe.formFullSearch.frameStructureBrowser.formEmxtableform.tableBodytable.cellInWork, "ColumnIndex", cmpEqual, 3)
+     
+End Function
+'##################################################################################################################
+'Function Name                : Peripheral_RowGrouping
+'Description                  : Performs the row grouping
+'Author                       : Shireesha Monduti
+'Creation Date                : 03.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function FindProductData_RowGrouping()
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp?"
+    'Create object of Limit Search buttton
+    Set RowGroupingButton=objGetObject(OR_EnoviaSearch_TC6_RowGroupingButton,m_strPageURL,"")
+    RowGroupingButton.Click()
+    'Create object for rowGouping1
+    Set RowGroupingButton1=objGetObject(OR_EnoviaSearch_TC6_rowGouping1,m_strPageURL,"")
+    RowGroupingButton1.Clickitem("Type")
+    'Create object for rowGouping1
+    Set RowGroupingButton2=objGetObject(OR_EnoviaSearch_TC6_rowGouping2,m_strPageURL,"")
+    RowGroupingButton2.Clickitem("Type")
+    'Create object for rowGouping1
+    Set RowGroupingButton3=objGetObject(OR_EnoviaSearch_TC6_rowGouping3,m_strPageURL,"")
+    RowGroupingButton3.Clickitem("Type")
+    'Create object for apply button
+    Set RowGroupingApplyButton=objGetObject(OR_EnoviaSearch_TC6_ApplyButton,m_strPageURL,"")
+    RowGroupingApplyButton.Click()
+    aqutils.delay(1000)
+    'need to change below line according to plmtest data
+    Call aqObject.CheckProperty(Aliases.browser.page3dexperiencePlatform.frameWindowshadeframe.formFullSearch.frameStructureBrowser.formEmxtableform.textnodeCustomerUnitPart, "contentText", cmpEqual, "Customer Unit Part")
+    'close row grouping
+    Set RowGroupingCloseButton=objGetObject(OR_EnoviaSearch_TC7_RowGroupingClose,m_strPageURL,"")
+    RowGroupingCloseButton.Click()
+    
+End Function
+
+'##################################################################################################################
+'Function Name                : FindProductData_Toolbar_Searchdata
+'Description                  : search data in FindProductData
+'Author                       : Shireesha Monduti
+'Creation Date                : 3.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function FindProductData_Toolbar_Searchdata(Searchrecord)
+
+
+     m_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp?"
+    'Create object for delete saved name
+    Set DeleteSaved = objGetObject(OR_EnoviaSearch_TC19_DeleteSavedName,"","")
+    DeleteSaved.Click()
+    'create object for EnoviaSearchFindProdData
+    Set EnoviaSearchFindProdData = objGetObject(OR_EnoviaSearch_TC_FindProdData_SearchDrp,"","")
+    if EnoviaSearchFindProdData.VisibleOnScreen = True Then
+        EnoviaSearchFindProdData.Click()
+    Else    
+        'create object for SearchProductSpec
+        Set EnoviaSearchProductSpec = objGetObject(OR_EnoviaSearch_TC_ProductSpec_SearchDrp,"","")
+        EnoviaSearchProductSpec.Click()
+        EnoviaSearchFindProdData.Click()
+    End If
+   
+    'create object for search edit
+    Set SearchEdtRecord = objGetObject(OR_EnoviaSearch_TC_FindProdData_SearchEdt,m_strPageURL,"")
+    SearchEdtRecord.SetText(Searchrecord)
+    'Create object for search refresh command
+    Set SearchRefreshCmd = objGetObject(OR_EnoviaSearch_TC_SSearchRefreshCmd,m_strPageURL,"")
+    SearchRefreshCmd.Click()
+     aqutils.delay(8000)
+End Function
+
+'##################################################################################################################
+'Function Name                : ToolbarAddToCollections
+'Description                  : Performs the row grouping
+'Author                       : Shireesha Monduti
+'Creation Date                : 3.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function ToolbarAddToCollections()
+    
+     m_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp?" 
+     'm_strPageURL = "https://plmtraining.pg.com/enovia/common/emxFullSearch.jsp?"
+'     'Create object for selecting a record
+'     Set SelectRecord = objGetObject(OR_EnoviaSearch_TC18_SelectRecord,m_strPageURL,"")
+'     SelectRecord.Click()
+     'Creat object for Add collection
+     Set AddCollection = objGetObject(OR_EnoviaSearch_TC20_AddCollection,m_strPageURL,"")
+     AddCollection.Click()
+     Delay 5000
+     'Creat object for New/Add to Collections label
+     Set AddTOCollectionLabel = objGetObject(OR_EnoviaSearch_TC20_NewCollection,m_strPageURL,"")
+     AddTOCollectionLabel.Click()
+     Delay 10000
+     m_strPageURL = "https://*.pg.com*/enovia/common/emxCollectionsSelectCreateDialogFS.jsp"
+     'm_strPageURL = "https://plmtraining.pg.com/enovia/common/emxCollectionsSelectCreateDialogFS.jsp"
+     'Creat object for CollectionsName
+     Set CollectionName = objGetObject(OR_EnoviaSearch_TC20_CollectionName,m_strPageURL,"")
+     CollectionName.Click()
+     'SendKeys to press backspace
+     Set oWshell = CreateObject("WScript.Shell")  
+                  Delay 500 
+                  oWshell.SendKeys "{BACKSPACE}" 
+                  Set oWshell = Nothing
+     'Creat object for CollectionsName
+     Set CollectionNames = objGetObject(OR_EnoviaSearch_TC20_CollectionName,m_strPageURL,"")
+     CollectionNames.SetText("Diffname")
+     'Creat object for CollectionDescription
+     Set Collectiondescripion = objGetObject(OR_EnoviaSearch_TC20_CollectionDescription,m_strPageURL,"")
+     Collectiondescripion.Click()
+     Collectiondescripion.Keys("Diffname")
+     'Creat object for selecting All check boxes
+     Set CheckboxForClipboard = objGetObject(OR_EnoviaSearch_TC20_CheckboxForClipboard,m_strPageURL,"")
+     CheckboxForClipboard.Click()
+     'Creat object for Done Button
+     Set DoneButton = objGetObject(OR_EnoviaSearch_TC19_DoneButton,m_strPageURL,"")
+     DoneButton.Click()
+     EnoviaSearch_HandlingAlert("Selected")
+     Set SelectRecord = nothing
+     Set AddCollection = nothing
+     Set AddTOCollectionLabel = nothing
+     Set CollectionName = nothing 
+     Set CollectionNames = nothing
+     Set Collectiondescripion = nothing
+     Set CheckboxForClipboard = nothing 
+     Set DoneButton = nothing 
+
+
+End Function
+
+
+
+
+'##################################################################################################################
+'Function Name                : FullSearch_DeleteAddCollection
+'Description                  : To check the list of collection objects created
+'Author                       : Shireesha Monduti
+'Creation Date                : 3.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function FullSearch_DeleteAddCollection()
+
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp?"  
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'Creat object for CollectionLink
+    Set CollectionLink = objGetObject(OR_EnoviaSearch_TC20_CollectionLink,m_strPageURL,"")
+    CollectionLink.Click()
+    Delay 10000
+    'Creat object for Selection
+    Set DeletIcon = objGetObject(OR_EnoviaSearch_TC19_SelectCollectionName,m_strPageURL,"")
+    DeletIcon.Click()
+    'Creat object for DeletIcon
+    Set DeletIcons = objGetObject(OR_EnoviaSearch_TC18_DeletIcon,m_strPageURL,"")
+    DeletIcons.Click()
+    Delay 10000
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxAEFCollectionsDeleteFS.jsp"
+    'Creat object for DeletIcon
+    Set SelectRadioButton = objGetObject(OR_EnoviaSearch_TC20_CollectionNameDelete,m_strPageURL,"")
+    SelectRadioButton.Click()
+    'Creat object for Done Button
+     Set DoneButton = objGetObject(OR_EnoviaSearch_TC19_DoneButton,m_strPageURL,"")
+     DoneButton.Click()
+     Set CollectionLink = nothing
+     Set DeletIcon = nothing
+     Set DeletIcons = nothing
+     Set SelectRadioButton = nothing 
+     Set DoneButton = nothing 
+     
+End Function
+
+'##################################################################################################################
+'Function Name                : Peripheral_RowGrouping
+'Description                  : Performs the row grouping
+'Author                       : Shireesha Monduti
+'Creation Date                : 02.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function Peripheral_RowGrouping()
+
+    'Create object of Limit Search buttton
+    'Set RowGroupingButton=objGetObject(OR_EnoviaSearch_TC6_RowGroupingButton,m_strPageURL,"")
+    'RowGroupingButton.Click()
+    'Create object for rowGouping1
+    Set RowGroupingButton1=objGetObject(OR_EnoviaSearch_TC6_rowGouping1,m_strPageURL,"")
+    RowGroupingButton1.Clickitem("Type")
+    'Create object for rowGouping1
+    Set RowGroupingButton2=objGetObject(OR_EnoviaSearch_TC6_rowGouping2,m_strPageURL,"")
+    RowGroupingButton2.Clickitem("Type")
+    'Create object for rowGouping1
+    Set RowGroupingButton3=objGetObject(OR_EnoviaSearch_TC6_rowGouping3,m_strPageURL,"")
+    RowGroupingButton3.Clickitem("Type")
+    'Create object for apply button
+    Set RowGroupingApplyButton=objGetObject(OR_EnoviaSearch_TC6_ApplyButton,m_strPageURL,"")
+    RowGroupingApplyButton.Click()
+    aqutils.delay(1000)
+    Call aqObject.CheckProperty(Aliases.browser.page3dexperiencePlatform.frameWindowshadeframe.formFullSearch.frameStructureBrowser.formEmxtableform.textnodeCustomerUnitPart, "contentText", cmpEqual, "Customer Unit Part")
+    'close row grouping
+    Set RowGroupingCloseButton=objGetObject(OR_EnoviaSearch_TC7_RowGroupingClose,m_strPageURL,"")
+    RowGroupingCloseButton.Click()
+End Function
+
+
+'##################################################################################################################
+'Function Name                : Limit_ToBeEnteredWithInRange
+'Description                  : Enters the limit number in limit field and displays the number of records displayed
+'Author                       : Shireesha Monduti
+'Creation Date                : 25.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function Limit_ToBeEnteredWithInRange(LimitNumber)
+    'Create object of Limit text box
+    Set objLimitNumber = objGetObject(OR_EnoviaSearch_TC17_LimitNumber,m_strPageURL,"")
+    objLimitNumber.SetText(LimitNumber)
+    'Create object of Limit Search buttton
+    Set objLimitSearchButton=objGetObject(OR_EnoviaSearch_TC_SearchBtn,m_strPageURL,"")
+    objLimitSearchButton.Click()
+    Call EnoviaSearch_HandlingAlert("Object Find Limit")
+    'Create object to get the rowcount of records displayed
+    Set objLimitRowCount=objGetObject(OR_EnoviaSearch_TC17_Rows,"","")
+    Dim rowCountName                                      
+    rowCount = objLimitRowCount.rowCount
+    Log.Message("RowCount = " &rowCount-1)
+    ActualRowCount=rowCount-1
+    If CInt(LimitNumber)=CInt(ActualRowCount) Then
+        Log.Message "Pass"
+        Else
+        Log.Message "Fail"
+    End If
+    Set objLimitNumber = nothing
+    Set objLimitSearchButton = nothing
+    Set objLimitRowCount = nothing
+  
+End Function
+
+'##################################################################################################################
+'Function Name                : Limit_ToBeEnteredOutOfRange
+'Description                  : Enters the limit number as 10000 in limit field and check if records are refreshed as as per limit number
+'Author                       : Shireesha Monduti
+'Creation Date                : 25.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function Limit_ToBeEnteredOutOfRange(LimitNumberOutOfRange)
+    'Create object of Limit text box
+    Set objLimitNumber = objGetObject(OR_EnoviaSearch_TC17_LimitNumber,m_strPageURL,"")
+    objLimitNumber.SetText(LimitNumberOutOfRange)
+    'Create object of Limit Search buttton
+    Set objLimitSearchButton=objGetObject(OR_EnoviaSearch_TC_SearchBtn,m_strPageURL,"")
+    objLimitSearchButton.Click()
+    aqutils.delay(70000)
+    'Create object to get the rowcount of records displayed
+    Set objLimitRowCount=objGetObject(OR_EnoviaSearch_TC17_Rows,"","")
+    Dim rowCountName                                      
+    rowCount = objLimitRowCount.rowCount
+    Log.Message("RowCount = " &rowCount-1)
+    Set objLimitNumber = nothing
+    Set objLimitSearchButton = nothing
+    Set objLimitRowCount = nothing
+    
+End Function
+
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_HandlingAlert
+'Description                  : Handles the Alert message and compare with whether correct aler is displayed
+'Author                       : Shireesha Monduti
+'Creation Date                : 25.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+OR_EnoviaSearch_TC_AlertWnd = Array("WEBOBJECT", "ObjectType", "Alert", "")
+Function EnoviaSearch_HandlingAlert(AlertMsg)
+    'Create object for Alert window
+    Set objAlert = objGetObject(OR_EnoviaSearch_TC_AlertWnd,"","")
+    'Create object for Ok button
+    Set objAlertOK = objGetObject(OR_EnoviaSearch_TC_AlertOKBtn,"","")    
+    If AlertMsg <> "" Then
+        If objAlert.Exists and instr(1,objAlert.Message,AlertMsg,1)  Then   'Check if Alert pop up is displayed and the Alert Message has field Name
+            Delay 1000
+            log.Message objAlert.Message
+            log.Message "Pass"
+            EnoviaSearch_HandlingAlertWindow = True  
+            'objAlertOK.Click
+        else
+            EnoviaSearch_HandlingAlertWindow = False
+            log.Message "Fail"   
+        End If
+    End If
+    Set objAlert = nothing
+    Set objAlertOK = nothing
+  
+End Function
+
+
+'##################################################################################################################
+'Function Name                : DeleteRecord
+'Description                  : Code to delete a record
+'Author                       : Shireesha Monduti
+'Creation Date                : 26.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function DeleteRecord()
+     'Create object for selecting a record
+     Set SelectRecord = objGetObject(OR_EnoviaSearch_TC18_SelectRecord,"","")
+     SelectRecord.Click()
+     'Create object for delete image
+     Set DeleteRecord = objGetObject(OR_EnoviaSearch_TC18_DeletIcon,"","")
+     DeleteRecord.Click()
+     Call EnoviaSearch_AlertConfirmation ("You have chosen to delete the selectedobjects in the current viewTo continue with the deletion, click OK.To cancel deletion, click Cancel.")
+     'Propery Check point used to check the Result text
+     Call aqObject.CheckProperty(Aliases.browser.page3dexperiencePlatform.frameWindowshadeframe.formFullSearch.frameStructureBrowser.formEmxtableform.tableBodytable.cellNoObjectsFound, "ColumnIndex", cmpEqual, 0)
+     Set SelectRecord = nothing
+     Set DeleteRecord = nothing
+     
+End Function
+
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_AlertConfirmation 
+'Description                  : Function to handle confirmation window
+'Author                       : Shireesha Monduti
+'Creation Date                : 26.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+
+Function EnoviaSearch_AlertConfirmation(AlertMsg)
+    'Create object for confirmation window
+    Set objAlert = objGetObject(OR_EnoviaSearch_TC18_AlertWindow,"","")
+    'Create object for ok button
+    Set objAlertOK = objGetObject(OR_EnoviaSearch_TC_AlertOKBtn,"","")   
+    If AlertMsg <> "" Then   
+        If objAlert.Exists  Then   'Check if Alert pop up is displayed and the Alert Message has field Name
+            Delay 1000
+            log.Message objAlert.Message
+            log.Message "Pass"
+            EnoviaSearch_HandlingAlertWindow = True
+            'objAlertOK.Click
+        else
+            EnoviaSearch_HandlingAlertWindow = False
+            log.Message "Fail"   
+        End If
+    End If
+    Set objAlert = nothing
+    Set objAlertOK = nothing
+End Function
+
+'##################################################################################################################
+'Function Name                : SavedQueries
+'Description                  : Function to save a record
+'Author                       : Shireesha Monduti
+'Creation Date                : 26.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function SavedQueries()
+
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxSearchSaveDialog.jsp?"
+    'Create object for Save Query button
+    Set SaveQuery = objGetObject(OR_EnoviaSearch_TC19_SavedQueries,"","")
+    SaveQuery.Click()
+    'Create object for Save Label
+    Set SaveRecord = objGetObject(OR_EnoviaSearch_TC19_Save,"","")
+    SaveRecord.Click()
+    Delay 1000
+    'Create object for Save name field
+    Set SaveName = objGetObject(OR_EnoviaSearch_TC19_NameSave,m_strPageURL,"")
+    SaveName.SetText("NameOfRecord") 
+    'Create object for Done button
+    Set DoneBtn = objGetObject(OR_EnoviaSearch_TC19_DoneButton,m_strPageURL,"")
+    DoneBtn.Click()
+    Set SaveQuery = nothing
+    Set SaveRecord = nothing
+    Set SaveName = nothing
+    Set DoneBtn = nothing
+    
+End Function 
+
+'##################################################################################################################
+'Function Name                : SelectSavedRecord
+'Description                  : Function to select already saved record and check if saved record is displayed correctly
+'Author                       : Shireesha Monduti
+'Creation Date                : 30.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function SelectSavedRecord()
+
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxSearchSaveDialog.jsp?"
+    'Create object for Save Query button
+    Set SaveQuery = objGetObject(OR_EnoviaSearch_TC19_SavedQueries,"","")
+    SaveQuery.Click()
+    Delay 1000
+    'Create object for savedname
+    Set ClickedOnSavedRecord = objGetObject(OR_EnoviaSearch_TC19_SavedRecord,"","")
+    ClickedOnSavedRecord.Click()
+    Delay 10000
+    'Create object for Namesearch field
+    Set objSearch = objGetObject(OR_EnoviaSearch_TC_SearchEdt,"","")
+    str=objSearch.value
+    Log.Message str
+    if instr(str,"CUP-00002411") <>0 Then
+        log.Message "Pass"
+    Else
+        log.Message "Fail"
+    End If
+    Set SaveQuery = nothing
+    Set ClickedOnSavedRecord = nothing
+    Set objSearch = nothing
+     
+End Function
+
+
+'##################################################################################################################
+'Function Name                : SaveAs
+'Description                  : Function to perform Saveoperation on a record
+'Author                       : Shireesha Monduti
+'Creation Date                : 30.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function SaveAs()
+
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxSearchSaveAsDialog.jsp"
+    'Create object for Save Query button
+    Set SaveQuery = objGetObject(OR_EnoviaSearch_TC19_SavedQueries,"","")
+    SaveQuery.Click()
+    Delay 1000
+    'Create object for SaveAs Label
+    Set SaveAs = objGetObject(OR_EnoviaSearch_TC19_SavedASRecord,"","")
+    SaveAs.Click()
+    'Create object for radio button
+    Set SelectradioButton = objGetObject(OR_EnoviaSearch_TC19_SelectRadioButton,m_strPageURL,"")
+    SelectradioButton.Click()
+    'Create object for done button
+    Set DoneBtn = objGetObject(OR_EnoviaSearch_TC19_DoneButton,m_strPageURL,"")
+    DoneBtn.Click()
+    Delay 10000
+    'Create object for Save Query button
+    Set SaveQuery = objGetObject(OR_EnoviaSearch_TC19_SavedQueries,"","")
+    SaveQuery.Click()
+    Delay 10000
+    'Create object for savedname
+    Set SavedRecordSelect = objGetObject(OR_EnoviaSearch_TC19_SavedRecord,"","")
+    Sys.HighlightObject(SavedRecordSelect)
+    SavedRecordSelect.Click()
+    Delay 10000
+    'Create object for Namesearch field
+    Set objSearch = objGetObject(OR_EnoviaSearch_TC_SearchEdt,"","")
+    str=objSearch.value
+    Log.Message str	
+    if instr(str,"CUP-00000037") <>0 Then
+        log.Message "Pass"
+    Else
+        log.Message "Fail"
+    End If
+    Set SaveQuery = nothing
+    Set SaveAs = nothing
+    Set SelectradioButton = nothing
+    Set DoneBtn = nothing
+    Set SavedRecordSelect = nothing
+    Set objSearch = nothing
+    
+End Function
+
+'##################################################################################################################
+'Function Name                : DeleteSavedname
+'Description                  : Function to delete already saved name from application
+'Author                       : Shireesha Monduti
+'Creation Date                : 30.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function DeleteSavedname()
+
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxSearch.jsp"
+    'Create object for delete saved name
+    Set DeleteSaved = objGetObject(OR_EnoviaSearch_TC19_DeleteSavedName,"","")
+    DeleteSaved.Click()
+    'Create object for FavoriteSearches label
+    Set FavoriteSearches = objGetObject(OR_EnoviaSearch_TC19_FavoriteSearches,"","")
+    FavoriteSearches.Click()
+    'Create object for delete label 
+    Set DeleteSavedRecord = objGetObject(OR_EnoviaSearch_TC19_DeleteSavedRecordName,m_strPageURL,"")
+    DeleteSavedRecord.Click()
+    Call EnoviaSearch_AlertConfirmation("Are you")
+    Call aqObject.CheckProperty(Aliases.browser.page3dexperiencePlatformSearchMy.frameSearchview.frameSearchcontent.formEmxtableform.tableTblmain.cellNoObjectsFound, "ColumnIndex", cmpEqual, 0)
+    'Create object for cancle button
+    Set CancleSearch = objGetObject(OR_EnoviaSearch_TC19_CancelSearches,m_strPageURL,"")
+    CancleSearch.Click()
+    Set DeleteSaved = nothing
+    Set FavoriteSearches = nothing
+    Set DeleteSavedRecord = nothing
+    Set CancleSearch = nothing
+    
+End Function
+
+
+'##################################################################################################################
+'Function Name                : Enovia_LoginToApplication
+'Description                  : Function to login to enovia applicartion
+'Author                       : Shireesha Monduti
+'Creation Date                : 30.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function Enovia_LoginToApplication()
+   
+    Call CreateEnvironment("Enovia Search Regression", "plmtest", true, "Enovia Search Regression")
+    g_strBrowserType = "iexplore"
+    Call Enovia_LaunchEnovia(g_regLog.Environment)
+    'Code to login to Enovia
+    Call Enovia_Login("plmperf1")
+    'Code to click Ok Button 
+    Call Enovia_clickOK()
+   
+End Function
+
+
+'##################################################################################################################
+'Function Name                : AddToCollection
+'Description                  : Add Search Objects to Collections
+'Author                       : Shireesha Monduti
+'Creation Date                : 31.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function AddToCollection()
+
+      m_strPageURL = "https://*.pg.com*/enovia/common/emxCollectionsSelectCreateDialogFS.jsp"
+     'Create object for selecting a record
+     Set SelectRecord = objGetObject(OR_EnoviaSearch_TC18_SelectRecord,"","")
+     SelectRecord.Click()
+     'Creat object for Add collection
+     Set AddCollection = objGetObject(OR_EnoviaSearch_TC20_AddCollection,"","")
+     AddCollection.Click()
+     Delay 5000
+     'Creat object for New/Add to Collections label
+     Set AddTOCollectionLabel = objGetObject(OR_EnoviaSearch_TC20_NewCollection,"","")
+     AddTOCollectionLabel.Click()
+     Delay 10000
+     'Creat object for CollectionsName
+     Set CollectionName = objGetObject(OR_EnoviaSearch_TC20_CollectionName,m_strPageURL,"")
+     CollectionName.Click()
+     'SendKeys to press backspace
+     Set oWshell = CreateObject("WScript.Shell")  
+                  Delay 500 
+                  oWshell.SendKeys "{BACKSPACE}" 
+                  Set oWshell = Nothing
+     'Creat object for CollectionsName
+     Set CollectionNames = objGetObject(OR_EnoviaSearch_TC20_CollectionName,m_strPageURL,"")
+     CollectionNames.SetText("Diffname")
+     'Creat object for CollectionDescription
+     Set Collectiondescripion = objGetObject(OR_EnoviaSearch_TC20_CollectionDescription,m_strPageURL,"")
+     Collectiondescripion.Click()
+     Collectiondescripion.Keys("Diffname")
+     'Creat object for selecting All check boxes
+     Set CheckboxForClipboard = objGetObject(OR_EnoviaSearch_TC20_CheckboxForClipboard,m_strPageURL,"")
+     CheckboxForClipboard.Click()
+     'Creat object for Done Button
+     Set DoneButton = objGetObject(OR_EnoviaSearch_TC19_DoneButton,m_strPageURL,"")
+     DoneButton.Click()
+     EnoviaSearch_HandlingAlert("Selected")
+     Set SelectRecord = nothing
+     Set AddCollection = nothing
+     Set AddTOCollectionLabel = nothing
+     Set CollectionName = nothing 
+     Set CollectionNames = nothing
+     Set Collectiondescripion = nothing
+     Set CheckboxForClipboard = nothing 
+     Set DoneButton = nothing 
+     
+End Function
+
+
+'##################################################################################################################
+'Function Name                : DeleteAddCollection
+'Description                  : To check the list of collection objects created
+'Author                       : Shireesha Monduti
+'Creation Date                : 31.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function DeleteAddCollection()
+
+     m_strPageURL = "https://*.pg.com*/enovia/common/emxAEFCollectionsDeleteFS.jsp"
+    'Code to login to enovia application
+    Call Enovia_LoginToApplication()
+    'Creat object for CollectionLink
+    Set CollectionLink = objGetObject(OR_EnoviaSearch_TC20_CollectionLink,"","")
+    CollectionLink.Click()
+    Delay 10000
+    'Creat object for Selection
+    Set DeletIcon = objGetObject(OR_EnoviaSearch_TC19_SelectCollectionName,"","")
+    DeletIcon.Click()
+    'Creat object for DeletIcon
+    Set DeletIcons = objGetObject(OR_EnoviaSearch_TC18_DeletIcon,"","")
+    DeletIcons.Click()
+    Delay 10000
+    'Creat object for DeletIcon
+    Set SelectRadioButton = objGetObject(OR_EnoviaSearch_TC20_CollectionNameDelete,m_strPageURL,"")
+    SelectRadioButton.Click()
+    'Creat object for Done Button
+     Set DoneButton = objGetObject(OR_EnoviaSearch_TC19_DoneButton,m_strPageURL,"")
+     DoneButton.Click()
+     Set CollectionLink = nothing
+     Set DeletIcon = nothing
+     Set DeletIcons = nothing
+     Set SelectRadioButton = nothing 
+     Set DoneButton = nothing 
+     
+End Function
+
+
+'##################################################################################################################
+'Function Name                : FullTextSearch_SearchText
+'Description                  : To search fullsearchtext
+'Author                       : Shireesha Monduti
+'Creation Date                : 1.06.2017                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function FullTextSearch_SearchText(SearchText)
+
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp"
+    'Create object for clicking name search
+    Set DeleteSaved = objGetObject(OR_EnoviaSearch_TC19_DeleteSavedName,"","")
+    DeleteSaved.Click()
+    'Create object for FullSearch Text
+    Set FullSearchText = objGetObject(OR_EnoviaSearch_TC13_FullSearchText_Label,"","")
+    FullSearchText.Click()
+    Delay 10000
+    'Create object for Name text field
+    Set NameEdit = objGetObject(OR_EnoviaSearch_TC_FullText_SearchEdt,m_strPageURL,"")
+    NameEdit.SetText(SearchText)
+    'Create object for search refresh command
+    Set SearchRefreshCmd = objGetObject(OR_EnoviaSearch_TC_SSearchRefreshCmd,m_strPageURL,"")
+    SearchRefreshCmd.Click()
+    Delay 40000
+    'Call aqObject.CheckProperty(Aliases.browser.pageSearch.formFullSearch.frameStructureBrowser.formEmxtableform.tableBodytable.cellIllustration, "ColumnIndex", cmpEqual, 2)
+    Set DeleteSaved = nothing
+    Set FullSearchText = nothing
+    Set NameEdit = nothing
+    Set SearchRefreshCmd = nothing
+End function
+
+'##################################################################################################################
+'Function Name                : FullTextSearch_Page_Size_Text
+'Description                  : To search fullsearchtext
+'Author                       : Shireesha Monduti
+'Creation Date                : 01.06.2017                                        
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+OR_EnoviaSearch_TC_FullText_PagesizeEdt = Array("NATIVEWEBOBJECT", "idStr", "txtPageLimit","INPUT")
+Function FullTextSearch_Page_Size_Text(SizeOfPage)
+
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp"
+    'Create object for page size
+    Set PageSizeOfSearch = objGetObject(OR_EnoviaSearch_TC_FullText_PagesizeEdt,m_strPageURL,"")
+    PageSizevalue=PageSizeOfSearch.Text
+    If PageSizevalue="100" Then
+        Log.Message "Pass-Default page size is 100"
+    Else
+        Log.Message "Fail-Default page size is not 100"
+    End If
+        
+    PageSizeOfSearch.SetText(SizeOfPage)
+    'Create object for search refresh command
+    Set SearchRefreshCmd = objGetObject(OR_EnoviaSearch_TC_SSearchRefreshCmd,m_strPageURL,"")
+    SearchRefreshCmd.Click()
+    Set PageSizeOfSearch = nothing
+    Set SearchRefreshCmd = nothing
+    
+End Function
+
+
+'##################################################################################################################
+'Function Name                : Peripheral_SavedQueries
+'Description                  : Function to save a record
+'Author                       : Shireesha Monduti
+'Creation Date                : 02.06.2017                                       
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function Peripheral_SavedQueries()
+
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp?"
+    'm_strPageURL = "https://plmtraining.pg.com/enovia/common/emxFullSearch.jsp?"
+    'Create object for Save Query button
+    Set SaveQuery = objGetObject(OR_EnoviaSearch_TC19_SavedQueries,m_strPageURL,"")
+    SaveQuery.Click()
+    'Create object for Save Label
+    Set SaveRecord = objGetObject(OR_EnoviaSearch_TC19_Save,m_strPageURL,"")
+    SaveRecord.Click()
+    Delay 1000
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxSearchSaveDialog.jsp?"
+    'm_strPageURL = "https://plmtraining.pg.com/enovia/common/emxSearchSaveDialog.jsp?"
+    'Create object for Save name field
+    Set SaveName = objGetObject(OR_EnoviaSearch_TC19_NameSave,m_strPageURL,"")
+    SaveName.SetText("NameOfRecord") 
+    'Create object for Done button
+    Set DoneBtn = objGetObject(OR_EnoviaSearch_TC19_DoneButton,m_strPageURL,"")
+    DoneBtn.Click()
+    Set SaveQuery = nothing
+    Set SaveRecord = nothing
+    Set SaveName = nothing
+    Set DoneBtn = nothing
+    
+End Function 
+
+
+
+
+'##################################################################################################################
+'Function Name                : Peripheral_SelectSavedRecord()
+'Description                  : Function to select already saved record and check if saved record is displayed correctly
+'Author                       : Shireesha Monduti
+'Creation Date                : 02.06.2017                                       
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function Peripheral_SelectSavedRecord(RecordNames)
+
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp?"
+    'm_strPageURL = "https://plmtraining.pg.com/enovia/common/emxFullSearch.jsp?"
+    'Create object for Save Query button
+    Set SaveQuery = objGetObject(OR_EnoviaSearch_TC19_SavedQueries,m_strPageURL,"")
+    SaveQuery.Click()
+    Delay 1000
+    'Create object for savedname
+    Set ClickedOnSavedRecord = objGetObject(OR_EnoviaSearch_TC19_SavedRecord,m_strPageURL,"")
+    ClickedOnSavedRecord.Click()
+    Delay 10000
+    'Create object for Namesearch field
+    Set NameEdit = objGetObject(OR_EnoviaSearch_TC_FullText_SearchEdt,m_strPageURL,"")
+    str=NameEdit.value
+    Log.Message str
+    if instr(str,RecordNames) <>0 Then
+        log.Message "Pass"
+    Else
+        log.Message "Fail"
+    End If
+    Set SaveQuery = nothing
+    Set ClickedOnSavedRecord = nothing
+    Set objSearch = nothing
+     
+End Function
+
+'##################################################################################################################
+'Function Name                : Peripheral_SearchFulltext
+'Description                  : Function to select already saved record and check if saved record is displayed correctly
+'Author                       : Shireesha Monduti
+'Creation Date                : 02.06.2017                                       
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function Peripheral_SearchFulltext(SearchText)
+    
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp"
+    'Create object for Name text field
+    Set NameEdit = objGetObject(OR_EnoviaSearch_TC_FullText_SearchEdt,m_strPageURL,"")
+    NameEdit.SetText(SearchText)
+    'Create object for search refresh command
+    Set SearchRefreshCmd = objGetObject(OR_EnoviaSearch_TC_SSearchRefreshCmd,m_strPageURL,"")
+    SearchRefreshCmd.Click()
+    Delay 10000
+    Call aqObject.CheckProperty(Aliases.browser.pageSearch.formFullSearch.frameStructureBrowser.formEmxtableform.tableBodytable.cellIllustration, "ColumnIndex", cmpEqual, 2)
+    Set NameEdit = nothing
+    Set SearchRefreshCmd = nothing
+    
+End Function
+
+
+'##################################################################################################################
+'Function Name                : Peripheral_SaveAs
+'Description                  : Function to perform Saveoperation on a record
+'Author                       : Shireesha Monduti
+'Creation Date                : 02.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function Peripheral_SaveAs(SearchRecord)
+
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp"
+    'm_strPageURL = "https://plmtraining.pg.com/enovia/common/emxFullSearch.jsp"
+    'Create object for Save Query button
+    Set SaveQuery = objGetObject(OR_EnoviaSearch_TC19_SavedQueries,m_strPageURL,"")
+    SaveQuery.Click()
+    Delay 1000
+    'Create object for SaveAs Label
+    Set RecordSaveAs = objGetObject(OR_EnoviaSearch_TC19_SavedASRecord,m_strPageURL,"")
+    RecordSaveAs.Click()
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxSearchSaveAsDialog.jsp"
+    'Create object for radio button
+    Set SelectradioButton = objGetObject(OR_EnoviaSearch_TC19_SelectRadioButton,m_strPageURL,"")
+    SelectradioButton.Click()
+    'Create object for done button
+    Set DoneBtn = objGetObject(OR_EnoviaSearch_TC19_DoneButton,m_strPageURL,"")
+    DoneBtn.Click()
+    Delay 10000
+    m_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp"
+    'm_strPageURL = "https://plmtraining.pg.com/enovia/common/emxFullSearch.jsp"
+    'Create object for Save Query button
+    Set SaveQuery = objGetObject(OR_EnoviaSearch_TC19_SavedQueries,m_strPageURL,"")
+    SaveQuery.Click()
+    Delay 10000
+    'Create object for savedname
+    Set SavedRecordSelect = objGetObject(OR_EnoviaSearch_TC19_SavedRecord,m_strPageURL,"")
+    Sys.HighlightObject(SavedRecordSelect)
+    SavedRecordSelect.Click()
+    Delay 10000
+    'Create object for Namesearch field
+    Set NameEdit = objGetObject(OR_EnoviaSearch_TC_FullText_SearchEdt,m_strPageURL,"")
+    str=NameEdit.value
+    Log.Message str	
+    if instr(str,SearchRecord) <>0 Then
+        log.Message "Pass"
+    Else
+        log.Message "Fail"
+    End If
+    Set SaveQuery = nothing
+    Set RecordSaveAs = nothing
+    Set SelectradioButton = nothing
+    Set DoneBtn = nothing
+    Set SavedRecordSelect = nothing
+    Set objSearch = nothing
+    
+End Function
+
+
+
+
+'##################################################################################################################
+'Function Name                : FindProductData_Toolbar_Searchdata
+'Description                  : search data in FindProductData
+'Author                       : Shireesha Monduti
+'Creation Date                : 3.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function FindProductData_Searchdata()
+
+
+     m_strPageURL = "https://*.pg.com*/enovia/common/emxFullSearch.jsp?"
+
+    'create object for search edit
+    Set SearchEdtRecord = objGetObject(OR_EnoviaSearch_TC_FindProdData_SearchEdt,m_strPageURL,"")
+    SearchEdtRecord.SetText("00000_17194")
+    'Create object for search refresh command
+    Set SearchRefreshCmd = objGetObject(OR_EnoviaSearch_TC_SSearchRefreshCmd,m_strPageURL,"")
+    SearchRefreshCmd.Click()
+     aqutils.delay(8000)
+     
+End Function
+
+
+'Function RandomNumber(Min, Max)
+'  Randomize
+'  RandomNumber = Int(Min + Rnd*(Max - Min + 1))
+'End Function
+
+
+
+
+'Function EnoviaSearch_HandlingAlertWindow(AlertMsg,ExpectedAlertMsg)
+'
+'    Set objAlert = objGetObject(OR_EnoviaSearch_TC_AlertWnd,"","")
+'    Set objAlertOK = objGetObject(OR_EnoviaSearch_TC_AlertOKBtn,"","")
+'    AlerMessage=objAlert.Message
+'    log.Message AlerMessage
+'    if instr(AlerMessage,ExpectedAlertMsg) <>0 Then
+'        log.Message "Pass"
+'    Else
+'        log.Message "Fail"
+'    End If
+'    
+'    If AlertMsg <> "" Then
+'        If objAlert.Exists and instr(1,objAlert.Message,AlertMsg,1)  Then   'Check if Alert pop up is displayed and the Alert Message has field Name
+'            AlertCount = AlertCount+1
+'            Delay 1000
+'            EnoviaSearch_HandlingAlertWindow = True  
+'        else
+'            EnoviaSearch_HandlingAlertWindow = False   
+'        End If
+'    End If
+'    objAlertOK.Click
+'  
+'End Function
+
+Sub Test1
+  Call Browsers.Item(btIExplorer, "", Browsers.pX64).Navigate("https://plmqa.pg.com/enovia/common/emxErrorReportDialog.jsp?totalCount=1&timeStamp=1496989428004&cmd=Promote")
+ 
+End Sub
+
+Sub Test2
+  Call Browsers.Item(btIExplorer).Navigate("https://plmqa.pg.com/enovia/common/emxErrorReportDialog.jsp?totalCount=1&timeStamp=1496989428009&cmd=Demote")
+  Aliases.browser.pageMassPromoteDemoteErrorReport.formEditfooter.buttonClose.ClickButton
+End Sub
+
+Sub Test3
+  Call Browsers.Item(btIExplorer, "", Browsers.pX64).Navigate("https://plmqa.pg.com/enovia/common/emxNavigator.jsp?ticket=ST-624-9FaQ6ctaD2Thfxaofa9v-cas")
+  Call aqObject.CheckProperty(Aliases.browser.page3dexperiencePlatform.frameWindowshadeframe.formFullSearch.frameStructureBrowser.formEmxtableform.tableBodytable.cellInWork, "ColumnIndex", cmpEqual, 3)
+End Sub
+
+Sub Test4
+  Call Browsers.Item(btIExplorer, "", Browsers.pX64).Navigate("https://plmqa.pg.com/enovia/common/emxNavigator.jsp?ticket=ST-624-9FaQ6ctaD2Thfxaofa9v-cas")
+  Call aqObject.CheckProperty(Aliases.browser.page3dexperiencePlatform.frameWindowshadeframe.formFullSearch.frameStructureBrowser.formEmxtableform.tableBodytable.cellInWork, "ColumnIndex", cmpEqual, 3)
+End Sub

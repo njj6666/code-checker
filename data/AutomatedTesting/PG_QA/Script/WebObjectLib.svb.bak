@@ -1,0 +1,578 @@
+﻿'USEUNIT GlobalVars
+g_dblWaitTime = 15000
+
+Function objGetObject(m_arrFindProperties, m_strPageURL, m_dblWaitTime)
+    On Error Resume Next                                                              
+    
+    'Declaration of variables
+    Dim arrProps, arrVals
+    Dim arrstrPropertyNames(), arrstrPropertyValues()
+    Dim i, dblDelayLoop
+    Dim m_strFindMethod, m_strPropertyName, m_strPropertyValue, m_strTagName, ldblWaitTime
+    
+    m_strFindMethod     = m_arrFindProperties(0)
+    m_strPropertyName   = m_arrFindProperties(1)  
+    m_strPropertyValue  = m_arrFindProperties(2)
+    m_strTagName        = m_arrFindProperties(3)
+    
+    ' Wait time set in function call. 
+    If m_dblWaitTime = "" Then
+      ' Not set, use default
+      ldblWaitTime = g_dblWaitTime
+    Else
+      ldblWaitTime = m_dblWaitTime
+    End If
+    
+     'Set Flag to 0 initially
+    dblDelayLoop = 0
+    
+    Select Case UCase(m_strFindMethod)
+        
+        'Single property value
+        Case "NATIVEWEBOBJECT"
+        
+            Set objPage = objGetPage(m_strPageURL)
+            Set objGetObject = objPage.NativeWebObject.Find(m_strPropertyName, m_strPropertyValue, m_strTagName)
+            
+            Do While blnObjExists(objGetObject) = False And (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))
+                  Delay(500)
+                  dblDelayLoop = dblDelayLoop + 500
+                  
+                  Set objPage = objGetPage(m_strPageURL)
+                  Set objGetObject = objPage.NativeWebObject.Find(m_strPropertyName, m_strPropertyValue, m_strTagName)
+            Loop
+            Set objPage = Nothing
+            
+        'Multiple property values
+        Case "WEBOBJECT"
+        
+            ' Create arrays of property names and values
+            arrProps = Split(m_strPropertyName, "~")
+            arrVals = Split(m_strPropertyValue, "~")
+
+            Redim arrstrPropertyNames(UBound(arrProps))
+            Redim arrstrPropertyValues(UBound(arrProps))
+            
+            'Build the array of property names and values
+            For i = 0 to UBound(arrProps)
+              arrstrPropertyNames(i) = arrProps(i)
+              arrstrPropertyValues(i) = arrVals(i)
+            Next
+            m_strPageURL="http://cssqa.internal.pg.com/ViewTab.action?id=30244.51202.20510.63991"
+            Set objPage = objGetPage(m_strPageURL)          
+            Set objGetObject = objPage.Find(arrstrPropertyNames, arrstrPropertyValues, 60, True)
+            
+            Do While blnObjExists(objGetObject) = False And (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))
+                  Delay(500)
+                  dblDelayLoop = cdbl(dblDelayLoop) + 500
+                  
+                  Set objPage = objGetPage(m_strPageURL)
+                  Set objGetObject = objPage.Find(arrstrPropertyNames, arrstrPropertyValues,60, True)
+            Loop             
+
+        'XPath
+        Case "EVALUATEXPATH"
+            Set objGetObject = objGetPage(m_strPageURL).EvaluateXPath(m_strPropertyName)(0)
+            Do While blnObjExists(objGetObject) = False And (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))
+              Delay(500)
+              dblDelayLoop = dblDelayLoop + 500            
+              Set objGetObject = objGetPage(m_strPageURL).EvaluateXPath(m_strPropertyName)(0)
+            Loop                    
+      
+        'CSS
+        Case "CSSSELECTOR"
+            Set objGetObject = objGetPage(m_strPageURL).QuerySelector(m_strPropertyName)'(0)
+            Do While blnObjExists(objGetObject) = False And (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))
+              Delay(500)
+              dblDelayLoop = dblDelayLoop + 500            
+              Set objGetObject = objGetPage(m_strPageURL).QuerySelector(m_strPropertyName)'(0)
+            Loop                    
+
+       'FullName     
+       Case "FULLNAME"
+            Dim objPage, objPages
+                   
+            If m_strPageURL = "" And Not IsEmpty(g_objPage) Then
+                m_strPageURL = g_objPage.URL
+            ElseIf IsEmpty(g_objPage) Then
+                Set objPages = Sys.Browser(g_strBrowserType).Page("*")
+                m_strPageURL = objPages.URL
+            End If
+
+            Set objGetObject = Eval("Sys.Browser(g_strBrowserType).Page(m_strPageURL)." & m_strPropertyName)
+            Do While blnObjExists(objGetObject) = False And (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))
+              Delay(500)
+              dblDelayLoop = dblDelayLoop + 500
+              Set objGetObject = Eval("Sys.Browser(g_strBrowserType).Page(m_strPageURL)." & m_strPropertyName)
+            Loop
+                                     
+     End Select
+          
+     If (BuiltIn.IsSupported(objGetObject, "Enabled") = False) Or (BuiltIn.IsSupported(objGetObject, "Visible") = False) Then
+          Set objGetObject = Nothing
+'          'if scrolling is supported then scroll into view to the object     
+'          'If (BuiltIn.IsSupported(objGetObject, "scrollIntoView") = True) Then 
+'            'objGetObject.scrollIntoView (True)
+'            'objGetObject.WaitProperty "VisibleOnScreen", "True", ldblWaitTime
+'          'End If
+     ElseIf (IsNull(objGetObject)) OR (IsEmpty(objGetObject)) Then
+          Set objGetObject = Nothing
+     Else
+          If (BuiltIn.IsSupported(objGetObject, "Visible") = True) Then  objGetObject.WaitProperty "Visible", True, d_dblObjectWaitTime   
+          'If (BuiltIn.IsSupported(objGetObject, "Enabled") = True) Then objGetObject.WaitProperty "Enabled", True, d_dblObjectWaitTime
+         'If (BuiltIn.IsSupported(objGetObject, "disabled") = True) Then objGetObject.WaitProperty "disabled", False, d_dblObjectWaitTime
+     End If
+End Function
+
+Function objGetPage(m_strPageURL)
+    On Error Resume Next                                                              
+    
+    'Declaration of the variables
+    Dim objPage, objPages
+    Dim arrstrPropNames, arrstrPropValues      
+    
+    Set objProcess = Sys.Process(g_strBrowserType)
+    
+    If m_strPageURL = "" Then
+      lstrPageURL = objProcess.Page("*").URL    
+    Else 
+      lstrPageURL = m_strPageURL
+    End If    
+
+    'Find Web Page Object
+    arrstrPropNames = Array("ObjectType", "URL")
+    arrstrPropValues = Array("Page", lstrPageURL & "*")
+        
+    Set objPage = objProcess.FindChild(arrstrPropNames, arrstrPropValues, 20, True)
+    
+    'WaitPageLoad(m_strPageURL)
+    
+    Set objGetPage = objPage 
+    Set objPage = Nothing
+    Set objProcess = Nothing
+End Function
+
+Function objGetObjectPerformance(m_arrFindProperties, m_strPageURL, m_dblWaitTime)
+    Log.Message("Starting objGetObjectPerformance Timing")
+    aqPerformance.Start("objGetObjectPerformance")
+    
+    On Error Resume Next                                                              
+    
+    'Declaration of variables
+    Dim arrProps, arrVals
+    Dim arrstrPropertyNames(), arrstrPropertyValues()
+    Dim i, dblDelayLoop
+    Dim m_strFindMethod, m_strPropertyName, m_strPropertyValue, m_strTagName, ldblWaitTime
+    
+    m_strFindMethod     = m_arrFindProperties(0)
+    m_strPropertyName   = m_arrFindProperties(1)  
+    m_strPropertyValue  = m_arrFindProperties(2)
+    m_strTagName        = m_arrFindProperties(3)
+    
+    ' Wait time set in function call. 
+    If m_dblWaitTime = "" Then
+      ' Not set, use default
+      ldblWaitTime = g_dblWaitTime
+    Else
+      ldblWaitTime = m_dblWaitTime
+    End If
+    
+     'Set Flag to 0 initially
+    dblDelayLoop = 0
+    
+    Select Case UCase(m_strFindMethod)
+        
+        'Single property value
+        Case "NATIVEWEBOBJECT"
+        
+            Set objPage = objGetPagePerformance(m_strPageURL)
+            aqPerformance.Start("NativeWebObject")           
+            Set objGetObjectPerformance = objPage.NativeWebObject.Find(m_strPropertyName, m_strPropertyValue, m_strTagName)
+            Log.Message("NativeWebObject.Find (" & m_strPropertyName & ", "& m_strPropertyValue &"): " & aqPerformance.Value("NativeWebObject")/1000)
+
+            Do While blnObjExists(objGetObjectPerformance) = False And (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))
+                  Delay(500)
+                  dblDelayLoop = dblDelayLoop + 500
+                  
+                  objPage.Refresh()
+                  aqPerformance.Start("NativeWebObject")           
+                  Set objGetObjectPerformance = objPage.NativeWebObject.Find(m_strPropertyName, m_strPropertyValue, m_strTagName)
+                  Log.Message("NativeWebObject.Find (" & m_strPropertyName & ", "& m_strPropertyValue &"): " & aqPerformance.Value("NativeWebObject")/1000)
+            Loop
+            Set objPage = Nothing
+            
+        'Multiple property values
+        Case "WEBOBJECT"
+        
+            ' Create arrays of property names and values
+            arrProps = Split(m_strPropertyName, "~")
+            arrVals = Split(m_strPropertyValue, "~")
+
+            Redim arrstrPropertyNames(UBound(arrProps))
+            Redim arrstrPropertyValues(UBound(arrProps))
+            
+            'Build the array of property names and values
+            For i = 0 to UBound(arrProps)
+              arrstrPropertyNames(i) = arrProps(i)
+              arrstrPropertyValues(i) = arrVals(i)
+            Next
+            
+            Set objPage = objGetPagePerformance(m_strPageURL)          
+            aqPerformance.Start("WebObject") 
+            Set objGetObjectPerformance = objPage.Find(arrstrPropertyNames, arrstrPropertyValues, 60, True)
+            Log.Message("WebObject.Find: " & aqPerformance.Value("WebObject")/1000)
+            
+            Do While blnObjExists(objGetObjectPerformance) = False And (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))
+                  Delay(500)
+                  dblDelayLoop = cdbl(dblDelayLoop) + 500
+                  
+                  Set objPage = objGetPagePerformance(m_strPageURL)          
+                  aqPerformance.Start("WebObject") 
+                  Set objGetObjectPerformance = objPage.Find(arrstrPropertyNames, arrstrPropertyValues,60, True)
+                  Log.Message("WebObject.Find: " & aqPerformance.Value("WebObject")/1000)
+            Loop
+            Set objPage = Nothing             
+
+        'XPath
+        Case "EVALUATEXPATH"
+            Set objGetObjectPerformance = objGetPagePerformance(m_strPageURL).EvaluateXPath(m_strPropertyName)(0)
+            Do While blnObjExists(objGetObjectPerformance) = False And (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))
+              Delay(500)
+              dblDelayLoop = dblDelayLoop + 500            
+              Set objGetObjectPerformance = objGetPagePerformance(m_strPageURL).EvaluateXPath(m_strPropertyName)(0)
+            Loop                    
+      
+        'CSS
+        Case "CSSSELECTOR"
+            Set objGetObjectPerformance = objGetPagePerformance(m_strPageURL).QuerySelector(m_strPropertyName)'(0)
+            Do While blnObjExists(objGetObjectPerformance) = False And (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))
+              Delay(500)
+              dblDelayLoop = dblDelayLoop + 500            
+              Set objGetObjectPerformance = objGetPagePerformance(m_strPageURL).QuerySelector(m_strPropertyName)'(0)
+            Loop                    
+
+       'FullName     
+       Case "FULLNAME"
+            Dim objPage, objPages
+                   
+            If m_strPageURL = "" And Not IsEmpty(g_objPage) Then
+                m_strPageURL = g_objPage.URL
+            ElseIf IsEmpty(g_objPage) Then
+                Set objPages = Sys.Browser(g_strBrowserType).Page("*")
+                m_strPageURL = objPages.URL
+            End If
+
+            Set objGetObjectPerformance = Eval("Sys.Browser(g_strBrowserType).Page(m_strPageURL)." & m_strPropertyName)
+            Do While blnObjExists(objGetObjectPerformance) = False And (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))
+              Delay(500)
+              dblDelayLoop = dblDelayLoop + 500
+              Set objGetObjectPerformance = Eval("Sys.Browser(g_strBrowserType).Page(m_strPageURL)." & m_strPropertyName)
+            Loop
+                                     
+     End Select
+          
+     If (BuiltIn.IsSupported(objGetObject, "Enabled") = False) Or (BuiltIn.IsSupported(objGetObject, "Visible") = False) Then
+          Set objGetObjectPerformance = Nothing
+     ElseIf (IsNull(objGetObject)) OR (IsEmpty(objGetObject)) Then
+          Set objGetObjectPerformance = Nothing
+     Else
+          If (BuiltIn.IsSupported(objGetObjectPerformance, "Visible") = True) Then  objGetObjectPerformance.WaitProperty "Visible", True, d_dblObjectWaitTime   
+     End If
+     
+     Log.Message("objGetObjectPerformance (" & m_arrFindProperties(0) & "): " & aqPerformance.Value("objGetObjectPerformance")/1000)
+End Function
+
+Function objGetPagePerformance(m_strPageURL)
+    aqPerformance.Start("objGetPagePerformance")
+    
+    On Error Resume Next                                                              
+    
+    'Declaration of the variables
+    Dim objPage, objPages
+    Dim arrstrPropNames, arrstrPropValues      
+    
+    aqPerformance.Start("Sys.Process")
+    Set objProcess = Sys.Process(g_strBrowserType)
+    Log.Message("Sys.Process: " & aqPerformance.Value("Sys.Process")/1000)
+
+'    If m_strPageURL = "" Then
+'      aqPerformance.Start("Page.URL")
+'      lstrPageURL = objProcess.Page("*").URL    
+'      Log.Message("Page.URL: " & aqPerformance.Value("Page.URL")/1000)
+'    Else 
+      lstrPageURL = m_strPageURL
+'    End If    
+
+    'Find Web Page Object
+    arrstrPropNames = Array("ObjectType", "URL")
+    arrstrPropValues = Array("Page", lstrPageURL & "*")
+        
+    aqPerformance.Start("objProcess.FindChild")
+    Set objPage = objProcess.FindChild(arrstrPropNames, arrstrPropValues, 20, True)
+    Log.Message("objProcess.FindChild: " & aqPerformance.Value("objProcess.FindChild")/1000)
+    
+    'WaitPageLoad(m_strPageURL)
+    
+    Set objGetPagePerformance = objPage 
+    Set objPage = Nothing
+    Set objProcess = Nothing  
+    
+    Log.Message("objGetPagePerformance: " & aqPerformance.Value("objGetPagePerformance")/1000)  
+End Function
+
+Function WaitPageLoad(m_strURL)
+    On Error Resume Next                                                              
+    
+    Dim dblDelayLoop
+    Dim astrPropNames
+    Dim astrPropValues
+    Dim objPage
+    
+    dblDelayLoop = 0
+    WaitPageLoad = False
+    
+    astrPropNames = Array("ObjectType", "URL")
+    astrPropValues = Array("Page", m_strURL & "*")
+    
+    Set objPage = Sys.Process(g_strBrowserType).FindChild(astrPropNames, astrPropValues, 5, True)
+
+    While (IsEmpty(objPage) Or Not(blnObjExists(objPage))) And (cdbl(dblDelayLoop) < Cdbl(g_dblWaitTime))
+        Delay(500)
+        dblDelayLoop = dblDelayLoop + 500
+        Set objPage = Sys.Process(g_strBrowserType).FindChild(astrPropNames, astrPropValues, 1, True)
+        ''Set objPage = Sys.Browser(g_strBrowserType).FindChild(astrPropNames, astrPropValues, 1, True)
+    Wend
+
+    dblDelayLoop = 0
+
+    If (BuiltIn.IsSupported(objPage, "Busy") = True And BuiltIn.IsSupported(objPage, "ReadyState") = True) Then
+        While (objPage.Busy = True) And Not (objPage.ReadyState = 4) And (cdbl(dblDelayLoop) < Cdbl(g_dblWaitTime))
+          Delay(500)
+          dblDelayLoop = dblDelayLoop + 500
+        Wend 
+    End If
+      
+    objPage.Wait
+                  
+    If objPage.Exists Then
+        WaitPageLoad = True
+    End If
+    
+End Function
+
+Function blnObjExists(m_objTestObject)
+
+    On Error Resume Next                                                              
+  
+      'Set Flag to False initially
+      Err.Clear
+      blnObjExists = False
+  
+      If (Not(IsEmpty(m_objTestObject) AND IsNull(m_objTestObject))) Then
+            If m_objTestObject.Exists = True Then
+              blnObjExists = m_objTestObject.Exists
+            Else
+              AqUtils.Delay(500)    
+            End if
+      End If
+      
+      If Err.Number = 0 And (blnObjExists) Then 
+        blnObjExists = True
+      Else
+        blnObjExists = False
+      End If
+             
+End Function
+
+'##################################################################################################################
+'Function Name                : CreateTestObject
+'Description                  : Create the Testobject from the Logical Name provided
+'Arguments                    : g_strLogicalName:Logical Name of the Test Object 
+'Return Value                 : TestObject
+'Author                       : Pramod Rao
+'Creation Date                : 19 -March- 2014
+'Special Conditions           : Test Object should Exists on screen else will return false & null object                                       
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function CreateTestObject(g_strLogicalName, m_strUrlm, m_intWaitTime)
+
+     'Set Flag to False initially
+    CreateTestObject = False      
+    
+    'get object based on parameters
+    Set g_objTestObject = objGetObject(g_strLogicalName, m_strUrlm, m_intWaitTime)  
+             
+    'if required object is not present raise error and move to next testcase
+    If (g_objTestObject Is Nothing) Or IsNull(g_objTestObject) Or IsEmpty(g_objTestObject) Then
+      If Not(g_blnNotExists) Then
+      End If
+    Else 
+      g_objTestObjectType = g_objTestObject.ObjectType
+      CreateTestObject = True
+    End If     
+
+End Function
+
+' waits object to become visible on screen. 
+' Can be beneficial for Xpath OR_ and webobjects performance wise which have long loading time.
+' disadvantage can be that function finds object that is not unique and won't ever be visible on that screen(cached in previous screens)
+Function WaitForVisibleOnScreen(oPageFrame, sURL, nWaitTime)
+
+  Set oItem = objGetObject(oPageFrame, sURL, nWaitTime)
+  
+  If nWaitTime = "" Then
+    lnWaitTime = 30000
+  Else
+    lnWaitTime = nWaitTime
+  End If
+  
+  If oItem.WaitProperty("VisibleOnScreen", True, lnWaitTime) Then
+    Set WaitForVisibleOnScreen = oItem
+  Else
+    log.Warning("WaitForVisibleOnScreen: Object did not become visible on screen")
+    Set WaitForVisibleOnScreen = Nothing
+  End If
+  
+  Set oItem = Nothing
+  
+End Function
+
+
+Function objIdentify(m_arrFindProperties, m_strPageURL, m_dblWaitTime)
+
+    On Error Resume Next                                                              
+    
+    'Declaration of variables
+    Dim arrProps, arrVals
+    Dim arrstrPropertyNames(), arrstrPropertyValues()
+    Dim i, dblDelayLoop
+    Dim m_strFindMethod, m_strPropertyName, m_strPropertyValue, m_strTagName, ldblWaitTime
+    
+    m_strFindMethod     = m_arrFindProperties(0)
+    m_strPropertyName   = m_arrFindProperties(1)  
+    m_strPropertyValue  = m_arrFindProperties(2)
+    m_strTagName        = m_arrFindProperties(3)
+    
+    ' Wait time set in function call. 
+    If m_dblWaitTime = "" Then
+      ' Not set, use default
+      ldblWaitTime = g_dblWaitTime
+    Else
+      ldblWaitTime = m_dblWaitTime
+    End If
+    
+     'Set Flag to 0 initially
+    dblDelayLoop = 0
+    
+    Select Case UCase(m_strFindMethod)
+        
+        'Single property value
+        Case "NATIVEWEBOBJECT"
+        
+            Set objIdentify = Sys.Browser(g_strBrowserType).Page(m_strPageURL).NativeWebObject.Find(m_strPropertyName, m_strPropertyValue, m_strTagName)
+            Do While blnObjExists(objIdentify) = False And (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))
+                  Delay(500)
+                  dblDelayLoop = dblDelayLoop + 500
+                  Set objIdentify = Sys.Browser(g_strBrowserType).Page(m_strPageURL).NativeWebObject.Find(m_strPropertyName, m_strPropertyValue, m_strTagName)
+                  
+                  ' for debugging
+                  If dblDelayLoop > 4000 Then
+                    Log.Warning("Finding object. m_strPropertyName:"&m_strPropertyName &" m_strPropertyValue: "&m_strPropertyValue)
+                  End if
+            Loop             
+'            
+        'Multiple property values
+        Case "WEBOBJECT"
+        
+            ' Create arrays of property names and values
+            arrProps = Split(m_strPropertyName, "~")
+            arrVals = Split(m_strPropertyValue, "~")
+
+            Redim arrstrPropertyNames(UBound(arrProps))
+            Redim arrstrPropertyValues(UBound(arrProps))
+            
+            'Build the array of property names and values
+            For i = 0 to UBound(arrProps)
+              arrstrPropertyNames(i) = arrProps(i)
+              arrstrPropertyValues(i) = arrVals(i)
+            Next
+            
+            Set objIdentify = Sys.Browser(g_strBrowserType).Page(m_strPageURL).Find(arrstrPropertyNames, arrstrPropertyValues, 60, True)
+            Do While blnObjExists(objIdentify) = False And (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))
+                  Delay(500)
+                  dblDelayLoop = cdbl(dblDelayLoop) + 500
+                  Set objIdentify = Sys.Browser(g_strBrowserType).Page(m_strPageURL).Find(arrstrPropertyNames, arrstrPropertyValues,60, True)
+                  
+                  ' for debugging
+                  If dblDelayLoop > 4000 Then
+                    Log.Warning("Finding object. m_strPropertyName:"&m_strPropertyName &" m_strPropertyValue: "&m_strPropertyValue)
+                  End if
+            Loop             
+
+        'XPath
+        Case "EVALUATEXPATH"
+            Set objIdentify = Sys.Browser(g_strBrowserType).Page(m_strPageURL).EvaluateXPath(m_strPropertyName)(0)
+            Do While blnObjExists(objIdentify) = False And (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))
+              Delay(500)
+              dblDelayLoop = dblDelayLoop + 500            
+              Set objIdentify = Sys.Browser(g_strBrowserType).Page(m_strPageURL).EvaluateXPath(m_strPropertyName)(0)
+              
+              ' for debugging
+              If dblDelayLoop > 4000 Then
+                Log.Warning("Finding object. m_strPropertyName:"&m_strPropertyName &" m_strPropertyValue: "&m_strPropertyValue)
+              End if
+            Loop                  
+      
+        'CSS
+        Case "CSSSELECTOR"
+            Set objIdentify = Sys.Browser(g_strBrowserType).Page(m_strPageURL).QuerySelector(m_strPropertyName)'(0)
+            Do While blnObjExists(objIdentify) = False And (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))
+              Delay(500)
+              dblDelayLoop = dblDelayLoop + 500            
+              Set objIdentify = Sys.Browser(g_strBrowserType).Page(m_strPageURL).QuerySelector(m_strPropertyName)'(0)
+            Loop                    
+  
+
+       'FullName     
+       Case "FULLNAME"
+            Dim objPage, objPages
+       'As Marvin            
+'            If m_strPageURL = "" And Not IsEmpty(g_objPage) Then
+'                m_strPageURL = g_objPage.URL
+'            ElseIf IsEmpty(g_objPage) Then
+'                Set objPages = Sys.Browser(g_strBrowserType).Page("*")
+'                m_strPageURL = objPages.URL
+'            End If
+            
+            If m_strPageURL="" Then
+                Set objPages = Sys.Browser(g_strBrowserType).Page("*")
+                m_strPageURL = objPages.URL
+            End If
+'            'log.Message m_strPageURL
+            Set objIdentify = Eval("Sys.Browser(g_strBrowserType).Page(m_strPageURL)." & m_strPropertyName)
+            Do While blnObjExists(objIdentify) = False And (cdbl(dblDelayLoop) < Cdbl(ldblWaitTime))
+              Delay(500)
+              dblDelayLoop = dblDelayLoop + 500
+              Set objIdentify = Eval("Sys.Browser(g_strBrowserType).Page(m_strPageURL)." & m_strPropertyName)
+            Loop
+                                     
+     End Select
+          
+     If (BuiltIn.IsSupported(objIdentify, "Enabled") = False) Or (BuiltIn.IsSupported(objIdentify, "Visible") = False) Then
+          Log.Event "This Control is disabled"
+'          'if scrolling is supported then scroll into view to the object     
+'          'If (BuiltIn.IsSupported(objIdentify, "scrollIntoView") = True) Then 
+'            'objIdentify.scrollIntoView (True)
+'            'objIdentify.WaitProperty "VisibleOnScreen", "True", ldblWaitTime
+'          'End If
+     ElseIf (IsNull(objIdentify)) OR (IsEmpty(objIdentify)) Then
+          Set objIdentify = Nothing
+          Log.Error "Cannot find object!"
+     Else
+          If (BuiltIn.IsSupported(objIdentify, "Visible") = True) Then  objIdentify.WaitProperty "Visible", True, d_dblObjectWaitTime   
+          'If (BuiltIn.IsSupported(objIdentify, "Enabled") = True) Then objIdentify.WaitProperty "Enabled", True, d_dblObjectWaitTime
+         'If (BuiltIn.IsSupported(objIdentify, "disabled") = True) Then objIdentify.WaitProperty "disabled", False, d_dblObjectWaitTime
+     End If
+     
+End Function

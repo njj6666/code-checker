@@ -1,0 +1,856 @@
+﻿'USEUNIT WebObjectLib
+'USEUNIT WebKeywords
+'USEUNIT OR_Enovia
+'USEUNIT DBLib
+'USEUNIT GlobalVars
+'USEUNIT StringLib
+'USEUNIT WindowsUtility
+'USEUNIT TR_EnoviaUtils
+'USEUNIT LogLib
+
+
+Function Enovia_LaunchEnovia(Environment)
+
+  ' Kill all processes before starting a new. Sometimes process can be stuck in background
+  Call CloseAllBrowserProcesses()
+  ' Fetch app url  
+  g_strURL = GetURL(Environment)
+  
+  Call LogTransaction("TR_EnoviaUtils_LaunchBrowser", "IE Launched")
+
+End function
+
+'##################################################################################################################
+'Function Name                : Enovia_ChooseJVM
+'Description                  : Chooses a JVM from the landing page
+'Arguments                    : NA
+'Return Value                 : Nothing, but end state is we will be at login page
+'Author                       : Elisa Rodriguez
+'Creation Date                : 2017-06-01
+'Special Conditions           : Enovia has already been launched to the landing page. eg: Enovia_LaunchEnovia("plmprod-landing")                           
+'Revision History             : 
+'Revision Date                : 
+'##################################################################################################################
+Function Enovia_ChooseJVM(ServerNum)
+  OR_LaunchPage_JVM = Array("WEBOBJECT", "ObjectIdentifier~ObjectType", ServerNum-1 & "~Button", "")
+  Set jvm = objGetObject(OR_LaunchPage_JVM, "", "")
+  transName = "ChooseJVM " & ServerNum
+  jvm.Click
+  
+  'Start Timer
+  aqPerformance.Start(transName)
+  'wait
+  Set obj = objGetObject(OR_EnoviaLogin_UserNameEdt,"", "")
+  Call LogPerformance( transName, false, "" )
+End function
+
+Function Enovia_Login(Identifier)
+  On Error Resume Next
+
+  Dim objUserID, objPassword, objLogin
+
+  ' Fetch Application Credentials
+  arrCreds = GetCredentials(Identifier)
+
+  Set objUserID = objGetObject(OR_EnoviaLogin_UserNameEdt,"","")
+  objUserID.SetText(arrCreds(0))
+
+  Set objPassword = objGetObject(OR_EnoviaLogin_PasswordEdt,"","")
+  objPassword.SetText(arrCreds(1))
+
+  Call LogTransaction("TR_EnoviaUtils_Login", "EnoviaCredentialsLogin")
+  
+  If Err.Number = 0 Then
+    Enovia_Login = True
+  Else
+    Enovia_Login  = False
+  End If
+
+End Function
+
+Function Enovia_Logout()
+  On Error Resume Next
+  Set objLogout = objGetObject(OR_EnoviaMenu_SignOutLnk,"","")
+  objLogout.Click
+
+  Set objSignOut = objGetObject(OR_EnoviaMenu_SignOutItm,"","")
+  objSignOut.Click
+End Function
+
+Function Enovia_clickOK()
+  On Error Resume Next
+  
+  Set objOk = objGetObject(OR_EnoviaLogin_OKBtn,"",30000)
+  objOk.Click()
+  aqPerformance.Start("Login Complete")
+  Set objtext = objGetObject(OR_EnoviaHomepage_Responsibility,"","")  
+  Call LogPerformance("Login Complete", False, "")
+End Function
+
+' uses top bar Search
+Function Enovia_SearchStuff(inputTxt)
+  On Error Resume Next
+  
+  dim objSearch, objResult
+  
+  Set objSearch = objGetObject(OR_EnoviaSearch_SearchEdt,"","")
+  objSearch.setText(inputTxt)
+  objSearch.Keys("[Enter]")
+ 
+End Function
+' uses top bar Search and opens found item 
+Function Enovia_SearchAndOpen(inputTxt)
+
+  Dim SearchProps, objResult
+  
+  Enovia_SearchStuff(inputTxt)
+  
+  SearchProps = Array("WEBOBJECT", "contentText~ObjectType", inputTxt&"~Link", "")
+  Call Click(SearchProps, "","")
+  
+  Erase SearchProps
+  
+End Function
+
+'##################################################################################################################
+'Function Name                : Enovia_ExecuteFindProdDataSearch
+'Description                  : Opens Find Product Data search window (does NOT execute a search)
+'Arguments                    : NA
+'Return Value                 : Nothing
+'Author                       : Sumana Gottipati
+'Creation Date                : 22 - May -2017
+'Special Conditions           : NA                                     
+'Revision History             : 2017-06-03 Rewite by Joe Feeley to call util to do these steps
+'Revision Date                : NA
+'##################################################################################################################
+
+Function Enovia_ExecuteFindProdDataSearch()
+      Call Enovia_OpenToolBarMenu( OR_EnoviaSearch_SearchDrp, OR_EnoviaSearchProductSpec_SearchDrp, OR_EnoviaSearchFindProdData_SearchDrop )
+      ' TODO: Add capture of timing to open window here by waiting for it to be displayed
+End Function
+
+
+'##################################################################################################################
+'Function Name                : Enovia_FullTextSearch
+'Description                  : Opens Full Text search window (does NOT execute a search)
+'Arguments                    : NA
+'Return Value                 : Nothing
+'Author                       : Geetanjali Vajrapu
+'Creation Date                : 08 - Jun -2017
+'Special Conditions           : NA                                     
+'Revision History             : 
+'Revision Date                : 
+'##################################################################################################################
+
+Function Enovia_FullTextSearch()
+      Call Enovia_OpenToolBarMenu(OR_EnoviaSearch_SearchDrp, OR_EnoviaSearchProductSpec_SearchDrp, OR_EnoviaSearchFullText_SearchDrop )
+      ' TODO: Add capture of timing to open window here by waiting for it to be displayed
+End Function
+
+'##################################################################################################################
+'Function Name                : Enovia_OpenPlusMenu
+'Description                  : Opens the plus menu and selects the sub menu item passed in
+'Arguments                    : arrMenu - Top level menu item to be explanded
+'                               arrSubMenu - Menu item that will launch a new screen
+'Return Value                 : Nothing
+'Author                       : Janne
+'Creation Date                : 
+'Special Conditions           : NA                                     
+'Revision History             : 2017-06-03 Rewite by Joe Feeley to call util to do this.
+'Revision Date                : NA
+'##################################################################################################################
+
+Function Enovia_OpenPlusMenu(arrMenu, arrSubMenu)
+  Call Enovia_OpenToolBarMenu( OR_EnoviaMenu_PlusIconBtn, arrMenu, ArrSubMenu )
+End Function
+
+'##################################################################################################################
+'Function Name                : Enovia_OpenToolBarMenu
+'Description                  : Utility to open a top level menu, expand a 2nd level menu item and then click on a submenu
+'Arguments                    : toolBarMenu - Menu item on the toolbar (though could be anywhere) that will get clicked first to display a submenu
+'                               arrMenu - Top level menu item to be explanded
+'                               arrSubMenu - Menu item that will launch a new screen
+'Return Value                 : Nothing
+'Author                       : Joe Feeley
+'Creation Date                : 2017-06-03
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function Enovia_OpenToolBarMenu( toolBarMenu, arrMenu, arrSubMenu)
+  Call Click( toolBarMenu,"","")
+  Call Enovia_OpenMenu(arrMenu, arrSubMenu)
+End Function
+
+'##################################################################################################################
+'Function Name                : Enovia_OpenMenu
+'Description                  : Utility to open a top level menu and click on a submenu
+'Arguments                    : arrMenu - Top level menu item to be explanded
+'                               arrSubMenu - Menu item that will launch a new screen
+'Return Value                 : Nothing
+'Author                       : Joe Feeley
+'Creation Date                : 2017-06-03
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function Enovia_OpenMenu(arrMenu, arrSubMenu)
+ 'Check to see if the SubMenu item already is visible. If so, click it. 
+ 'Otherwise, need to expand the arrMenu item by clicking on it first and then clicking on arrSubMenu
+  Set objSubMenuItem = objGetObject(arrSubMenu, "", 1000) 
+  If Not (objSubMenuItem is nothing) Then
+    If objSubMenuItem.VisibleOnScreen = True Then
+      objSubMenuItem.Click
+      Set objSubMenuItem = Nothing
+      Exit Function
+    End If
+  End If
+  
+  Call Click( arrMenu, "","" )
+  If (objSubMenuItem is nothing) = True then
+    Set objSubMenuItem = objGetObject(arrSubMenu, "", 4000) 
+  End If 
+  
+  objSubMenuItem.Click
+  Set objSubMenuItem = Nothing
+  
+End Function
+
+' Function searches part by name and selects the first value
+' Search window must be open before executing this function
+' Search window URL defined in g_SearchPageURL
+'where is the function from? - Yong
+Function Enovia_SearchAndSelectByName(strSearchString)
+  On Error Resume Next
+  Dim objSubmitobjName, objSearchBtn, objResult, objSubmit
+  
+  ' Search by name
+  Set objName = objGetObject(OR_EnoviaSearch_SearchNameEdt, g_SearchPageURL,"")
+  objName.Click
+  objName.Keys(strSearchString)
+  Set objName = Nothing
+  
+  Call Enovia_ChangeSearchRefinement("Go to RealTime",g_SearchPageURL)
+  AqUtils.Delay(5000)
+  Call Click(OR_EnoviaSearch_SearchBtn, g_SearchPageURL,"")
+ 
+  ' select first search result
+  Call Click(OR_EnoviaSearch_FirstResultChk, g_SearchPageURL,"")
+
+  Call Click(OR_EnoviaSearch_SubmitBtn, g_SearchPageURL,"")
+
+End Function 
+
+' change the search refinement 
+' input Go to Indexed or Go to RealTime
+Function Enovia_ChangeSearchRefinement(sRefinement, sPageUrl)
+  On Error Resume Next
+  
+  Dim objRef
+  
+  Set objRef = objGetObject(OR_EnoviaSearch_SearchRefinementBtn, sPageUrl,"")
+  If Ucase(objRef.ObjectLabel) = UCase(sRefinement) Then
+    objRef.Click
+  End If
+  
+  Set objRef = Nothing
+End Function
+
+' Function searches row, based on Search Column name and click results in same row that locates in Result Column
+Function Enovia_GridSearchAndClick(sSearchColumn, sSearchText, sResultColumn)
+  On Error Resume Next
+  Dim oParentobj, oHeadTable, oBodyTable, oLabel, oField, oResultLabel, oResultField, oResultLink, aSearchProps
+  
+  ' Find Column from header table
+  aSearchProps = Array("WEBOBJECT","contentText~VisibleOnScreen",sSearchColumn&"~True","")
+  Set oLabel = objGetObject(aSearchProps,"","")
+  
+  Set oParentobj = objGetObject(OR_EnoviaPDT_FormulationPartsProsFme,"","")
+  
+  ' Find table that contains headers
+  Set oHeadTable=oParentobj.FindChild("objectIdentifier","headTable",10)
+  Set oBodyTable=oParentobj.FindChild("objectIdentifier","bodyTable",10)
+  
+
+  
+'  aPropNames = Array("contentText","VisibleOnScreen")
+'  aPropValues = Array(sSearchColumn, True)
+'  Set oLabel=oHeadTable.FindChild(aPropNames, aPropValues,10)
+
+  'Value is in body table but column index is divided by two
+  nColumnIndex=(oLabel.ColumnIndex)/2
+  
+  aPropNames = Array("ColumnIndex","contentText")
+  aPropValues = Array(nColumnIndex, sSearchText)
+  
+  Set oField = oBodyTable.FindChild(aPropNames,aPropValues,10)
+  
+  ' Find results column
+  Set oResultLabel = oHeadTable.FindChild("contentText",sResultColumn,10)
+  
+  'Value is in body table but column index is divided by two
+  nResultColumnIndex=(oResultLabel.ColumnIndex)/2
+  
+  ' Find Result column by row and column index
+  aPropNames = Array("ColumnIndex","RowIndex")
+  aPropValues = Array(nResultColumnIndex, oField.RowIndex)
+  
+  Set oResultField = oBodyTable.FindChild(aPropNames,aPropValues,10)
+  
+  Set oResultLink = oResultField.Child(0)
+  oResultLink.Click
+  
+  ' Cleanup
+  Set oParentobj = Nothing
+  Set oLabel = Nothing
+  Set oHeadTable = Nothing
+  Set oResultLabel = Nothing
+  Set oResultField = Nothing
+  Set oResultLink = Nothing
+  Set oField = Nothing
+  Set oBodyTable = Nothing
+End Function
+
+
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_HandlingAlert
+'Description                  : Handles the Alert message and compare with whether correct aler is displayed
+'Author                       : Shireesha Monduti
+'Creation Date                : 25.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+OR_EnoviaSearch_TC_AlertWnd = Array("WEBOBJECT", "ObjectType", "Alert", "")
+Function EnoviaSearch_HandlingAlert(AlertMsg)
+    'Create object for Alert window
+    Set objAlert = objGetObject(OR_EnoviaSearch_TC_AlertWnd,"","")
+    'Create object for Ok button
+    Set objAlertOK = objGetObject(OR_EnoviaSearch_TC_AlertOKBtn,"","")    
+    If AlertMsg <> "" Then
+          If objAlert.Exists Then
+                If instr(1,objAlert.Message,AlertMsg,1) = 0 Then   'Check if Alert pop up is displayed and the Alert Message has field Name
+                    Delay 1000
+                    Call Err.raise (70061,"EnoviaSearch","Alert message doest not match")
+                End If
+         End If   
+            
+    End If
+    Set objAlert = nothing
+    Set objAlertOK = nothing
+  
+End Function
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_AlertConfirmation 
+'Description                  : Function to handle confirmation window
+'Author                       : Shireesha Monduti
+'Creation Date                : 26.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+
+Function EnoviaSearch_AlertConfirmation(AlertMsg)
+    'Create object for confirmation window
+    Set objAlert = objGetObject(OR_EnoviaSearch_TC18_AlertWindow,"","")
+    'Create object for ok button
+    Set objAlertOK = objGetObject(OR_EnoviaSearch_AlertOKBtn,"","")   
+    If AlertMsg <> "" Then   
+        If objAlert.Exists  Then   'Check if Alert pop up is displayed and the Alert Message has field Name
+            Delay 1000
+            EnoviaSearch_HandlingAlertWindow = True
+            'objAlertOK.Click
+        else
+            EnoviaSearch_HandlingAlertWindow = False 
+        End If
+    End If
+    Set objAlert = nothing
+    Set objAlertOK = nothing
+End Function
+
+'##################################################################################################################
+'Function Name                : Enovia_LoginToApplication
+'Description                  : Function to login to enovia applicartion
+'Author                       : Shireesha Monduti
+'Creation Date                : 30.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function Enovia_LoginToApplication()
+   
+    'Call CreateEnvironment("Enovia Search Regression", "plmqa", true, "Enovia Search Regression", false, "Regression")
+    g_strBrowserType = "iexplore"
+    Call Enovia_LaunchEnovia(g_regLog.Environment)
+    'Code to login to Enovia
+    Call Enovia_Login("dsotest30")
+    'Code to click Ok Button 
+    Call Enovia_clickOK()
+   
+End Function
+
+                                        
+'**************************************************************************************
+' Purpose:  Locates the Alert Window object and clicks the "OK" Button  
+'**************************************************************************************                              
+                      
+Function EnoviaNameSearch_HandlingAlertWindow(AlertMsg)
+    On Error Resume Next
+    
+   'Get the object of Alert Box and OK Button into the variable                           
+    Set objAlert = objGetObject(OR_EnoviaSearch_AlertWnd,"","")
+    Set objAlertOK = objGetObject(OR_EnoviaSearch_AlertOKBtn,"","")
+                                                                  
+    If AlertMsg <> "" Then
+       If objAlert.Exists and instr(1,objAlert.Message,AlertMsg,1)  Then   'Check if Alert pop up is displayed and the Alert Message has field Name
+         AlertCount = AlertCount+1
+         Delay 1000
+         EnoviaSearch_HandlingAlertWindow = True  
+       else
+         EnoviaSearch_HandlingAlertWindow = False   
+       End If
+    End If
+                                     
+    objAlertOK.Click
+                                                                    
+End Function
+            
+'##################################################################################################################
+'Function Name                : DeleteSavedname
+'Description                  : Function to delete saved name
+'Author                       : Shireesha Monduti
+'Creation Date                : 12.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function DeleteSavedname()
+
+    'Code to delete the saved name
+    Set objDeleteSaved = objGetObject(OR_EnoviaSearch_TC19_DeleteSavedName,"","")
+    objDeleteSaved.Click()
+    Set objDeleteSaved = nothing 
+    
+    'Create object for FavoriteSearches label
+    Set objFavoriteSearches = objGetObject(OR_EnoviaSearch_TC19_FavoriteSearches,"","")
+    objFavoriteSearches.Click()
+    Set objFavoriteSearches = nothing 
+    
+    'Create object for delete record
+    Set objDeleteSavedRecord = objGetObject(OR_EnoviaSearch_TC19_DeleteSavedRecordName,g_DeleteSavedNamePage_URL,3000)
+    If (objDeleteSavedRecord is Nothing)=False Then
+      objDeleteSavedRecord.Click()
+      Set DeleteSavedRecord = nothing 	
+      'Function to handle alert
+      Call EnoviaSearch_AlertWindow("")
+    End If 
+   
+    'Create object to cancle the opened window  
+    Set CancelSearches = objGetObject(OR_EnoviaSearch_TC19_CancelSearches,g_DeleteSavedNamePage_URL,"")
+    CancelSearches.Click()
+    Set CancelSearches = nothing 
+   
+End Function
+
+'##################################################################################################################
+'Function Name                : fnGetColumnNumber
+'Description                  : Function to get column number for sorting
+'Author                       : Shireesha Monduti
+'Creation Date                : 30.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function fnGetColumnNumber(ws,sCol,iColHeadingRow)
+     iColCnt = ws.UsedRange.Columns.Count
+    
+     
+     For i = 1 to iColCnt
+         
+        If Ucase(ws.Cells(iColHeadingRow,i)) =Ucase(sCol) Then
+          fnGetColumnNumber = i
+          Exit For
+        End If
+     Next
+     
+End Function
+
+'##################################################################################################################
+'Function Name                : ClosePopupWindow
+'Description                  : Function to close the search popup window. Function determines which window is the popup window based on the window caption.
+'Author                       : Joe Feeley
+'Creation Date                : 30.05.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function ClosePopupWindow
+  popupIndex = 1
+  caption = Sys.Browser(g_strBrowserType).BrowserWindow(1).WndCaption
+  If Left( caption, 5 ) = "3DEXP" Then
+    popupIndex = 0
+  End If
+  Log.Message( "Closing Window Index: " & popupIndex & " with Caption " & Sys.Browser(g_strBrowserType).BrowserWindow(popupIndex).WndCaption )
+  Sys.Browser(g_strBrowserType).BrowserWindow(popupIndex).Keys("^[F4]")
+  
+End Function
+
+'##################################################################################################################
+'Function Name                : Enovia_FTSearchStuff
+'Description                  : Function to enter text into the search field of a Full Text Search popup window and press click on the Search button to execute.
+'Author                       : Elisa-Michelle Rodriguez
+'Creation Date                : 22.06.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function Enovia_FTSearchStuff(inputTxt)
+  On Error Resume Next
+  
+  dim objFTS, objFTSEnter
+  
+  OR_EnoviaSearch_FTSearchEdt = Array("NATIVEWEBOBJECT", "idStr", "txtTextSearch", "INPUT")
+  Set objFTS = objGetObject(OR_EnoviaSearch_FTSearchEdt,g_SearchPageURL, "300000")
+  objFTS.Click
+  objFTS.setText("SOP")
+  
+  OR_EnoviaSearch_FTSEnter = Array("NATIVEWEBOBJECT", "idStr", "mx_btn-search", "A")
+  Set objFTSEnter = objGetObject(OR_EnoviaSearch_FTSEnter, g_SearchPageURL, "300000")
+  objFtSEnter.Click
+ 
+End Function
+
+
+'##################################################################################################################
+'Function Name                : Enovia_ClickProjectsTab
+'Description                  : Function to click on the Projects tab on the Enovia homepage.
+'Author                       : Elisa-Michelle Rodriguez
+'Creation Date                : 03.07.2017                                      
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function Enovia_ClickProjectsTab()
+  On Error Resume Next
+  
+  'OR_EnoviaSearch_Projects = Array("EVALUATEXPATH",".//*[@id='pvChannelTabs']/table/tbody/tr/td[3]/table/tbody/tr/td[1]", "")
+  'OR_EnoviaSearch_Projects = Array("EVALUATEXPATH",".//*[@class='text'][text()='Projects']", "")
+  OR_EnoviaSearch_Projects = Array("WEBOBJECT", "ObjectType~contentText~VisibleOnScreen", "Cell~Projects~True", "")
+  Set objProjects = objGetObject(OR_EnoviaSearch_Projects,"","600000") 
+  objProjects.Click 
+  
+  ' Lopp until the object is found
+  Do While IsEmpty(objProjects)
+                  Set objProjects = objGetObject(OR_EnoviaSearch_Projects,"","600000") 
+                  objProjects.Click
+            Loop   
+ 
+End Function
+
+'***Function EditAttribute added by Marvin
+Function Enovia_EditAttribute(arrOPtionObject,value,strUrl)
+  Dim objCurrentExe
+  Dim arrGetObj
+  'Dim type
+  '***Edite Attribute
+  'arrGetObj = arrGetObjInfoFromXL("DSM_EditAttributePage",itemEdit)
+  Set objCurrentExe = objGetObject(arrOPtionObject,strUrl,30000)
+  'type = objCurrentExe.ObjectType
+  Select Case objCurrentExe.ObjectType
+    Case "Select"
+      objCurrentExe.ClickItem(value)
+    Case "Textarea"
+      objCurrentExe.Click
+      objCurrentExe.Keys("^a[BS]")
+      objCurrentExe.Keys(value)
+    Case "Textbox"
+      objCurrentExe.SetText(value)
+      
+  End Select
+  Set objCurrentExe = Nothing
+End Function
+
+' Function searches part by name and selects the first value
+' Search window must be open before executing this function
+' Search window URL defined in g_SearchPageURL
+Function Enovia_SearchAndSelectByNameAndRefinement(strSearchString,strRefinement)
+  On Error Resume Next
+  Dim objSubmitobjName, objSearchBtn, objResult, objSubmit
+  
+  ' Search by name
+  Set objName = objGetObject(OR_EnoviaSearch_SearchNameEdt, g_SearchPageURL,"")
+  objName.Click
+  objName.Keys(strSearchString)
+  Set objName = Nothing
+  If strRefinement = "" Then
+    Call Click(OR_EnoviaSearch_SearchBtn, g_SearchPageURL,"")
+  Else
+    Call Enovia_ChangeSearchRefinement(strRefinement,g_SearchPageURL)
+    AqUtils.Delay(5000)
+    Call Click(OR_EnoviaSearch_SearchBtn, g_SearchPageURL,"")
+  End If
+  ' select first search result
+  Call Click(OR_EnoviaSearch_FirstResultChk, g_SearchPageURL,"")
+
+  Call Click(OR_EnoviaSearch_SubmitBtn, g_SearchPageURL,"")
+
+End Function 
+
+'*******Created By Marvin 
+Function Enovia_LoginNoSelectRole(identifier,environment)
+g_strURL = GetURL(environment)
+Enovia_LaunchEnovia()
+Enovia_Login(identifier)
+Enovia_ClickOK()
+AqUtils.Delay(15000)
+End Function 
+
+'##################################################################################################################
+'Function Name                : Enovia_SearchForType2Level
+'Description                  : To select top bar search 2nd level type and use global search and open
+'Arguments                    : objSearchType---search type object
+'                               inputTxt----search content
+'Return Value                 : Nothing
+'Author                       : Amanda Li
+'Creation Date                : 21 - Aug -2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function Enovia_SearchForType2Level(str1stlevelSearchType,str2ndlevelSearchType,inputTxt)
+
+  On Error Resume Next
+  Dim objSearch,objSearchType1,objSearchType2
+  Set objSearch = objGetObject(OR_EnoviaSearch_SearchTypeBtn,g_EnoviaHomePage_URL,"1000")
+  objSearch.Click
+  'select 1st level type
+  Set objSearchType1 = objGetObject(str1stlevelSearchType,g_EnoviaHomePage_URL,"1000")
+  Set objSearchType2 = objGetObject(str2ndlevelSearchType,g_EnoviaHomePage_URL,"1000")
+  If objSearchType2.VisibleOnScreen = True Then
+    'select 2nd level type
+    objSearchType2.Click
+  Else
+    objSearchType1.Click
+    objSearchType2.Click
+  End If
+  Set objSearch = nothing
+  Set objSearchType1 = nothing
+  Set objSearchType2 = nothing 
+  Enovia_SearchAndLink(inputTxt)
+  
+End Function
+
+'##################################################################################################################
+'Function Name                : Enovia_SearchAndLink
+'Description                  : To Search data and select the last list and submit,not click "Go to RealTime"
+'Arguments                    : NA
+'Return Value                 : Nothing
+'Author                       : Amanda Li
+'Creation Date                : 22 - Aug -2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function Enovia_SearchAndLink(strSearchString)
+  On Error Resume Next
+  Dim objSubmitobjName, objSearchBtn, objResult, objSubmit
+  
+  ' Search by name
+  Set objName = objGetObject(OR_EnoviaSearch_SearchNameEdt, g_SearchPageURL,"")
+  objName.Click
+  objName.Keys(strSearchString)
+  Set objName = Nothing
+  
+  'Call Enovia_ChangeSearchRefinement("Go to RealTime",g_SearchPageURL)
+  'AqUtils.Delay(5000)
+  Call Click(OR_EnoviaSearch_SearchBtn, g_SearchPageURL,"")
+  
+  'Click Link
+  SearchProps = Array("WEBOBJECT", "contentText~ObjectType", inputTxt&"~Link", "")
+  Call Click(SearchProps, "","")
+
+End Function
+'########################
+'*******Created by Marvin
+'*******Create from '+' Sign
+'############################
+Function Enovia_OpenLevel2MenuAndCreate(arrLevel1Menu,arrLevel2Menu,arrLink)
+  On Error Resume Next
+  Dim objLevel1Menu,objLevel2Menu
+  Call Click(OR_EnoviaMenu_PlusIconBtn,"","")
+  Set objLevel1Menu = objGetObject(arrLevel1Menu,g_EnoviaHomePage_URL,30000)
+  Set objLevel2Menu = objGetObject(arrLevel2Menu,g_EnoviaHomePage_URL,30000)
+  If objLevel2Menu.VisibleOnScreen = True Then
+    Call Click(arrLink,"","")
+  Else
+    objLevel1Menu.Click
+    objLevel2Menu.Click
+    Call Click(arrLink,"","")
+  End If
+  Set objLevel1Menu = Nothing
+  Set objLevel2Menu = Nothing
+End Function 
+
+'##################################################################################################################
+'Function Name                : Enovia_GridFindCell
+'Description                  : To locate the right cell object according to the left tree table
+'Arguments                    : strSearchFram, both table's parent frame object's attribute
+'                               strSearchColumn, right table's column name
+'                               strSearchText, cell's value of left table
+'Return Value                 : Cell's object
+'Author                       : Amanda Li, Xiong Zhuang
+'Creation Date                : 23 - Aug -2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function Enovia_GridFindCell(m_strSearchRow,m_strSeachColumn,strUrl)
+    On Error Resume Next
+    'log.Message strValue
+    Dim oTreeTable,oHeadTable,oBodyTable,oLabel
+    'Get TreeTable
+    'arrGetObj = arrGetObjInfoFromXL("DSM_BOMPage","TreeTable")
+    Set oTreeTable = objGetObject(OR_EnoviaBOM_TreeTable,strUrl,"")
+    
+    'Get Row
+    aPropNames = Array("contentText","ObjectType")
+    aPropValues = Array(m_strSearchRow, "Cell")
+    Set oResult = oTreeTable.FindChild(aPropNames,aPropValues,10)
+    row = oResult.RowIndex
+    Set oLabel=Nothing
+    Set oResult=Nothing
+    'Get HeadTable
+    'arrGetObj = arrGetObjInfoFromXL("DSM_BOMPage","HeadTable")
+    Set oTreeTable = objGetObject(OR_EnoviaBOM_RHeadTable,strUrl,"")
+    'Get Column
+    aSearchProps = Array("WEBOBJECT","contentText~VisibleOnScreen",m_strSeachColumn&"~True","")
+    Set oLabel = objGetObject(aSearchProps,"","")
+    column = oLabel.ColumnIndex
+    
+    'Get BodyTable
+    'arrGetObj = arrGetObjInfoFromXL("DSM_BOMPage","BodyTable")
+    Set BodyTable = objGetObject(OR_EnoviaBOM_RBodyTable,strUrl,"")
+    aPropNames = Array("ColumnIndex","RowIndex")
+    aPropValues = Array(column/2, row)
+    Set Cell = BodyTable.FindChild(aPropNames,aPropValues,10)
+    
+    Set Enovia_GridFindCell = Cell
+    Set oTreeTable = Nothing
+    Set oHeadTable = Nothing
+    Set oBodyTable = Nothing
+End Function
+
+Function ClickImageBeforeLnk(inputTxt,strURL)
+  On Error Resume Next
+  Dim objTable,oResultLnk,objImg
+  arrTreeTable = Array("WEBOBJECT","contentText~ObjectType",inputTxt&"~Table","TABLE")
+  Set objTable = objGetObject(arrTreeTable,strURL,"")
+  'Log.Message "TableRowCount:"&objTable.FullName
+  'Get link cell
+  Set oResultLnk = objTable.FindChild("contentText",inputTxt,10)
+  'log.Message oResultLnk.FullName
+  aPropNames = Array("ColumnIndex","RowIndex")
+  aPropValues = Array(oResultLnk.ColumnIndex-2, 0)
+  'get img
+  Set objImg = objTable.FindChild(aPropNames,aPropValues)
+  objImg.Click
+  
+  'Cleanup
+  Set objTable=Nothing
+  Set oResultLnk = Nothing
+  Set objImg = Nothing
+  ERASE aPropNames
+  ERASE aPropValues
+End Function 
+
+'*************As Marvin on 25th Aug 2017
+Function SearchByTypeAndState(strType,State)
+  Dim arrGetObj,objCurrentExe
+  arrGetObj = arrGetObjInfoFromXL("SearchPage","Type")
+  Call Click(arrGetObj,g_SearchPageURL,"")
+  arrGetObj = arrGetObjInfoFromXL("SearchPage","TypeSelect")
+  Set objCurrentExe = objGetObject(arrGetObj,g_SearchPageURL,"")
+  objCurrentExe.ClickItem(strType)
+  arrGetObj = arrGetObjInfoFromXL("SearchPage","SelectOK")
+  Call Click(arrGetObj,g_SearchPageURL,"")
+  
+  arrGetObj = arrGetObjInfoFromXL("SearchPage","State")
+  Call Click(arrGetObj,g_SearchPageURL,"")
+  arrGetObj = arrGetObjInfoFromXL("SearchPage","StateSelect")
+  Set objCurrentExe = objGetObject(arrGetObj,g_SearchPageURL,"")
+  objCurrentExe.ClickItem(State)
+  arrGetObj = arrGetObjInfoFromXL("SearchPage","SelectOK")
+  Call Click(arrGetObj,g_SearchPageURL,"")
+  Set objCurrentExe = Nothing
+  
+  Call Click(OR_EnoviaSearch_SearchBtn, g_SearchPageURL,"")
+ 
+  ' select first search result
+  Call Click(OR_EnoviaSearch_FirstResultChk, g_SearchPageURL,"")
+
+  Call Click(OR_EnoviaSearch_SubmitBtn, g_SearchPageURL,"")
+End Function
+
+'Function Enovia_UploadFile(path)
+'  Dim objCurrentExe
+'  Dim arrGetObj
+''****Click Browser
+'  arrGetObj = arrGetObjInfoFromXL("VT_Upload","Browser")
+'  'log.Message arrGetObj(0)
+'  'log.Message g_CheckinDocPage_URL
+'  Set objCurrentExe = objGetObject(arrGetObj,g_CheckinDocPage_URL,30000)
+'  objCurrentExe.Click
+'  '****open file
+'  set SwingObject = Sys.Browser("iexplore").SwingObject("JDialog", "Open", -1, 1).SwingObject("JRootPane", "", 0).SwingObject("null.layeredPane").SwingObject("null.contentPane").SwingObject("JFileChooser", "", 0).SwingObject("JPanel", "", 0).SwingObject("JPanel", "", 1)
+'  SwingObject.SwingObject("JPanel", "", 1).SwingObject("WindowsFileChooserUI$7", "File name:", 0).SetText(path)
+'  SwingObject.SwingObject("JPanel", "", 2).SwingObject("WindowsFileChooserUI$9", "Open", 0).Click
+'  '****Check checkbox
+'  arrGetObj = arrGetObjInfoFromXL("VT_Upload","Checkbox")
+'  'log.Message arrGetObj(0)
+'  'log.Message g_CheckinDocPage_URL
+'  Set objCurrentExe = objGetObject(arrGetObj,g_CheckinDocPage_URL,30000)
+'  call objCurrentExe.ClickCell(0," ")
+'  '****Click upload
+'  arrGetObj = arrGetObjInfoFromXL("VT_Upload","Upload")
+'  'log.Message arrGetObj(0)
+'  'log.Message g_CheckinDocPage_URL
+'  Set objCurrentExe = objGetObject(arrGetObj,g_CheckinDocPage_URL,30000)
+'   objCurrentExe.Click
+'End function
+
+'##################################################################################################################
+'Function Name                : Enovia_ClosePageByURL
+'Description                  : Close all pages related to the input URL  
+'Arguments                    : strUrl, the specified url
+'Return Value                 : NA
+'Author                       : Xiong Zhuang
+'Creation Date                : 20 - Sep -2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function Enovia_ClosePageByURL(strUrl)
+  On Error Resume Next
+  Dim arrProps, arrVals
+  
+  arrProps = Array("ObjectType","URL")
+  arrVals = Array("Page","*"&strUrl&"*")
+  Pages = Sys.Browser(g_strBrowserType).FindAllChildren(arrProps, arrVals)
+  
+  For i = 0 to Ubound(Pages)
+    Pages(i).Close
+  Next
+End Function
+
+
+'Purpose: Function to Clean up the variables
+'Input: Variable to be cleaned up
+'Output: None
+Function Enovia_ClearVariable(ByRef Var)
+
+  If IsObject(Var) Then
+    Set Var = Nothing
+  elseIf IsArray(Var) Then
+    Erase Var
+    Set Var = Nothing  
+  End If
+  
+  Var = Empty  
+
+End Function

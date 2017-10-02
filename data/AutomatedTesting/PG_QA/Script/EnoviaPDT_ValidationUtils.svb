@@ -1,0 +1,1338 @@
+﻿'USEUNIT EnoviaPDT_PDTUtils
+'USEUNIT GlobalVars
+'USEUNIT LogLib
+'USEUNIT OR_Enovia
+'USEUNIT WebObjectLib
+'USEUNIT ExcelLib
+'USEUNIT EnoviaUtils
+
+' Function reads values from Enovia Table structure. Table headers are in different table 
+' Takes first field from tree table and rest from body table
+Function EnoviaPDT_GetTableFieldNamesAndValues(OR_Parentobj, aFieldsArray)
+  On Error Resume Next
+  
+  Dim oParentobj,oParentobj1,oLabel,oField
+  
+  Set oParentobj = objGetObject(OR_Parentobj,"","")
+  Set oParentHead=oParentobj.FindChild("objectIdentifier","headTable",10)
+  Set oParentBody=oParentobj.Findchild("ObjectIdentifier","bodyTable",6)
+  
+  Set dFieldNamesValues = CreateObject("Scripting.Dictionary")
+    
+  For i = 0 to Ubound(aFieldsArray)
+     
+    if i=0 then 'Applicable for the first field of a table (No.)
+      Set oField=objGetObject(OR_EnoviaPDT_TablesPnl1,"","")'Applicable only for 1 field i.e. No as it will comes in a different panel
+      Set oField=oField.FindChild("ObjectIdentifier","treeBodyTable",6)
+      nColumnIndex=1
+      Set oField=oField.cell(1,nColumnIndex)
+      
+    else 'Applicable for the remaining fields in Tables tab
+      Set oLabel=oParentHead.FindChild("contentText",aFieldsArray(i),10)
+      nColumnIndex=(oLabel.ColumnIndex)/2
+      Set oField=oParentBody.Cell(1,nColumnIndex)
+    end if
+    
+    If oField.contentText = "No Objects Found" Then
+      sFieldValue = ""
+    Else
+      sFieldValue = oField.contentText
+    End If
+    
+    dFieldNamesValues.Add Ucase(aFieldsArray(i)), sFieldValue
+  Next
+  
+  Set EnoviaPDT_GetTableFieldNamesAndValues = dFieldNamesValues
+End Function
+
+' Function finds values for fields that are in input array.
+' Logic to find field values is that value cell is in next cell on the right
+' Return dictionary object where field name is key in UPPERCASE and contentText value as it shows in application
+Function EnoviaPDT_GetFieldNamesAndValues(aParentObject, aFieldsArray)
+  On Error Resume Next
+  
+  Dim oParentobj, oFieldCollection,oLabel, dFieldNamesValues
+  
+  Set dFieldNamesValues = CreateObject("Scripting.Dictionary")
+  Set oParentobj = objGetObject(aParentObject,"","")
+  
+  For i=0 to UBound(aFieldsArray)
+    Set oLabel=oParentobj.FindChild("contentText",aFieldsArray(i),10)'Get all the labels from application bases on the contentText
+    
+    if isObject(oLabel)and oLabel.Exists then'If object found then it will proceed to get the field related to label
+      if oLabel.clientHeight>0 then
+        nRowIndex=oLabel.RowIndex'Takes the rowIndex and columnIndex of a lable and add +1 to column index to get the related field
+        nColumnIndex=(oLabel.ColumnIndex)+1
+        set oField=oParentobj.Cell(nRowIndex, nColumnIndex)
+        dFieldNamesValues.Add Ucase(aFieldsArray(i)), oField.contentText   
+      end if
+    end if
+  Next
+
+  Set EnoviaPDT_GetFieldNamesAndValues = dFieldNamesValues
+  
+  EnoviaPDT_ClearVariable dFieldNamesValues
+  EnoviaPDT_ClearVariable oFieldCollection
+  EnoviaPDT_ClearVariable oParentobj
+  EnoviaPDT_ClearVariable oLabel
+End Function
+
+'Desciption : Function to get all the required fields for the given PageName
+'Inputs     : Parent object - Parent object used to find all the fields
+            ' Page Name - Name of the page being searched for fields
+            ' SearchDepth - Depth at which search is to be performed
+            ' aORObject - OR object
+            ' sPartType - Part Type being worked on
+'Output     : Dictionary object with Fields and thier Source indices
+'Author     : Sandeep
+
+Function EnoviaPDT_GetAllFieldsFromApp(oParent,sAppPageName,nSearchDepth,aORObject,sPartType)
+  
+  Dim oFieldWithSI, oFieldCollection, aLabelObjects, aValToConsider, oRegEx, sURL
+  
+  If sAppPageName = "Create" and sPartType <> "Virtual Intermediate" Then
+    sURL = g_CreatePage_URL
+  ElseIf sAppPageName = "Copy" THen
+    If sPartType = "Formulation Process" Then 'Copy URL for Formulation Process is same as create URL
+      sURL = g_CreatePage_URL
+    else
+      sURL = g_CopyPage_URL
+    End If   
+  Elseif sAppPageName = "Substitutes" Then
+    sURL = g_CopyPage_URL
+  Else
+    sURL = ""  
+  End If 
+  
+  Delay 1000
+  Set oParent = objGetObject(aORObject,sURL,"")
+    
+  aValToConsider = Array("Create","Attributes","Copy","Master") 'These Values need a different set of conditions to work with
+  Set oFieldWithSI = CreateObject("Scripting.Dictionary")
+  
+  oFieldCollection = oParent.FindAllChildren("ObjectType","Cell",nSearchDepth) 'Find all children of type Cell
+  ReDim aLabelObjects(Ubound(oFieldCollection))
+  
+  If EnoviaPDT_CheckStringValinArray(aValToConsider,sAppPageName) Then
+  
+    Set oRegEx = New RegExp
+    oRegEx.Pattern = "Label*"
+    oRegEx.IgnoreCase = "True"
+    i=0
+    For j = Ubound(oFieldCollection) to 0 Step -1
+      If oFieldCollection(j).ContentText = "Fix Target % As Consumed" and sAppPageName = "Create" Then  'This field is not marked as Label
+        Set aLabelObjects(i) = oFieldCollection(j)
+        i = i+1
+      else
+        If oRegEx.Test(oFieldCollection(j).ClassName) and oFieldCollection(j).ContentText <> "" Then 'Get only those Children with Class Label
+          Set aLabelObjects(i) = oFieldCollection(j)
+          i = i+1
+        End If
+      End If
+    Next
+  Else
+    
+    i=0
+    For j = Ubound(oFieldCollection) to 0 Step -1
+      If  oFieldCollection(j).ClassName <> "mx_sizer" and oFieldCollection(j).ClassName <> "groupheader" and oFieldCollection(j).ContentText <> "" and oFieldCollection(j).tagName = "TH" Then 'Conditions to get only the column headers in Table
+        Set aLabelObjects(i) = oFieldCollection(j)
+        i = i+1
+      End If
+    Next 
+  End If
+  
+  ReDim Preserve aLabelObjects(i-1)
+  
+  If Ucase(sAppPageName) = "ATTRIBUTES" Then 
+    AttributesSI = oParent.FindChild("ContentText", "Attributes",3).RowIndex
+    'OrgSI = oParent.FindChild("ContentText", "Organizations").RowIndex
+    For i = 0 to Ubound(aLabelObjects)
+      If aLabelObjects(i).RowIndex > AttributesSI Then  'Ignore objects that are not part of Attributes section
+        oFieldWithSI.add aLabelObjects(i).SourceIndex, aLabelObjects(i).ContentText 'Get the sourceindex of the objects into an array
+      End If
+    Next
+  
+  else
+    For i = 0 to Ubound(aLabelObjects)
+      If aLabelObjects(i).clientHeight > 0 Then
+         oFieldWithSI.add aLabelObjects(i).SourceIndex, aLabelObjects(i).ContentText 'Get the sourceindex of the objects into an array
+      End If
+    Next
+  End If  
+
+  set EnoviaPDT_GetAllFieldsFromApp = oFieldWithSI
+  
+  EnoviaPDT_ClearVariable oFieldWithSI
+  EnoviaPDT_ClearVariable oFieldCollection
+  EnoviaPDT_ClearVariable aLabelObjects
+  EnoviaPDT_ClearVariable aValToConsider
+  EnoviaPDT_ClearVariable oRegEx
+  EnoviaPDT_ClearVariable sURL
+  
+End Function
+
+
+'Description  : Function to compare 2 arrays have same value and in same order
+'Inputs       : 2 Arrays with source indices
+'Output       : Dictionary object with 3 keys - 
+              '“Array” – Gives array of Source indices of all matched values.
+              '"MisMatch" – Gives the Source index of mismatched value, if any. 
+              '"ErrorMsg" – Gives the Error message, if any.
+'Author       : Sandeep
+
+Function EnoviaPDT_CompareArrays(aAppValues,aExcelValues)
+  
+  Dim j, sMisMatch, sErrorMessage, oMatchedFieldsDict, aMatchedValues, bUnequalFlag, i, k
+  
+  j=0
+  sMisMatch = ""
+  sErrorMessage = ""
+  Set oMatchedFieldsDict = CreateObject("Scripting.Dictionary")
+  
+  If Ubound(aAppValues) >= Ubound(aExcelValues) Then
+    ReDim aMatchedValues(Ubound(aAppValues))
+  else
+    ReDim aMatchedValues(Ubound(aExcelValues))
+  End If  
+  
+  bUnequalFlag = False
+  If Ubound(aAppValues) <> Ubound(aExcelValues) Then  'Check if length is not equal
+    sErrorMessage = sErrorMessage&"Number of fields in Application do not match with those in Excel Sheet "
+    Log.Warning sErrorMessage
+    bUnequalFlag = True
+  End If
+  
+  On Error Resume Next
+  k = 0
+  For i=0 to Ubound(aAppValues)
+   If cint(aAppValues(i)) <> cint(aExcelValues(i)) Then 'Check for mismatch in values
+    Exit For
+   else
+    aMatchedValues(k) = aAppValues(i)
+    K = K+1  
+   End If
+  Next
+  Redim Preserve aMatchedValues(k-1)
+
+'  If Err.Number <> 0 Then
+'    sErrorMessage = sErrorMessage&"Run Time Error: "&Err.Number&" : "&Err.Description
+'    Log.Warning sErrorMessage 
+'  End If
+  
+  If i <= Ubound(aAppValues) Then
+    sMisMatch = aAppValues(i)  
+  End If
+  
+  If bUnequalFlag = True and  sMisMatch = "" Then
+    sMisMatch = aExcelValues(i)
+  End IF
+  
+  oMatchedFieldsDict.add "Array",aMatchedValues
+  oMatchedFieldsDict.add "MisMatch",sMisMatch
+  oMatchedFieldsDict.add "ErrorMsg",sErrorMessage
+  
+  Set EnoviaPDT_CompareArrays = oMatchedFieldsDict
+  
+  EnoviaPDT_ClearVariable j
+  EnoviaPDT_ClearVariable sMisMatch
+  EnoviaPDT_ClearVariable sErrorMessage
+  EnoviaPDT_ClearVariable oMatchedFieldsDict
+  EnoviaPDT_ClearVariable aMatchedValues
+  EnoviaPDT_ClearVariable bUnequalFlag
+  EnoviaPDT_ClearVariable i
+  EnoviaPDT_ClearVariable k 
+  
+End Function
+
+'Description  : Function to add a new row in Local Table and Select Change value
+'Inputs       : None
+'Output       : None
+'Author       : Sandeep
+
+Sub EnoviaPDT_AddNewRow_Table
+  
+  Dim oAddButton, oInsertButton, oChangeCell, oChangeCellActual, oChangeCell_Select 
+   
+  Set oAddButton = objGetObject(OR_EnoviaPDT_TablesAddBtn,"","") 'Click on Add button
+  If (oAddButton IS Nothing) = False Then
+    oAddButton.Click
+  End If
+    
+  Set oInsertButton = objGetObject(OR_EnoviaPDT_TablesInsertAboveLnk,"","")  'Insert New row
+  If (oInsertButton IS Nothing) = False Then
+    oInsertButton.Click
+  End If
+  Delay 1500
+  
+  Set oChangeCell = objGetObject(OR_EnoviaPDT_TablesColChangeCell,"","")  'Get Label Cell for Change column
+  If (oChangeCell IS Nothing) = False Then
+    Set oChangeCellActual = EnoviaPDT_GetChild_TablesnNotes(oChangeCell,True)  'Get Actual Cell Change column
+    oChangeCellActual.ScrollintoView()
+    oChangeCellActual.Click
+  End If
+ 
+  Set oChangeCell_Select = objGetObject(OR_EnoviaPDT_TablesColChangeSel,"","")
+  If (oChangeCell_Select IS Nothing) = False Then
+    oChangeCell_Select.ClickItem(1)
+  End If
+  
+  Delay 500
+  
+  EnoviaPDT_ClearVariable oAddButton
+  EnoviaPDT_ClearVariable oInsertButton
+  EnoviaPDT_ClearVariable oChangeCell
+  EnoviaPDT_ClearVariable oChangeCellActual
+  EnoviaPDT_ClearVariable oChangeCell_Select 
+  
+End Sub
+
+'Description  : Function to get all mandatory fields from the Application
+'Inputs       : oParent - Parent Object
+'             : sAppPageName - name of the page where the objects are to be found
+'             : nSearchDepth - Depth at which search has to be performec
+'Output       : Array of source indices of the all the found fields
+'Author       : Sandeep
+
+Function EnoviaPDT_GetAllMandatoryFieldsFromApp(oParent,sAppPageName,nSearchDepth)
+
+  Dim oMandFieldWithSI, oFieldCollection, aLabelObjects, aValToConsider, oRegEx
+  
+  Set oMandFieldWithSI = CreateObject("Scripting.Dictionary")
+  
+  oFieldCollection = oParent.FindAllChildren("ObjectType","Cell",nSearchDepth) 'Find all children of type Cell
+  ReDim aLabelObjects(Ubound(oFieldCollection))
+  aValToConsider = Array("Create","Attributes","Copy","Master") 'These Values need a different set of conditions to work with
+  
+  If EnoviaPDT_CheckStringValinArray(aValToConsider,sAppPageName) Then
+  
+    Set oRegEx = New RegExp
+    oRegEx.Pattern = "Label*"
+    oRegEx.IgnoreCase = "True"
+    
+    i=0
+    For j = Ubound(oFieldCollection) to 0 Step -1
+      If oRegEx.Test(oFieldCollection(j).ClassName) Then 
+        If oFieldCollection(j).Childcount > 0 Then 
+           If oFieldCollection(j).Child(0).CurrentStyle.fontStyle = "italic" Then 'Get only those Children with Class Label
+            Set aLabelObjects(i) = oFieldCollection(j)
+            i = i+1
+           End IF 
+        End if 
+      End If
+    Next
+  Else
+    i=0
+    For j = Ubound(oFieldCollection) to 0 Step -1
+      If oFieldCollection(j).RowIndex = 1 and oFieldCollection(j).ClassName <> "mx_sizer" and oFieldCollection(j).ContentText <> "" and oFieldCollection(j).tagName = "TH" and oFieldCollection(j).CurrentStyle.fontStyle = "italic" Then 'Conditions to get only the column headers in Table
+        Set aLabelObjects(i) = oFieldCollection(j)
+        i = i+1
+      End If
+    Next 
+  End If
+  
+  ReDim Preserve aLabelObjects(i-1)
+  
+  For i = 0 to Ubound(aLabelObjects)
+    If aLabelObjects(i).clientHeight > 0 Then
+       oMandFieldWithSI.add aLabelObjects(i).SourceIndex, aLabelObjects(i).ContentText 'Get the sourceindex of the objects into an array
+    End If
+  Next
+
+  Set EnoviaPDT_GetAllMandatoryFieldsFromApp = oMandFieldWithSI
+  
+  EnoviaPDT_ClearVariable oMandFieldWithSI
+  EnoviaPDT_ClearVariable oFieldCollection
+  EnoviaPDT_ClearVariable aLabelObjects
+  EnoviaPDT_ClearVariable aValToConsider
+  EnoviaPDT_ClearVariable oRegEx
+  
+End Function
+
+
+'Description  : Function to get Child Object under a specific Table/Cell structure
+'Inputs       : Parent Object
+'Output       : Child Object
+'Author       : Sandeep
+
+Function EnoviaPDT_GetChild(oParentobj)
+
+  On Error Resume Next
+  Dim nCount, oChildobject, oChildofChild, oReqdObject, oRetObj
+  
+  nCount=oParentobj.ChildCount
+  if nCount > 0 then
+    'Set objCell=oParentobj.Child(nCount-1) 'Get the first Child 
+    For j = 0 to nCount-1
+      Set oChildobject = oParentobj.child(j)
+      if (oChildobject.ObjectType="Table") then 'If objecttype is table traverse to get the child 
+        K=0
+        Do While k <= oChildobject.ChildCount-1
+          Set oChildofChild = oChildobject.child(k)
+          If oChildofChild.ObjectType = "Cell" Then
+            For l = 0 to oChildofChild.ChildCount-1
+              Set oReqdObject = EnoviaPDT_CheckforReqdField(oChildofChild.Child(l),oParentobj)
+              If oReqdObject Is Nothing = False Then
+                Set oRetObj = oReqdObject
+                Exit For
+              End if
+            Next      
+          else  
+            Set oReqdObject = EnoviaPDT_CheckforReqdField(oChildofChild,oParentobj)
+            If oReqdObject Is Nothing = False Then
+              Set oRetObj = oReqdObject
+              'Exit Function
+            End if
+          End If
+          K = K+1
+          If isObject(oRetObj) Then
+            Exit Do
+          End If
+        Loop
+      else if oChildobject.ObjectType="Select" or oChildobject.ObjectType="Textbox" or oChildobject.ObjectType="Textarea" Then 
+        Set oRetObj = oChildobject
+        'Exit Function
+      else If oChildobject.ObjectType="Panel" then 'If objecttype is Panel, check object type of child and return first Child   
+        If oChildobject.ChildCount = 1 Then  'Only for Panel with one child
+          Set oChildofChild = oChildobject.Child(0)
+          If oChildofChild.ObjectType  = "Textarea" or oChildofChild.ObjectType  = "Textbox" Then
+            Set oRetObj = oChildofChild
+            'Exit Function
+          else If oChildofChild.ObjectType  = "Image" Then 
+            Set oRetObj = oChildobject
+            'Exit Function
+          End If  
+          End If
+        else
+          Set oRetObj = oChildobject  
+        End If
+      End If      
+      End If   
+      end if
+    Next  
+  else
+   'Log.Message "No Child Exists for the object: "&oParentobj.Name
+   Set oRetObj = oParentobj 'No Child found for Parent object
+  end if
+  
+  If IsEmpty(oRetObj) Then  'Does not have any required Child
+    Set oRetObj = oParentobj
+  End If  
+  
+  If Err.Number > 0 THen
+     Set oRetObj = Nothing
+  End If
+  
+  Set EnoviaPDT_GetChild = oRetObj
+  
+  EnoviaPDT_ClearVariable nCount
+  EnoviaPDT_ClearVariable oChildobject
+  EnoviaPDT_ClearVariable oChildofChild
+  EnoviaPDT_ClearVariable oReqdObject
+  EnoviaPDT_ClearVariable oRetObj
+End Function
+
+'Description  : Function to check type of the passed object and return an object based on object type
+'Inputs       : oReqdObject - Object to be checked
+'             : oParentobj - Parent of oReqdObject
+'Output       : Child Object
+'Author       : Sandeep
+
+Function EnoviaPDT_CheckforReqdField(oReqdObject,oParentobj)
+
+  If oReqdObject.ObjectType="Select" or oReqdObject.ObjectType="Textbox" or oReqdObject.ObjectType="Textarea" or oReqdObject.ObjectType = "Checkbox" Then
+    Set EnoviaPDT_CheckforReqdField = oReqdObject
+    Exit Function  
+  Else If oReqdObject.ObjectType = "Image" Then 'If Image return the parent object
+    Set EnoviaPDT_CheckforReqdField = oParentobj
+    Exit Function
+  Else If oReqdObject.ObjectType = "RadioButton" Then
+    If oReqdObject.wChecked = "True" Then
+      Set EnoviaPDT_CheckforReqdField = oReqdObject
+      Exit Function
+    End If
+  End If  
+  End If
+  End If
+  
+  Set EnoviaPDT_CheckforReqdField = Nothing
+End Function
+
+
+'Description  : Function to get the first field object given a Label field in Tables/Notes page 
+'Inputs       : Label Cell Object
+'Output       : Corresponding Field Object
+'Author       : Sandeep
+
+Function EnoviaPDT_GetChild_TablesnNotes(FieldCollectionObj,bTopDownSearch)
+ 
+  Dim nColindex, nScreenLeft, oParentObj, aReqdCells, oFieldobj, nStart, nStop, nStep
+  
+  nColindex = FieldCollectionObj.ColumnIndex 'Column index of the Label object
+  nScreenLeft = FieldCollectionObj.ScreenLeft
+  set oParentObj = FieldCollectionObj.Parent 'Get its Parent objGetObject(TablesPage_Frame,"","") 
+  
+  'Required Parent object does not have word 'Head' in its idstr property. Find that Parent object
+  While instr(1,oParentObj.idStr,"Head",1) > 0  
+    Set oParentObj = oParentObj.Parent
+  Wend
+  'Get the all the Data cells under the Parent   
+  oParentObj.Refresh   
+  aReqdCells = oParentObj.FindAll(Array("tagName","ColumnIndex"),Array("TD",nColindex/2),10,true)
+  
+  If bTopDownSearch = True Then
+    nStart = Ubound(aReqdCells)
+    nStop = 0
+    nStep = -1 
+  else
+    nStart = 0
+    nStop = Ubound(aReqdCells)
+    nStep = 1 
+  End If
+  
+  For x = nStart to nStop Step nStep
+    If aReqdCells(x).clientHeight > 0 and (nScreenLeft MOD aReqdCells(x).ScreenLeft) <= 1 Then 'Required object will have clientHeight greater than 0
+      Set oFieldobj = aReqdCells(x)
+      Exit For
+    End If
+  Next
+  If IsObject(oFieldobj) = False Then
+    Log.Warning "TD Field not found for "&FieldCollectionObj.ContentText
+    Set oFieldobj = Nothing
+  End If  
+
+  Set EnoviaPDT_GetChild_TablesnNotes = oFieldobj  'Return the found object
+  
+  EnoviaPDT_ClearVariable nColindex
+  EnoviaPDT_ClearVariable nScreenLeft
+  EnoviaPDT_ClearVariable oParentObj
+  EnoviaPDT_ClearVariable aReqdCells
+  EnoviaPDT_ClearVariable oFieldobj
+  EnoviaPDT_ClearVariable nStart
+  EnoviaPDT_ClearVariable nStop
+  EnoviaPDT_ClearVariable nStep
+  
+End Function
+
+'Description  : Function to remove the first row in the Tables page
+'Inputs       : sPartType - Part type being worked on
+'             : sSheetName - Name of the sheet being worked on
+'             : oParent - Parent Table object
+'             : sFirstColName - Firstcolumn name in Table with the checkbox
+'Output       : None
+'Author       : Sandeep
+
+Sub EnoviaPDT_Table_CleanUp(sPartType,sSheetName,oParent,sFirstColName)
+
+  Dim aFieldColl, oActualField, aCheckBox, oActionsMenu, oOKbutton, oRemoveBtn
+  
+  aFieldColl = oParent.FindAllChildren(Array("tagName","contentText"),Array("TH",sFirstColName),10)
+  
+  
+  For i = Ubound(aFieldColl) to 0 Step -1
+    If aFieldColl(i).ClientHeight > 0 Then  'Compare with content Text property 
+      If sPartType = "Finished Product Part" Then
+        Set oActualField = EnoviaPDT_GetChild_TablesnNotes(aFieldColl(i),False) 'For FPP new row is added below existing row
+      else
+        Set oActualField = EnoviaPDT_GetChild_TablesnNotes(aFieldColl(i),True)    
+      End if
+      Exit For
+    End If   
+  Next
+  
+  aCheckBox = oActualField.FindAllChildren("ObjectType","Checkbox",4)
+  
+  If Ubound(aCheckBox) = 0 Then
+    aCheckBox(0).Click
+  else
+    Log.Warning "Checkbox not found to Delete Table Row"  
+  End If
+  Set aCheckBox = Nothing
+  Set oActualField = Nothing
+  
+  If strcomp(sSheetName,"Tables",1) = 0 Then
+    Set oActionsMenu = objGetObject(OR_EnoviaTB_ActionBtn,"","")
+    If oActionsMenu Is Nothing = False Then
+      oActionsMenu.Click
+      Set oRemoveRow = objGetObject(OR_EnoviaTB_ActionRemoveRowPnl,"","")
+      If oRemoveRow Is Nothing = False Then
+        oRemoveRow.Click
+        Set oRemoveRow = Nothing
+        Delay 1000
+        Set oOKbutton = objGetObject(OR_EnoviaPDT_sWarningOKBtn,"","")
+        If (oOKbutton Is Nothing) = False Then
+          oOKbutton.Click
+          Set oOKbutton = Nothing
+        End If
+      else
+        Log.Warning "Remove Row button is not available" 
+      End If  
+    else
+      Log.Warning "Actions Menu could not be found"  
+    End If  
+  else
+    Set oRemoveBtn = objGetObject(OR_EnoviaTB_RemoveIconBtn,"","")
+    If oRemoveBtn Is Nothing = False Then
+      oRemoveBtn.Click
+    End If  
+    Set oRemoveBtn = Nothing
+  End if  
+  Set oActionsMenu = Nothing
+  
+  EnoviaPDT_ClearVariable aFieldColl
+  EnoviaPDT_ClearVariable oActualField
+  EnoviaPDT_ClearVariable aCheckBox
+  EnoviaPDT_ClearVariable oActionsMenu
+  EnoviaPDT_ClearVariable oOKbutton
+  EnoviaPDT_ClearVariable oRemoveBtn
+  EnoviaPDT_ClearVariable oRemoveRow
+
+End Sub
+
+'Description  : Function to fetch all enabled labels from parent object
+'Inputs       : Parent object, Search dept, object type
+'Output       : Dictionary
+
+Function EnoviaPDT_GetSourceIndexesFromApp(oParent,iSearchDepth,sObjectType)
+  
+  Set oFieldWithSI = CreateObject("Scripting.Dictionary")
+  oFieldCollection = oParent.FindAllChildren("ObjectType", sObjectType,iSearchDepth) 'Find all children of type Cell
+
+  For j = Ubound(oFieldCollection) to 0 Step -1
+    If oFieldCollection(j).Enabled = True Then
+      oFieldWithSI.add oFieldCollection(j).SourceIndex, oFieldCollection(j).ContentText 'Get the sourceindex of the objects into an array
+    End if
+  Next
+
+  Set EnoviaPDT_GetSourceIndexesFromApp = oFieldWithSI
+End Function 
+
+'Description  : Function to Check whether a string value exits in an array
+'Inputs       : aStringVal - Array of strings
+'             : sValueTOCheck - Value to be searched
+'Output       : Boolean, True if string value exists; else false
+'Author       : Sandeep
+
+Function EnoviaPDT_CheckStringValinArray(aStringVal,sValueTOCheck)
+  Dim str
+  
+  For each str in aStringVal
+    If strcomp(str,sValueTOCheck,1) = 0 Then
+      EnoviaPDT_CheckStringValinArray = True
+      Exit Function
+    End If
+  Next
+  EnoviaPDT_CheckStringValinArray = False
+  
+  EnoviaPDT_ClearVariable str
+End Function
+
+
+'Description  : Function to add a new row in Table Weights and Select given field Value
+'Inputs       : sPartType - Part Type being run
+'             : oParent - Parent object representing the Table
+'             : oDoneButton - Done button object
+'             : sFieldName - Name of the field to be entered
+'             : sFieldValue - Value to be entered in the field
+'Output       : None
+'Author       : Sandeep
+
+Function EnoviaPDT_AddNewRowWtChar(sPartType,oParent,oDoneButton,sFieldName,sFieldValue)
+
+  Dim oCreateNewIcon, oGrossWt, oActualGrossWt, oFloatingWnd, oReqfield
+  
+  Set oCreateNewIcon = objGetObject(OR_EnoviaPDTAddRowImg,"","")
+  
+  If oCreateNewIcon Is Nothing = False Then
+    oCreateNewIcon.Click
+  End If  
+  
+  Set oGrossWt = oParent.FindChild("ContentText",sFieldName,6)
+  If oGrossWt.Exists Then
+    oParent.Click   'Move to the Left to make the field visible
+    oParent.Keys "[Left]"
+    oParent.Keys "[Left]"
+    
+    If sPartType = "Finished Product Part" Then
+      Set oActualGrossWt = EnoviaPDT_GetChild_TablesnNotes(oGrossWt,False)  'For FPP new row is added below existing row
+    else
+      Set oActualGrossWt = EnoviaPDT_GetChild_TablesnNotes(oGrossWt,True)
+    End If
+    oActualGrossWt.Click
+    Delay 1000
+    Set oFloatingWnd = objGetObject(OR_EnoviaPDT_FloatingWndPnl,"",5000)
+    If oFloatingWnd Is Nothing = False Then
+      Set oReqfield = oFloatingWnd.Child(oFloatingWnd.ChildCount-1)
+      oReqfield.Keys sFieldValue
+      oDoneButton.Click
+    else
+      Log.Warning "Could not find the floating window"
+    End If  
+  else
+    Log.Warning "Could not find the Field "&sFieldName
+  End If   
+  
+  EnoviaPDT_ClearVariable oCreateNewIcon
+  EnoviaPDT_ClearVariable oGrossWt
+  EnoviaPDT_ClearVariable oActualGrossWt
+  EnoviaPDT_ClearVariable oFloatingWnd
+  EnoviaPDT_ClearVariable oReqfield
+  
+End Function
+
+
+'Description  : Function to Handle Mandatory fields for Tables Weight Page
+'Inputs       : oParent - Parent object to search for the fields
+'               sField - Field Name
+'               oActualField - Actual Field object
+'               oReqfield - Field obtained from the floating panel
+'               oInputDict - Field and its input mapped dictionary
+'               oDoneButton - Done Button object
+      
+'Output       : Dictionary object with 3 keys-
+'               FieldFound - Integer, whether the field was found or not
+'               FailFlag - Boolean, check if there is any failure
+'               ErrorMsg - string, error message
+'Author       : Sandeep
+Function EnoviaPDT_CheckMandatoryTableWt(oParent,sField,oActualField,oReqfield,oInputDict,oDoneButton)
+  
+  Dim oResultsDict, sErrorMessage, nFieldFound, bFailFlag, sExisitngVal, oParentTable, oReqCell
+  
+  Set oResultsDict = CreateObject("Scripting.Dictionary")
+  sErrorMessage = ""
+  nFieldFound = 0
+  bFailFlag = ""
+  
+  If oReqfield.ObjectType = "Select" Then
+    nFieldFound = nFieldFound+1
+    sExisitngVal = Cint(oReqfield.wSelectedItem) 
+
+    If oParent.FindChild("ObjectIdentifier","iconStatusError_gif",10).Exists Then
+      bFailFlag = False
+      Set oParentTable = objGetObject(OR_EnoviaPDT_TablesBodyTbl,"","")
+      Set oReqfield = EnoviaPDT_GetFieldInFloatingWnd(oParentTable,oActualField)
+      If oReqfield Is Nothing Then 'Field is not Found
+        sErrorMessage = sErrorMessage&"Could not FInd the Child Object for "&sField
+        Log.Warning sErrorMessage
+        bFailFlag = True
+      else
+        If oInputDict.Exists(sField) Then 'DropDown has to be set to non empty value
+          If IsNumeric(oInputDict.item(sField)) Then
+            oReqfield.Clickitem Cint(oInputDict.item(sField))
+          else
+            oReqfield.Clickitem oInputDict.item(sField)  
+          End If
+        else
+          oReqfield.Clickitem(1)
+        End If      
+        oDoneButton.Click
+        Delay 1000
+      End If  
+    else
+      bFailFlag = True    
+    End If
+  else If oReqfield.ObjectType = "Textarea" or oReqfield.ObjectType  = "Textbox" Then
+    oReqfield.SetText ""
+    oDoneButton.Click
+    If oParent.FindChild("ObjectIdentifier","iconStatusError_gif",10).Exists Then
+      nFieldFound = nFieldFound+1
+      bFailFlag = False 
+      Set oParentTable = objGetObject(OR_EnoviaPDT_TablesBodyTbl,"","")
+      Set oReqfield = EnoviaPDT_GetFieldInFloatingWnd(oParentTable,oActualField)
+      If oReqfield Is Nothing Then 'Field is not Found
+        sErrorMessage = sErrorMessage&"Could not FInd the Child Object for "&sField
+        Log.Warning sErrorMessage
+        bFailFlag = True
+      else  
+        If oInputDict.Exists(sField) Then 'set to non empty value
+          If IsNumeric(oInputDict.item(sField)) Then
+            oReqfield.SetText Cint(oInputDict.item(sField))
+          else
+            oReqfield.SetText oInputDict.item(sField)  
+          End If
+        else
+          oReqfield.SetText "2" 
+        End if
+        oDoneButton.Click
+        Delay 1000
+       End If   
+    else
+      bFailFlag = True
+    End If
+  End If   
+  End If
+  
+  oResultsDict.add "FieldFound",nFieldFound
+  oResultsDict.add "FailFlag",bFailFlag
+  oResultsDict.add "ErrorMsg",sErrorMessage
+  
+  Set EnoviaPDT_CheckMandatoryTableWt = oResultsDict
+  
+  EnoviaPDT_ClearVariable oResultsDict
+  EnoviaPDT_ClearVariable sErrorMessage
+  EnoviaPDT_ClearVariable nFieldFound
+  EnoviaPDT_ClearVariable bFailFlag
+  EnoviaPDT_ClearVariable sExisitngVal
+  EnoviaPDT_ClearVariable oParentTable
+  EnoviaPDT_ClearVariable oTypeAhead_TextNode
+  EnoviaPDT_ClearVariable oReqCell
+  
+End Function
+
+'Description  : Function to Handle Mandatory fields for Tables Page
+'Inputs       : oParent - Parent object to search for the fields
+'               sField - Field Name
+'               oActualField - Actual Field object
+'               oReqfield - Field obtained from the floating panel
+'               oInputDict - Field and its input mapped dictionary
+'               oDoneButton - Done Button object  
+'               sAlertMsg - Message to be validated in the Alert box           
+'Output       : Dictionary object with 3 keys-
+'               FieldFound - Integer, whether the field was found or not
+'               FailFlag - Boolean, check if there is any failure
+'               ErrorMsg - string, error message
+'Author       : Sandeep
+Function EnoviaPDT_CheckMandatoryTables(oParent,sField,oActualField,oReqfield,oInputDict,oDoneButton,sAlertMsg)
+  
+  Dim oResultsDict, sErrorMessage, nFieldFound, bFailFlag, sExisitngVal, oParentTable, oTypeAhead_TextNode, oReqCell
+    
+  Set oResultsDict = CreateObject("Scripting.Dictionary")
+  sErrorMessage = ""
+  nFieldFound = 0
+  bFailFlag = False
+  
+  oReqfield.ScrollIntoView
+  
+  If oReqfield.ObjectType = "Textarea" or oReqfield.ObjectType  = "Textbox" Then
+    nFieldFound = nFieldFound+1 
+    Delay 1000
+    If oParent.FindChild("ObjectIdentifier","iconStatusError_gif",10).Exists = False Then 'Check if the Error Status image is present for the last field
+       bFailFlag = True
+      'Log.Error "Mandatory Field "&sField&" is not working as expected"
+    End If
+    If oInputDict.Exists(sField) Then
+      oReqfield.Keys oInputDict.item(sField)
+    else
+      oReqfield.Keys "Area"
+    End If 
+        
+    Set oTypeAhead_TextNode = objGetObject(OR_EnoviaPDT_TypeAheadTxtNd,"",3000)
+    If (oTypeAhead_TextNode Is Nothing) = False Then
+      oTypeAhead_TextNode.Click
+      Set oTypeAhead_TextNode = Nothing
+      Delay 3000
+    End if
+        
+  Else If oReqfield.ObjectType = "Select" Then
+    nFieldFound = nFieldFound+1 
+    sExisitngVal = Cint(oReqfield.wSelectedItem) 
+    If oReqfield.wText = "" or Left(oReqfield.wItemList,1) = oReqfield.wListSeparator Then 'Check if dropdown can be set to an empty value
+      If oInputDict.Exists(sField) Then 'DropDown has to be set to non empty value before setting into empty value
+        If IsNumeric(oInputDict.item(sField)) Then
+          oReqfield.Clickitem Cint(oInputDict.item(sField))
+        else
+          oReqfield.Clickitem oInputDict.item(sField)  
+        End If
+      else
+        oReqfield.Clickitem(1)
+      End If 
+      oDoneButton.Click
+      delay 1000
+      Set oParentTable = objGetObject(OR_EnoviaPDT_TablesBodyTbl,"","")
+      Set oReqCell = oParentTable.Cell(oActualField.RowIndex, oActualField.ColumnIndex)
+      oReqCell.click (oReqCell.Width)*0.75,(oReqCell.offsetHeight)*0.5
+          
+      If Left(oReqfield.wItemList,1) = oReqfield.wListSeparator Then
+        oReqfield.ClickItem(0) 'Set empty value
+      End IF
+      oDoneButton.Click
+      If EnoviaPDT_HandlingAlertWindow(sAlertMsg) = False Then 'Handles Alert Window and checks for displayed Message
+        Log.Warning "The Alert Pop up displayed is not for the expected field "&sField
+        bFailFlag = True
+      End If
+    End If 
+  End If
+  End if
+  oResultsDict.add "FieldFound",nFieldFound
+  oResultsDict.add "FailFlag",bFailFlag
+  oResultsDict.add "ErrorMsg",sErrorMessage
+  
+  Set EnoviaPDT_CheckMandatoryTables = oResultsDict
+  
+  EnoviaPDT_ClearVariable oResultsDict
+  EnoviaPDT_ClearVariable sErrorMessage
+  EnoviaPDT_ClearVariable nFieldFound
+  EnoviaPDT_ClearVariable bFailFlag
+  EnoviaPDT_ClearVariable sExisitngVal
+  EnoviaPDT_ClearVariable oParentTable
+  EnoviaPDT_ClearVariable oTypeAhead_TextNode
+  EnoviaPDT_ClearVariable oReqCell
+  
+End Function
+
+'Description: Function to add Passed LogstepData field wise
+'Input: oFieldWithSI - Dictionary object with Field names and their source index
+'     : oMatchedFieldsDict - Dictionary object with all the matched source indices
+'Output: None
+'Author: Sandeep
+
+Function EnoviaPDT_LogPassedStepsFieldWise(oFieldWithSI,oMatchedFieldsDict)
+
+  DIm aMatchedFields, y
+  
+  aMatchedFields = oMatchedFieldsDict.item("Array")
+  For y = 0 to Ubound(aMatchedFields)
+     Call LogStepData (g_pdt_CurrentCategory&"-"&g_pdt_CurrentTab&": "&oFieldWithSI.item(Cint(aMatchedFields(y)))&" is in expected order",True,"","")
+     Log.Message(oFieldWithSI.item(Cint(aMatchedFields(y)))&" is in expected order")
+     g_isBlocked = False
+  Next
+  
+  EnoviaPDT_ClearVariable aMatchedFields
+  EnoviaPDT_ClearVariable y
+End Function
+
+'Description  : Function to enter the passed input value based on Object Type
+'Inputs       : oFieldobject - Object into which Data is to be entered   
+'               Input Value - Input to be entered into the field
+'Output       : None               
+'Author       : Sandeep  
+
+Function EnoviaPDT_CheckTypeNInput(oFieldobj,sInputVal)
+  
+  Dim sSearchURL, oParent, oTypeAhead_TextNode, oDone_Link 
+  sSearchURL = ""
+  If (BuiltIn.IsSupported(oFieldobj, "scrollIntoView") = True) Then
+    oFieldobj.scrollIntoView()
+  End If
+  Delay 1000
+  oFieldobj.Refresh
+  If oFieldobj.ObjectType  = "Textarea" or oFieldobj.ObjectType  = "Textbox"  Then
+    oFieldobj.Keys sInputVal
+    If aqObject.IsSupported(oFieldobj,"start") Then 'For Handling the Type Ahead Fields
+      Set oParent = oFieldobj.Parent
+      While oParent.ObjectType <> "Table" 'Loop until Parent object of type Table is found
+       Set oParent = oParent.Parent
+      Wend
+      If oParent.ClassName = "form" Then
+        Set oParent = oFieldobj.Parent
+      End If
+      If oParent.FIndChildByXpath("//input[contains(@onclick, 'Chooser')]").Exists Then 'Check if chooser(ellipses button) exists 
+        If IsEmpty(objGetPage(g_CreatePage_URL)) = False Then   'Set the URL for searching the object
+          sSearchURL = g_CreatePage_URL
+        else If IsEmpty(objGetPage(g_CopyPage_URL)) = False Then
+          sSearchURL = g_CopyPage_URL
+        End If  
+        End If
+        Set oTypeAhead_TextNode = objGetObject(OR_EnoviaPDT_TypeAheadTxtNd,sSearchURL,3000) 'Look for Type Ahead Text Node
+        If (oTypeAhead_TextNode Is Nothing) = False Then
+          oTypeAhead_TextNode.Click
+          Delay 1500
+          Set oTypeAhead_TextNode = Nothing
+        End IF
+        Set oDone_Link = objGetObject(OR_EnoviaPDT_TypeAheadDoneLnk,sSearchURL,1000)  'Look for Type Ahead Done Link
+        If (oDone_Link Is Nothing) = False Then
+          oDone_Link.Click
+          Set oDone_Link = Nothing
+        End If
+      End If
+      Set oParent = Nothing  
+    End If  
+  else If oFieldobj.ObjectType  = "Select" Then
+    oFieldobj.ClickItem sInputVal
+  End If
+  End If
+  'Cleanup all the variables
+  EnoviaPDT_ClearVariable sSearchURL
+  EnoviaPDT_ClearVariable oParent
+  EnoviaPDT_ClearVariable oTypeAhead_TextNode
+  EnoviaPDT_ClearVariable oDone_Link 
+  
+End function
+
+'Description  : Function to read existing value of a Object based on Objecttype
+'Inputs       : oFieldobject - Object whose value is to be read
+'Output       : Returns the existing value of the field               
+'Author       : Sandeep  
+
+Function EnoviaPDT_ReadExistingValue(oFieldobj)
+  
+  Dim nCount, x, y, arrChkBox, sRetVal
+  
+  If oFieldobj.ObjectType  = "Textarea" or oFieldobj.ObjectType  = "Textbox" Then
+    sRetVal = oFieldobj.value
+  else If oFieldobj.ObjectType  = "Select" Then
+    If oFieldobj.type = "select-multiple" Then  'Incase of a multi-Select list
+      sRetVal = oFieldobj.wSelectedItems
+    else
+      sRetVal = oFieldobj.wText      
+    End if  
+  else If oFieldobj.ObjectType  = "Panel" Then
+    nCount=oFieldobj.ChildCount 'Get count of all children under the panel
+    If nCount = 0 Then
+      sRetVal = oFieldobj.ContentText 'Return the contentText of the parent if no child
+    else If nCount > 1 Then
+      If oFieldobj.Child(0).ObjectType = "RadioButton"  Then  'If the object is of type RadioButton
+        For x=0 to nCount-1 'Loop through the buttons and check which button has been selected
+          Set oRadio = oFieldobj.Child(x)
+          if oRadio.wChecked = "True"  then
+            Exit For
+          end if
+        NEXT
+        If x <= nCount-1 Then 
+          sRetVal = oRadio.Value  'Return the wChecked property value for that Radio button
+        else
+          sRetVal = Null
+        End If
+      else If oFieldobj.Child(0).ObjectType = "Checkbox" Then   'If the object is of type RadioButton
+        y = 0
+        ReDim arrChkBox(nCount-1)
+        For x = nCount-1 to 0 Step -1 'Loop through the children and find all the checked objects
+          Set ocheckBox = oFieldobj.Child(x)
+          if ocheckBox.Checked = "True"  then
+            arrChkBox(y) = " "&ocheckBox.Value  'Get the value property of the checkbox object
+            y = y+1
+          end if
+        NEXT
+        ReDim Preserve arrChkBox(y-1)
+        sRetVal = Trim(Join(arrChkBox,",")) 'Join all the values for easier comparison
+      End If  
+      End If  
+    else If oFieldobj.Child(nCount-1).ObjectType = "Image" Then
+      sRetVal = oFieldobj.ContentText
+    else if oFieldobj.Child(nCount-1).ObjectType = "Textarea" or oFieldobj.Child(nCount-1).ObjectType  = "Textbox" Then
+      sRetVal = oFieldobj.Child(nCount-1).Value
+    End If  
+    End If  
+    End If
+    End If    
+  else If oFieldobj.ObjectType  = "Cell" Then
+    sRetVal = oFieldobj.ContentText
+  else If oFieldobj.ObjectType  = "Checkbox" Then
+    sRetVal = oFieldobj.Checked
+  else If oFieldobj.ObjectType  = "RadioButton" Then
+      sRetVal = oFieldobj.Value  
+  else
+    sRetVal = Null
+    Log.Warning "Existing Value could not be retireved"  
+  End If
+  End if    
+  End If  
+  End If
+  End If
+  End If
+  
+  EnoviaPDT_ReadExistingValue = sRetVal 'Return the value obtained above
+  
+  EnoviaPDT_ClearVariable nCount
+  EnoviaPDT_ClearVariable x
+  EnoviaPDT_ClearVariable y
+  EnoviaPDT_ClearVariable arrChkBox
+  EnoviaPDT_ClearVariable sRetVal
+End function
+
+
+'Description  : Function to get the field withing the Floating panel in Tables like tabs
+'Inputs       : oParentTable - Parent Table of the page being worked on
+'             : oActualField - Cell value to be clicked to access Floating Panel
+'Output       : Returns the found Field.              
+'Author       : Sandeep  
+
+Function EnoviaPDT_GetFieldInFloatingWnd(oParentTable,oActualField)
+
+  Dim oReqCell, oFloatingWnd
+  
+  Set oReqCell = oParentTable.Cell(oActualField.RowIndex, oActualField.ColumnIndex) 'Get the Cell containg the Field from oParentTable object as dynamic objects seems to lose its state/properties
+  oReqCell.ScrollintoView()
+  oReqCell.click (oReqCell.Width)*0.75,(oReqCell.offsetHeight)*0.5  'Click to ensure the link within the cell is not clicked
+  Set oFloatingWnd = objGetObject(OR_EnoviaPDT_TablesFloatingDivPnl,"",5000)
+  If oFloatingWnd Is Nothing = False THen
+    Set oReqfield = oFloatingWnd.Child(oFloatingWnd.ChildCount-1)
+  else
+    Set oReqfield = Nothing
+  End If
+  Set oFloatingWnd = Nothing
+  
+  Set EnoviaPDT_GetFieldInFloatingWnd = oReqfield
+  
+  EnoviaPDT_ClearVariable oReqCell
+  EnoviaPDT_ClearVariable oFloatingWnd
+  EnoviaPDT_ClearVariable oReqfield
+  
+End Function  
+
+
+'Description  : Function to read the Attributes fields values  
+'Inputs       : sFilePath - Path of the excel file being worked on
+'             : sColumnName - Column Name to fetch the field names from excel
+'             : nSearchDepth - Search Depth 
+'Output       : Returns dictionary object with Field names as keys and their values as values.              
+'Author       : Sandeep  
+
+Function EnoviaPDT_ReadAttributeValues(sFilePath,sColumnName,nSearchDepth)
+
+  set oAttrParent = objGetObject(OR_EnoviaPDT_CreateTbl,"","")  'Get the Attribute parent object to get the values of the fields to compare them with copy page's fields
+  Set oAttrDoneBtn = objGetObject(OR_EnoviaPDT_DoneBtn,"",500)
+  bInEditMode = False 'Check if Attributes page is in edit mode
+  If oAttrDoneBtn Is Nothing = False Then
+    bInEditMode = True 'Set to true if in Edit mode
+  End If
+  aFields = Excel_GetColumnValues("Attributes",sFilePath,sColumnName)'Get Attribute page field names
+  oAttrFieldCollection = oAttrParent.FindAllChildren("ObjectType","Cell",nSearchDepth)  'FInd all children of type cell
+      
+  Set oCellValMapping = CreateObject("Scripting.Dictionary") 'Create a dictionary object
+  For i = 0 to Ubound(aFields) 
+    For j = 0 to Ubound(oAttrFieldCollection)  
+      If UCase(oAttrFieldCollection(j).ContentText) = Ucase(aFields(i)) Then  'Find cells that match the content text
+        Set oActualCell = oAttrParent.cell(oAttrFieldCollection(j).RowIndex,oAttrFieldCollection(j).ColumnIndex+1) 'Get the cell that contains actual field
+        If bInEditMode = True Then  'If in Edit mode get the inner child by calling EnoviaPDT_GetChild
+          oCellValMapping.add aFields(i), EnoviaPDT_ReadExistingValue(EnoviaPDT_GetChild(oActualCell)) 'Add Field name as Key and its value as value
+        Else  'If not in Edit Mode get the value of cell directly without looking for child
+          oCellValMapping.add aFields(i), EnoviaPDT_ReadExistingValue(oActualCell) 'Add Field name as Key and its value as value
+        End If   
+      End If
+    Next
+  Next
+  
+  Set EnoviaPDT_ReadAttributeValues = oCellValMapping
+  
+  EnoviaPDT_ClearVariable oAttrParent
+  EnoviaPDT_ClearVariable oAttrDoneBtn
+  EnoviaPDT_ClearVariable bInEditMode
+  EnoviaPDT_ClearVariable aFields
+  EnoviaPDT_ClearVariable oAttrFieldCollection
+  EnoviaPDT_ClearVariable oCellValMapping
+  
+End Function
+
+'Description  : Function to Read set of values from Table
+'Inputs       : sSearchColumn - Column where the search has to be performed
+'             : aSearchText - Array of all the values to be searched for
+'             : sResultColumn - Column whose values are to be retrieved based on the results of sSearchColumn
+'Output       : Dictionary object with aSearchText values as Keys and sResultColumn values as values              
+'Author       : Sandeep  
+
+Function EnoviaPDT_ReadValFromTables(sSearchColumn, aSearchText, sResultColumn)
+  
+  Dim oParentobj, oHeadTable, oBodyTable, oLabel, oField, oResultLabel, oResultField, oFieldValues
+  
+  Set oFieldValues = CreateObject("Scripting.Dictionary")
+  Set oFilterImg = objGetObject(OR_EnoviaPDT_FilterImg,"",3000) 'Wait For the page to load
+  
+  Set oParentobj = objGetObject(OR_EnoviaPDT_FormulationPartsProsFme,"","")
+  
+  If oParentobj Is Nothing = False Then
+    ' Find table that contains headers
+    Set oHeadTable=oParentobj.FindChild("objectIdentifier","headTable",10)
+    Set oBodyTable=oParentobj.FindChild("objectIdentifier","bodyTable",10)
+  
+    ' Find Column from header table
+    Set oLabel=oHeadTable.FindChild("contentText", sSearchColumn,10)
+      ' Find results column
+    Set oResultLabel = oHeadTable.FindChild("contentText",sResultColumn,10)
+    'Value is in body table but column index is divided by two
+    nColumnIndex=(oLabel.ColumnIndex)/2
+   
+    'Value is in body table but column index is divided by two
+    nResultColumnIndex=(oResultLabel.ColumnIndex)/2
+  
+    For i = 0 to Ubound(aSearchText)
+      aPropNames = Array("ColumnIndex","contentText")
+      aPropValues = Array(nColumnIndex, aSearchText(i)) 
+      Set oField = oBodyTable.FindChild(aPropNames,aPropValues,10) 
+      
+      ' Find Result column by row and column index
+      aPropNames = Array("ColumnIndex","RowIndex")
+      aPropValues = Array(nResultColumnIndex, oField.RowIndex) 
+    
+      Set oResultField = oBodyTable.FindChild(aPropNames,aPropValues,10)
+    
+      oFieldValues.add Replace(aSearchText(i),"*",""),oResultField.ContentText  'Store the search text as key and corresponding field's content text as value
+    
+    Next
+
+    Set EnoviaPDT_ReadValFromTables = oFieldValues  'Return the dictionary
+  Else
+    Log.Warning "Could not find the Page's Parent Object"
+  End If  
+  ' Cleanup  
+  EnoviaPDT_ClearVariable oParentobj
+  EnoviaPDT_ClearVariable oHeadTable
+  EnoviaPDT_ClearVariable oBodyTable
+  EnoviaPDT_ClearVariable oLabel
+  EnoviaPDT_ClearVariable oField
+  EnoviaPDT_ClearVariable oFilterImg
+  EnoviaPDT_ClearVariable oResultLabel
+  EnoviaPDT_ClearVariable oResultField
+  EnoviaPDT_ClearVariable oFieldValues
+
+End Function
+
+'Description  : Function to Prepare validation of Formulation parts and process by collecting values from Attributes of Formulation
+'Inputs       : sFilePath_1 - File Path of the Formulation file
+'             : sSheetName - Sheet name being worked on
+'             : sColumnName - Column Name in excel file containing all field names
+'             : sPartType - Name of the part type
+'Output       : Dictionary object with aSearchText values as Keys and sResultColumn values as values              
+'Author       : Sandeep  
+
+Function EnoviaPDT_PrepForFormulationValidation(sFilePath_1,sSheetName,sColumnName,sPartType)
+
+  Dim sSearchColumn, aSearchText, sResultColumn, sSearchText, sErrorMessage, oFormulationPrepInfo, oFomulationRedBeakerImg,_
+  oBackBtn, oCellValMapping, oFieldValues
+  
+  sSearchColumn = "Type"  'Column where the search is to be performed
+  sSearchText = sPartType   
+  aSearchText = Array("*Formulation","Formulation Part","Formulation Process")  'Values to be searched in sSearchColumn
+  sResultColumn = "Name" 'Column Name where Corresponding values are to be retrieved
+  sErrorMessage = ""
+  Set oFormulationPrepInfo = CreateObject("Scripting.Dictionary")
+  
+  Set oFormulationPartsProsCell = objGetObject(OR_EnoviaPDT_FormulationPartsProsCell,"",500) 
+  
+  If oFormulationPartsProsCell Is Nothing = True Then 'If not in Formulation Page then navigate back
+    Set oBackBtn = objGetObject(OR_EnoviaPDT_BackBtn,"","")
+    oBackBtn.Click
+    Set oBackBtn = Nothing
+    Set oFormulationPartsProsCell = objGetObject(OR_EnoviaPDT_FormulationPartsProsCell,"",3000)
+  End if  
+  
+  If oFormulationPartsProsCell Is Nothing = False Then  'Check if we are on Formulation Page
+    
+    Call EnoviaPDT_NavigateTabsAndLinks("","Attributes")  'Click on Attributes tab
+      
+    Set oCellValMapping = EnoviaPDT_ReadAttributeValues(sFilePath_1,sColumnName,10) 'Read the attribute page values into dictionary
+    Call EnoviaPDT_NavigateTabsAndLinks("","Formulation Parts and Pro...") 'click on Formulation Parts and Process tab
+    Delay 1000
+         
+    If sSheetName = "Attributes" Then 
+      Set oFieldValues = EnoviaPDT_ReadValFromTables(sSearchColumn,aSearchText,sResultColumn) 'Read Name column values from the table
+      Set oRevisionValues = EnoviaPDT_ReadValFromTables(sSearchColumn,aSearchText,"Revision") 'Read revision column value    
+    End if  
+    
+    Set oFilterImg = objGetObject(OR_EnoviaPDT_FilterImg,"",3000)            
+    Call Enovia_GridSearchAndClick(sSearchColumn, sSearchText, sResultColumn) 'Click on the desired link in Table to open Part type
+    
+    If sPartType = "Formulation Process" Then   
+      Set oFormulaMaxCell = objGetObject(OR_EnoviaPDT_FormulaMaxCell,"",5000) 'Wait Until the Max cell object is visible on screen
+    ElseIf sPartType = "Formulation Part" Then
+      Set oFormulaMaxCell = objGetObject(OR_EnoviaPDT_FormulaPartTypeCell,"",5000)
+    End If
+    
+    Call EnoviaPDT_NavigateTabsAndLinks("","Attributes")  'Navigate to Attributes
+  else
+    sErrorMessage = "Could not Navigate to Formulation Part"      
+  End if 
+  
+  'Add all the obtained values into a dictionary
+  oFormulationPrepInfo.add "AttrValueMapping",oCellValMapping
+  oFormulationPrepInfo.add "FormulationNos",oFieldValues
+  oFormulationPrepInfo.add "RevisionValues",oRevisionValues
+  
+  Set EnoviaPDT_PrepForFormulationValidation = oFormulationPrepInfo 'Return Dictionary
+  
+  EnoviaPDT_ClearVariable sSearchColumn
+  EnoviaPDT_ClearVariable aSearchText
+  EnoviaPDT_ClearVariable sResultColumn
+  EnoviaPDT_ClearVariable sSearchText
+  EnoviaPDT_ClearVariable sErrorMessage
+  EnoviaPDT_ClearVariable oFormulationPrepInfo
+  EnoviaPDT_ClearVariable oFomulationRedBeakerImg
+  EnoviaPDT_ClearVariable oBackBtn
+  EnoviaPDT_ClearVariable oFormulaMaxCell
+  EnoviaPDT_ClearVariable oCellValMapping
+  EnoviaPDT_ClearVariable oFieldValues
+End Function
+
+
+'Description  : Function to Prepare validation of Formulation parts and process by collecting values from Attributes of Formulation
+'Inputs       : Array1 - Array of values to be compared
+'             : Array2 - Array of values to be compared
+'Output       : Dictionary object with 3 keys - 
+              '“Array” – Gives array of Source indices of all matched values.
+              '"MisMatch" – Gives the Source index of mismatched value, if any. 
+              '"ErrorMsg" – Gives the Error message, if any.         
+'Author       : Sandeep  
+
+Function EnoviaPDT_ArrayComparison(Array1,Array2)
+
+  On Error Resume Next
+
+  Dim i, j, bFound, aMatchedValues, bUnequalFlag, sMisMatch, sErrorMessage
+  
+  sErrorMessage = ""
+  sMisMatch = ""
+  
+  Set oMatchedFieldsDict = CreateObject("Scripting.Dictionary")
+  
+  If Ubound(Array1) >= Ubound(Array2) Then  'Set the upper bound of array aMatchedValues
+    ReDim aMatchedValues(Ubound(Array1))
+  else
+    ReDim aMatchedValues(Ubound(Array2))
+  End If  
+  
+  bUnequalFlag = False
+  
+  If Ubound(Array1) <> Ubound(Array2) Then  'Check if length is not equal
+    sErrorMessage = sErrorMessage&"Number of fields in Application do not match with those in Excel Sheet "
+    Log.Warning sErrorMessage
+    bUnequalFlag = True
+    If Ubound(Array1) < Ubound(Array2) Then 'Change the Array1 to Array 2 if the size is bigger
+      aTemp = Array1
+      Array1 = Array2
+      Array2 = aTemp
+    End If
+  End If
+  
+  k = 0
+  For i = 0 To UBound(array1)
+    bFound = False
+    For j = 0 To UBound(array2)
+      If array1(i) = array2(j) Then
+        bFound = True 'Value is found
+        aMatchedValues(k) = array1(i) 'Add the value in the aMatchedValues Array
+        k = k+1
+        Exit For
+      End If
+    Next 
+    If bFound = False Then
+      sMisMatch = array1(i)
+      Exit For
+    End If
+  Next
+  Redim Preserve aMatchedValues(k-1)  'Remove empty indices 
+  
+  'Add the values into Dictionary
+  oMatchedFieldsDict.add "Array",aMatchedValues
+  oMatchedFieldsDict.add "MisMatch",sMisMatch
+  oMatchedFieldsDict.add "ErrorMsg",sErrorMessage
+  
+  Set EnoviaPDT_ArrayComparison = oMatchedFieldsDict 'Retunr the dictionary object
+  
+  EnoviaPDT_ClearVariable j
+  EnoviaPDT_ClearVariable sMisMatch
+  EnoviaPDT_ClearVariable sErrorMessage
+  EnoviaPDT_ClearVariable oMatchedFieldsDict
+  EnoviaPDT_ClearVariable aMatchedValues
+  EnoviaPDT_ClearVariable bUnequalFlag
+  EnoviaPDT_ClearVariable bFound
+  EnoviaPDT_ClearVariable i
+  EnoviaPDT_ClearVariable k 
+  
+End Function
+
+
+'Description  : Function to trim spaces in given string
+'Input       : sValue-Value from Spreadsheet or Application
+'Output       : None
+
+Function EnoviaPDT_Trimvalue(sValue)
+  Dim sWordArray, i
+  sWordArray = Split(sValue)
+  sValue = ""
+  For i = 0 to UBound(sWordArray)
+    If sWordArray(i) <> "" Then sValue = sValue&sWordArray(i)
+  Next
+  EnoviaPDT_Trimvalue = Trim(sValue)
+  'Clean up the variables   
+  EnoviaPDT_ClearVariable sWordArray
+  EnoviaPDT_ClearVariable i
+End Function

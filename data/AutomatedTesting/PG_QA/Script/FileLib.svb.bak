@@ -1,0 +1,21 @@
+﻿'USEUNIT CommonModels
+
+'This function will overwrite an existing file with the new text
+Function FileLib_WriteTextFile(sText, sPath)
+  Set objFSO=CreateObject("Scripting.FileSystemObject")
+  Set objFile = objFSO.CreateTextFile(sPath,True)
+  objFile.Write sText
+  objFile.Close
+End Function 
+
+Function FileLib_GetTestCompleteAutoParams()
+  sFilePath = aqFileSystem.GetFolderInfo(aqFileSystem.GetCurrentFolder).ParentFolder.ParentFolder.ParentFolder.Path&"src\Files\Auto\TestExecuteAutomation.cfg"
+  sDetails = aqFile.ReadWholeTextFile(sFilePath, aqFile.ctANSI)
+  aParameters = Split(sDetails,",")
+  
+  Set oAutoParams = GetTestCompleteAuto_ModelInstance
+  oAutoParams.Environment = aParameters(0)
+  oAutoParams.BuildNumber = aParameters(1)
+  Set FileLib_GetTestCompleteAutoParams = oAutoParams
+  Set oAutoParams = Nothing
+End Function 

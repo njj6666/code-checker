@@ -1,0 +1,85 @@
+﻿'USEUNIT DBLib 
+'USEUNIT GlobalVars
+'USEUNIT WebKeywords
+'USEUNIT WinKeywords
+'USEUNIT WebObjectLib
+'USEUNIT RecordSetLib
+'USEUNIT LogLib
+'USEUNIT OR_VeevaVault
+'USEUNIT GlobalVars
+'USEUNIT TimeLib
+'USEUNIT WindowsUtility
+
+g_strBrowserType="iexplore" 
+
+Sub Main
+' Call Function CreateEnvironment(sAppName, sEnvironment, bDevelopmentFlag, sComments, bCitrix, sTestType)
+' For now, just leave everything as is except for the ones that say "CHANGE THIS ONE". Make those the same value.
+      Call CreateEnvironment("Veeva Vault", "vault-sandbox", False, "Vault Performance Run", False, "Performance")
+      Call LaunchBrowser( g_props.Item("applicationURL").URL, "VV: Open Login Screen" )
+
+      Call VaultLogin( "vaultperformance" )
+            
+'Function LogPerformance(sStepName, bLoginStep, sIdentifier)
+' Use same step name as the "Start" line. 2nd parameter should be false. Third parameter is only needed if you want extra text on the screen - example different input used for searches      
+      Call CloseEnvironment()
+End Sub
+
+Sub VaultLogin(Identifier)
+  ' Fetch Application Credentials
+      arrCreds = GetCredentials(Identifier)
+          
+      aqPerformance.Start( "VV Login Page Launched")  ' This sets up and starts a stopwatch
+
+      Set userObj = objGetObject( OR_UserNameTextbox,"","") ' Go find the object on the screen that tells us when screen is done painting.
+      Call LogPerformance( "VV Login Page Launched", False, "")      
+      Call EnterText( OR_UserNameTextbox, "", "", arrCreds(0) )
+      Call EnterText( OR_PwdTextbox, "", "", arrCreds(1) )
+      Call Click( OR_LoginButton, "", 5 )
+'      Set loginObj = objGetObject( OR_LoginButton,"","") ' Go find the object on the screen that tells us when screen is done painting.
+      aqPerformance.Start( "VV: Login")  ' This sets up and starts a stopwatch
+'      loginObj.Click
+      ' On screen that pops up after login, need to identify an object on the screen and do a "objGetObject" to find it so we know when screen has painted.
+      Set taskTextObj = objGetObject(taskText,"","") ' Go find the object on the screen that tells us when screen is done painting.
+      Call LogPerformance( "VV: Login", False, "")
+
+End Sub
+
+Sub Search( SearchType, SearchString )
+  'Define the dropdown here, since we allow user to pass in the Type to select from the dropdown
+      OR_ChooseTypeFromDropdown = Array ("WEBOBJECT", "contentText", SearchType, "" )
+      OR_ResultTypeResult = Array ("WEBOBJECT", "contentText~ObjectType", SearchType&"~Panel", "" )
+      
+      Call Click( OR_SearchFilterDropdown, "", 5 )
+      Call Click( OR_ChooseTypeFromDropdown, "", 5 )
+      Set obj = objGetObject(OR_SearchTextbox,"","") ' Go find the object on the screen that tells us when screen is done painting.
+      obj.Keys( SearchString & "[Enter]" )
+
+      aqPerformance.Start( "VV: Search" )
+'      Set obj = objGetObject(OR_SearchTextbox,"","") ' Wait for Type to show up on the screen
+      Sys.Browser(g_strBrowserType).Page("*").Wait
+      
+      Call LogPerformance( "VV: Search", False,  SearchType & " - " & SearchString)    
+
+End Sub
+
+Sub Tester
+  Call CreateEnvironment("Veeva Vault", "vault-sandbox", False, "Vault Performance Run", False, "Performance")
+  Call Search( "Raw Materials", "1" )
+  Call Search( "Formula Cards", "Wolf" )
+
+      OR_OctopusLink = Array( "WEBOBJECT", "innerText~ObjectType", "Old Spice Octopus Wolfthorn - PC51WB 10.5 % Surf 0% HC" & "~Link" )
+      Call Click( OR_OctopusLink, "", 5 )
+      aqPerformance.Start( "VV: OpenProject" )
+      Sys.Browser(g_strBrowserType).Page("*").Wait
+      Call LogPerformance( "VV: OpenProject", False, "Old Spice Octopus Wolfthorn - PC51WB 10.5 % Surf 0% HC" )
+
+End Sub
+
+Sub Test1
+  Dim page
+  Call Browsers.Item(btIExplorer).Navigate("https://sb-pg-gpsveevademo.veevavault.com/ui/#t/0TB000000000806/advSearch=&search=Wolf&ivp=1&ivr=0&iv=1&smart=true")
+  Set page = Sys.Browser.Page("https://sb-pg-gpsveevademo.veevavault.com/ui/*")
+  page.Panel("pageBody").Panel(0).Panel("body").Panel(0).Panel(0).Panel(0).Panel(0).Panel(0).Panel(1).Panel(2).Panel(0).Panel(1).Panel(0).Table(0).Cell(1, 0).Panel(0).Panel(0).Panel(0).Link(0).Click
+  page.Wait
+End Sub

@@ -1,0 +1,280 @@
+﻿'USEUNIT EnoviaPDF_Vars
+'USEUNIT EnoviaPDF_ExcelUtils
+'USEUNIT LogLib
+'USEUNIT GlobalVars
+'USEUNIT EnoviaUtils
+'USEUNIT WindowsUtility
+'USEUNIT EnoviaPDF_ValidateEngine
+'USEUNIT OR_Enovia
+'USEUNIT WebObjectLib
+'USEUNIT EnoviaPDT_GeneratePDFViewTemplate
+
+'Set Current driver name to get data from a excel sheet.
+Function SetCurrentSheetInputDriver(strSheetName)    
+  If strSheetName = "Attributes" Then
+      Tempsheetdriver = g_Pdf_InputAttributesSheetReader    
+    Elseif strSheetName = "Lifecycle Approval Powerview" Then
+      Tempsheetdriver = g_Pdf_InputLifecycleApprovalPowerviewSheetReader    
+    Elseif strSheetName = "Notes" Then
+      Tempsheetdriver = g_Pdf_InputNotesSheetReader    
+    Elseif strSheetName = "Organizations" Then
+      Tempsheetdriver = g_Pdf_InputOrganizationsSheetReader    
+    Elseif strSheetName = "Ownership" Then
+      Tempsheetdriver = g_Pdf_InputOwnershipSheetReader      
+    Elseif strSheetName = "Performance Characteristics" Then 
+      Tempsheetdriver = g_Pdf_InputPerfCharSheetReader      
+    Elseif strSheetName = "Performance Characteristic" Then 
+      Tempsheetdriver = g_Pdf_InputPerfCharSheetReader
+    Elseif strSheetName = "Headers" Then 
+      Tempsheetdriver = g_Pdf_InputHeadersSheetReader           
+    Else
+      Log.Error "SheetName:"&strSheetName&" is not defined."     
+  End If
+  g_Pdf_CurrentPDFTestDriver = Tempsheetdriver    
+End Function
+
+'Create local directories required to store PDF files.
+Function CreatePdfLocalfolderStructure()
+  aqFileSystem.CreateFolder(g_sPdfFileDownloadpath) 
+  aqFileSystem.CreateFolder(g_sPdfFileConvertedpath)
+End Function
+
+Function LogStepDatapdf(sExpectedResult, bPassed, sErrorMessage, sInfo)
+  bBlocked = g_isBlocked 
+  g_isBlocked = Flase 
+  Call g_currentTestCase.AddStep(sExpectedResult, bPassed, sErrorMessage, bBlocked, sInfo)    
+End Function
+
+Function RemoveLeadingZeroes(ByVal str)
+  Dim tempStr
+  tempStr = str
+  While Left(tempStr,1) = "0" AND tempStr <> ""
+      tempStr = Right(tempStr,Len(tempStr)-1)
+  Wend
+  RemoveLeadingZeroes = tempStr
+End Function
+
+Function TrimAllSpaces(sTempfield)
+  If not IsEmpty(sTempfield) Then      
+      If not IsNull(sTempfield) Then          
+          sTempfield = aqString.Replace(sTempfield, "|", " ")          
+          sTempfield = Replace(sTempfield, vbCr,"")
+          sTempfield = Replace(sTempfield, vbLf,"")
+          For c=1 to len(sTempfield)
+              char = Mid(sTempfield,c,1)
+              If(char<>" ") then
+                  newStr = newStr+Mid(sTempfield,c,1)
+              End if
+          Next
+          TrimAllSpaces = newStr
+        Else 
+          TrimAllSpaces = sTempfield
+      End If
+    Else
+      TrimAllSpaces = sTempfield
+  End If
+End Function
+
+Function TrimToLog(sTempVal, nLength)
+  If nLength = "" Then
+     nLength = 40 
+  End If 
+  If not IsEmpty(sTempVal) Then
+      If not IsNull(sTempVal) Then
+          If aqString.GetLength(sTempVal) > nLength Then 
+              sTologVal = aqString.SubString(sTempVal,0,nLength)
+            Else
+             sTologVal = sTempVal 
+          End If
+        Else 
+          sTologVal = sTempVal
+      End If
+    Else
+      sTologVal = sTempVal
+  End If
+  TrimToLog = sTologVal
+End Function
+
+Function EnoviaPDF_ConvertPdfToExcel()
+  'On Error Resume Next
+  aqFileSystem.DeleteFile(g_Pdf_CurrentPDFtoExcelfilePathAndName&".xlsx")
+  Dim acrobat
+  Set objPDF = CreateObject("WScript.Shell")
+  objPDF.Run(g_Pdf_CurrentPDFfilePathAndName&".pdf")
+  Delay 2000
+  Set acrobat = Sys.Process("Acrobat")
+  Delay 2000   
+  objPDF.SendKeys "%{F}"
+  Delay 2000
+  objPDF.SendKeys "t"
+  Delay 2000
+  objPDF.SendKeys "S"
+  Delay 2000
+  objPDF.SendKeys "E"
+  Delay 4000
+  Set SaveAsWindowExcelpathtosave =acrobat.FindChild("WndClass","ComboBox",10)  
+  SaveAsWindowExcelpathtosave.SetText g_Pdf_CurrentPDFtoExcelfilePathAndName  
+  Set SaveAsWindowPdf=acrobat.FindChild("WndCaption","Save As PDF",10)
+  Set SaveButton=SaveAsWindowPdf.FindChild("WndCaption","&Save",10)
+  SaveButton.ClickButton
+  Delay 2000  
+  Set SaveAsWindow=acrobat.FindChild("WndCaption","Save As",1)   
+  If SaveAsWindow.Exists and IsObject(SaveAsWindow) then
+    Set SaveAsWindow=acrobat.FindChild("WndCaption","Save As",1)
+    Set YesButton=SaveAsWindow.FindChild("WndCaption","&Yes",10)  
+	  YesButton.ClickButton        
+  End If
+  Delay 15000
+  Set p = Sys.WaitProcess("EXCEL", 10000)
+  If p.Exists Then 
+      Sys.Process("EXCEL").Window("XLMAIN").Close      
+  End If  
+  Sys.Process("Acrobat").Terminate
+  Delay 4000
+  If Err.Number = 0 and aqFile.Exists(g_Pdf_CurrentPDFtoExcelfilePathAndName&".xlsx")Then
+      bPassed = True   
+      Log.Message "Converted pdf to excel for"&g_pdf_sCurrentPartType&" and "&g_pdf_sCurrentViewType    
+    Else
+      sErrorMsg = "Failed to convert PDF to Excel" 
+      bPassed  = False
+   End If
+  Call LogStepDatapdf("Convert PDF to Excel "&g_pdf_sCurrentPartType&" and "&g_pdf_sCurrentViewType, bPassed, sErrorMsg, "")
+End Function
+
+Function EnoviaPDFViews_DownloadPdfView()
+ 'On Error Resume Next
+   Call EnoviaPDFViews_PartSearch()
+   Call EnoviaPDFViews_DownloadPDF()
+   g_Pdf_sGcasCode = Trim(g_Pdf_sGcasCode)
+   If g_pdf_sCurrentViewType = "GenDocView" Then
+        Delay(14444)
+        
+      Else
+        Set Var = Sys.Browser("iexplore").BrowserWindow(1)
+      Do While Var.Exists = True
+          Delay(1000)
+          Set Var = Sys.Browser("iexplore").BrowserWindow(1)                    
+      Loop 
+   End If
+   Call EnoviaPDFViews_SaveDownloadedfile()
+   sys.Browser("iexplore").Terminate
+   If Err.Number = 0 and aqFile.Exists(g_Pdf_CurrentPDFfilePathAndName&".pdf")Then
+      bPassed = True   
+      Log.Message "PDF downloaded for pattype: "&g_pdf_sCurrentPartType&" successfully"    
+    Else
+      sErrorMsg = "Failed to load Input data into Enovia" 
+      bPassed  = False
+   End If
+  Call LogStepDatapdf("Download and save "&g_pdf_sCurrentViewType&" pdf", bPassed, sErrorMsg, "")
+End Function
+
+Function EnoviaPDFViews_PartSearch()
+ 'On Error Resume Next     
+    searchbox = Array("NATIVEWEBOBJECT","idStr","GlobalNewTEXT","INPUT")
+    searchbtn = Array("WEBOBJECT","className~tagName","btn search~A","")
+    Set Searchbox = objGetObject(searchbox,"","")
+    sys.HighlightObject(Searchbox)
+    if(Searchbox.Exists)then
+      Searchbox.setText g_Pdf_sGcasCode  
+    end if
+    Set SearchBtn = objGetObject(searchbtn,"","")
+    sys.HighlightObject(SearchBtn)
+    if(SearchBtn.Exists)then
+      SearchBtn.Click  
+    end if
+    Set objEnoviaSearchName = objGetObject(OR_EnoviaSearch_Name,"","")
+    Set objEnoviaSearchFields = objGetObject(OR_EnoviaSearch_Fields,"","")
+    If objEnoviaSearchName.Exists Then 
+        if aqString.Find((objEnoviaSearchFields.Cell(1,0).ContentText),"No Objects") >= 0 Then
+            Log.Warning "No results found"
+            If g_regLog.Environment = "plmtest" Then
+                OR_EnoviaPDFViewsSearchRefinepane = Array("WEBOBJECT","idStr~ObjectType","windowshade~Panel","")
+                Set ObjPDFViewsSearchRefinepane = objGetObject(OR_EnoviaPDFViewsSearchRefinepane,"","")
+                Set ObjRefineBtn = ObjPDFViewsSearchRefinepane.FindChild("idStr","switchQueryButton",10)
+                ObjRefineBtn.Click
+                Delay 4000
+            End If                      
+        End If
+       objEnoviaSearchName.Cell(1,1).Child(0).Click       
+    End If   
+End Function
+
+Function EnoviaPDFViews_DownloadPDF()  
+  On Error Resume Next
+  OR_EnoviaAttributespanel = Array("WEBOBJECT","ObjectIdentifier","pgVPDSectionAttributes","")
+  Set ObjPdfTableframe = objGetObject(OR_EnoviaAttributespanel,"","")  
+  If g_pdf_sCurrentViewType = "AllInfoView" Then
+      PDfDownloadContentText = "All Info View..."      
+    Elseif g_pdf_sCurrentViewType = "SupplierView" Then
+      PDfDownloadContentText = "Supplier View..."      
+  End If
+  If g_pdf_sCurrentViewType = "GenDocView" Then    
+      If(ObjPdfTableframe.Exists)then
+          Set ObjGenDoc = ObjPdfTableframe.FindChild("ObjectIdentifier","iconActionPDF_gif",10)
+          ObjGenDoc.Click          
+        Else
+          Log.Error "Gendoc doenload failied  - Error 9"
+      End If
+    ElseIf g_pdf_sCurrentViewType = "CMView" Then
+      OR_EnoviaAttributesPDFMain = Array("WEBOBJECT","className~contentText","text-button~PDF Views","")
+      Set oPdfViewsDropDown = objGetObject(OR_EnoviaAttributesPDFMain,"","")       
+      If(ObjPdfTableframe.Exists)then
+          PropArray = Array("contentText", "ObjectType")
+          ValuesArray = Array("regexp:Pack", "Label")         
+          oPdfViewsDropDown.Click    
+          Set oPdfview =ObjPdfTableframe.FindChild(PropArray,ValuesArray,10)
+          Sys.HighlightObject(oPdfview)
+          oPdfview.Click 
+        Else
+          Log.Error "Search results are blank"  
+      End If 
+    Else
+      OR_EnoviaAttributesPDFMain = Array("WEBOBJECT","className~contentText","text-button~PDF Views","")
+      Set oPdfViewsDropDown = objGetObject(OR_EnoviaAttributesPDFMain,"","")       
+      If(ObjPdfTableframe.Exists)then
+          oPdfViewsDropDown.Click    
+          Set oPdfview =ObjPdfTableframe.FindChild("contentText",PDfDownloadContentText,10)         
+          oPdfview.Click 
+        Else
+          Log.Error "Search results are blank"  
+      End If
+  End If
+End function
+
+Function EnoviaPDFViews_SaveDownloadedfile()  
+  Set s1=Sys.Browser("iexplore").Browserwindow(0)                           
+  set frame=s1.findChild("WndClass","Frame Notification Bar",5) 
+  Set objdownbtn=frame.findChild("Name","UIAObject(1)",5) 
+  If objdownbtn.Exists then                            
+      objdownbtn.Click                                                            
+  End If
+  Sys.Keys "[Down][Enter]"
+  Set objwnd = Sys.Process(g_strBrowserType).window("*","Save As")
+  Set objEdit = objwnd.FindChild("WndClass","Edit",5)
+  Set objsavebtn = objwnd.FindChild("WndCaption","&Save")    
+  aqFileSystem.DeleteFile(g_Pdf_CurrentPDFfilePathAndName&".pdf")
+  Delay 1000
+  If objEdit.Exists then                            
+    objEdit.Keys g_Pdf_CurrentPDFfilePathAndName       
+    objsavebtn.Click                                                     
+  End If
+  Delay 2000      
+End Function
+
+Function SetCurrentPdfviewTypeProperties()  
+  If g_pdf_sCurrentViewType = "AllInfoView" Then
+      g_Pdf_CurrentPdfViewTypeColNo = 1   
+    Elseif g_pdf_sCurrentViewType = "CMView" Then
+      g_Pdf_CurrentPdfViewTypeColNo = 3  
+    Elseif g_pdf_sCurrentViewType = "GenDocView" Then
+      g_Pdf_CurrentPdfViewTypeColNo = 2 
+    Elseif g_pdf_sCurrentViewType = "SupplierView" Then
+      g_Pdf_CurrentPdfViewTypeColNo = 4
+    Else
+      Log.Error "Unable set Current pdf view properties"
+  End if 
+End Function
+
+Function EnoviaGeneratePDFInputTemplate()
+  Delay 100
+End Function 

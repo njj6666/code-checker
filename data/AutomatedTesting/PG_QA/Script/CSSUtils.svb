@@ -1,0 +1,96 @@
+﻿'USEUNIT DBLib
+'USEUNIT ExcelLib
+'USEUNIT GlobalVars
+'USEUNIT LogLib
+'USEUNIT WebKeywords
+'USEUNIT WebObjectLib
+'USEUNIT WindowsUtility
+'USEUNIT OR_Enovia
+'USEUNIT OR_CSS
+'USEUNIT StringLib
+'USEUNIT TR_EnoviaUtils
+'USEUNIT CSS_OBJClass
+
+'Function CSS_LaunchCSS(Environment) as Xiaoji
+'need to be added in odbc 
+Function CSS_LaunchCSS(Environment)
+
+  ' Kill all processes before starting a new. Sometimes process can be stuck in background
+  Call CloseAllBrowserProcesses()
+  ' Fetch app url  
+  'g_strURL = GetURL(sEnv)
+  g_strURL="http://adln9213.na.pg.com/"
+  Call LogTransaction("TR_EnoviaUtils_LaunchBrowser", "IE Launched")
+
+End function
+
+'Fill the Username and Password in the CSS Login page. Click ok to login CSS
+Function CSS_Login(Identifier)
+  On Error Resume Next
+
+  Dim arrCreds,arrGetObj,objUserName,objPassword,objLogin
+  ' Fetch Application Credentials
+  'arrCreds = GetCredentials(Identifier)
+  
+  'Get username textbox and input
+  Set objUserName = objGetObject(OR_CSSLogin_UserNameEdt,"",30000)
+  'objUserName.SetText(arrCreds(0))
+  objUserName.SetText("ab7918")
+
+  Set objPassword = objGetObject( OR_CSSLogin_PasswordEdt,"",30000)
+  'objPassword.SetText(arrCreds(1))
+  objPassword.SetText("Css1tst1")
+  
+  'click ok to login CSS
+  Set objLogin = objGetObject(OR_CSSLogin_SubmitBtn,"",30000)
+  objLogin.Click()
+  
+  'checkpoint, verify the CSS home page full loaded
+  'aqPerformance.Start("CSS Login Complete")
+  Set objtext = objGetObject(OR_CSSHomepage_Responsibility,"","")  
+  'Call LogPerformance("CSS Login Complete", False, "")
+  
+  If Err.Number = 0 Then
+    CSS_Login = True
+  Else
+    CSS_Login  = False
+  End If
+
+  Set objUserName = nothing
+  Set objPassword = nothing
+  Set objLogin=nothing
+
+End Function
+
+  
+
+
+'*******Created By Marvin 
+g_strBrowserType = c_IExplorer
+Function CSS_LoginNoSelectRole(identifier,environment)
+'g_strBrowserType = c_IExplorer
+
+g_strURL = GetURL(environment)
+CSS_LaunchCSS()
+CSS_SwitchToEnterpriseMode(objGetPage(g_strURL))
+CSS_Login(identifier)
+
+'Set obj = objGetObject(OR_EnoviaHomePage_3D,"",30000)
+'Call aqObject.CheckProperty(obj, "contentText", cmpEqual, "title")
+AqUtils.Delay(15000)
+End Function 
+
+Function CSS_SwitchToEnterpriseMode(objBrowser)
+AqUtils.Delay(2000)
+objBrowser.Keys("~t")
+AqUtils.Delay(2000)
+objBrowser.Keys ("r")
+AqUtils.Delay(2000)
+objBrowser.Keys ("[Enter]")
+AqUtils.Delay(5000)
+End Function 
+
+Function CSS_Logout
+On Error Resume Next
+  CSSLogout.Click
+End Function 

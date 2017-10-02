@@ -1,0 +1,3 @@
+﻿Sub Test
+  Call Browsers.Item(btChrome, "", Browsers.pX86).Run("about:Tabs")
+End Sub

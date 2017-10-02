@@ -1,0 +1,13 @@
+﻿'USEUNIT EnoviaPDF_Main
+'USEUNIT FileLib
+'USEUNIT CommonModels
+'USEUNIT GlobalVars
+
+Function Start_PDFViews_Engine_Manual()
+  Call PDF_Main("plmtest", 0)
+End Function
+
+Function Start_PDFViews_Engine_Auto()
+  Set oParams = FileLib_GetTestCompleteAutoParams()
+  Call PDF_Main(oParams.Environment, oParams.BuildNumber)
+End Function

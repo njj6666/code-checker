@@ -1,0 +1,218 @@
+﻿	
+'USEUNIT GlobalVars	
+'USEUNIT LogLib	
+'USEUNIT OR_Enovia	
+'USEUNIT WindowsUtility	
+'USEUNIT EnoviaUtils	
+'USEUNIT WebObjectLib	
+'USEUNIT EnoviaSearch_PopulateSearchModel
+	
+Function EnoviaSearch_PeripheralTC15_Steps()	
+	
+	  Call LogStep("EnoviaSearch_PeripheralTC15_Step1", "A dropdown with various commands(Like-Named Search, My Favourite Searches, Full Text Search..etc) should appear","")
+    Call LogStep("EnoviaSearch_PeripheralTC15_Step2", "A new window with Search Refinement Pane and Search Results Pane should pop up","")
+    Call LogStep("EnoviaSearch_PeripheralTC15_Step3", "The 'Search Results Pane' should refresh and all the objects which contain the Name(s)/Phrase(s) that was typed will be displayed","")
+  	Call LogStep("EnoviaSearch_PeripheralTC15_Step4", "A Save as Window should open with a Text box for typing the name and Radio Buttons for Selecting any Previous names","")
+	  Call LogStep("EnoviaSearch_PeripheralTC15_Step5", "The Results should be Saved and should replace the previous Search Results with that name.","")
+	  Call LogStep("EnoviaSearch_PeripheralTC15_Step6", "The Search Results Pane should refresh and should display the results of Step-4","")
+	 
+	  Call LogTestCase("Save your Specific Search Results", "TC-15_Find Product Data_Toolbar_Save As","47707")
+	
+End Function	
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC15_Step1
+'Description                  : Click on name search list of labels are shown
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC15_Step1()	
+ 
+    'Create object for delete saved name
+    Set objDeleteSaved = objGetObject(OR_EnoviaSearch_TC19_DeleteSavedName,"","")
+    objDeleteSaved.Click()
+    Set objDeleteSaved = nothing
+    
+    'Create object for Search product spec
+    Set objEnoviaSearchProductSpec = objGetObject(OR_EnoviaSearchProductSpec_SearchDrp,"",10000)
+    If objEnoviaSearchProductSpec.VisibleOnScreen = False Then
+        Call Err.raise (70112,"EnoviaSearch_PeripheralTC15_Step1","A dropdown with various commands shown")
+    End If
+    Set objEnoviaSearchProductSpec = nothing
+    
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC15_Step2
+'Description                  : Find product data page opened
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC15_Step2()	
+ 
+  
+    'create object for EnoviaSearchFindProdData
+    Set objEnoviaSearchFindProdData = objGetObject(OR_EnoviaSearchFindProdData_SearchDrop,"",10000)
+    if objEnoviaSearchFindProdData.VisibleOnScreen = True Then
+          objEnoviaSearchFindProdData.Click()
+     Else    
+          'create object for SearchProductSpec
+          Set objEnoviaSearchProductSpec = objGetObject(OR_EnoviaSearchProductSpec_SearchDrp,"","")
+          objEnoviaSearchProductSpec.Click()
+          objEnoviaSearchFindProdData.Click()
+    End If
+    Set objEnoviaSearchProductSpec = nothing
+    Set objEnoviaSearchFindProdData = nothing
+    
+    'create object for search edit
+    Set objSearchEdtRecord = objGetObject(OR_EnoviaSearchFindProdData_SearchEdt,g_SearchPageURL,20000)
+    If objSearchEdtRecord.Exists = False Then
+          Call Err.raise (70041,"EnoviaSearch_PeripheralTC14_Step2","Fail-FindProdData NOT opened")
+    End If
+    Set objSearchEdtRecord = nothing
+    
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC15_Step3
+'Description                  : Search record
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC15_Step3()	
+    
+   'create object for search edit
+    Set objSearchEdtRecord = objGetObject(OR_EnoviaSearchFindProdData_SearchEdt,g_SearchPageURL,"")
+    SearchRecord = EnoviaSearch_ReadTestCasesData("TC-15_Find Product Data_Toolbar_Save As","Search")
+    objSearchEdtRecord.SetText(SearchRecord)
+    Set objSearchEdtRecord = nothing
+    
+    'Create object for search refresh command
+    Set objSearchRefreshCmd = objGetObject(OR_EnoviaSearch_SSearchRefreshCmd,g_SearchPageURL,"")
+    objSearchRefreshCmd.Click()
+    Set objSearchRefreshCmd = nothing
+    
+    'Wait for complete loading of page
+    WaitPageLoad(g_SearchPageURL) 
+    
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC15_Step4
+'Description                  : opens saveAs page
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC15_Step4()	
+
+    'Create object for Save Query button
+    Set objSaveQuery = objGetObject(OR_EnoviaSearch_TC19_SavedQueries,g_SearchPageURL,10000)
+    objSaveQuery.Click()
+    Set objSaveQuery = nothing 
+    
+    'Create object for SaveAs Label
+    Set objRecordSaveAs = objGetObject(OR_EnoviaSearch_TC19_SavedASRecord,g_SearchPageURL,1000)
+    objRecordSaveAs.Click()
+    Set objRecordSaveAs = nothing 
+    
+    'Create object for radio button
+    Set objSelectradioButton = objGetObject(OR_EnoviaSearch_TC19_SelectRadioButton,g_SaveAsPage_URL,"")
+    If objSelectradioButton.VisibleOnScreen = False Then
+        Call Err.raise (70123,"EnoviaSearch_PeripheralTC15_Step4","A SaveAS Search Window not opened")
+    End If
+   	Set objSelectradioButton = nothing 
+       
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC15_Step5
+'Description                  : select the saved name and click on done
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC15_Step5()	
+   
+    'Create object for radio button
+    Set objSelectradioButton = objGetObject(OR_EnoviaSearch_TC19_SelectRadioButton,g_SaveAsPage_URL,"")
+    objSelectradioButton.Click()
+    Set objSelectradioButton = nothing 
+    
+    'Create object for done button
+    Set objDoneBtn = objGetObject(OR_EnoviaSearch_TC19_DoneButton,g_SaveAsPage_URL,1000)
+    objDoneBtn.Click()
+    Set objDoneBtn = nothing 
+    
+    'Wait for complete loading of page
+    WaitPageLoad(g_SearchPageURL) 
+     
+End Function	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC15_Step6
+'Description                  : Click on name search list of labels are shown
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Shireesha Monduti
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+	
+Function EnoviaSearch_PeripheralTC15_Step6()	
+ 
+    'Create object for Save Query button
+    Set objSaveQuery = objGetObject(OR_EnoviaSearch_TC19_SavedQueries,g_SearchPageURL,10000)
+    objSaveQuery.Click()
+    Set objSaveQuery = nothing
+    
+    'Create object for savedname
+    Set objSavedRecordSelect = objGetObject(OR_EnoviaSearch_TC19_SavedRecord,g_SearchPageURL,1000)
+    Sys.HighlightObject(objSavedRecordSelect)
+    objSavedRecordSelect.Click()
+    Set objSavedRecordSelect = nothing
+    
+    'Wait for complete loading of page
+    WaitPageLoad(g_SearchPageURL) 
+    
+    'Create object for Namesearch field
+    Set objNameEdit = objGetObject(OR_EnoviaSearchFindProdData_SearchEdt,g_SearchPageURL,50000)
+    str=objNameEdit.value
+    if instr(str,SearchRecord) = 0 Then
+        Call Err.raise (70122,"EnoviaSearch_PeripheralTC15_Step6","Wrong record")
+    End If
+    Set objNameEdit = nothing
+       
+End Function	
+	
+

@@ -1,0 +1,109 @@
+﻿'USEUNIT GlobalVars
+'USEUNIT LogLib
+'USEUNIT OR_Enovia
+'USEUNIT WindowsUtility
+'USEUNIT EnoviaUtils
+'USEUNIT WebObjectLib
+'USEUNIT EnoviaSearch_PopulateSearchModel
+
+'Search for a Limited Data
+'##################################################################################################################
+'Function Name                : EnoviaSearch_GeneralTC18_Steps
+'Description                  : TC-18_Named Search_MaxLimit_10000
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_GeneralTC18_Steps()
+
+    Call LogStep("EnoviaSearch_GeneralTC18_Step1", "The Object(s) should be displayed in the Search Results Window.","")
+    Call LogStep("EnoviaSearch_GeneralTC18_Step2", "The search result can be max to 10000.There is a warning message to show Please enter a valid limit query","")
+ 
+    Call LogTestCase("Search for a Limited Data", "TC-18_Named Search_MaxLimit_10000", "47692")
+  
+End Function
+
+
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_GeneralTC18_Step1
+'Description                  : In the Global Search Bar, Enter the name of the Object you want to search and click on the Search Icon.
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_GeneralTC18_Step1()
+  
+    'Create object for search record
+    SearchRecord = EnoviaSearch_ReadTestCasesData("TC-18_Named Search_MaxLimit_10000","Search")
+    Call Enovia_SearchStuff(SearchRecord)
+    
+    'Switching to Real time mode
+    Sys.Refresh
+    'Create object of Switch Query Button 
+    Set objSwitchQueryButton = objGetObject(OR_EnoviaSearch_SwitchQueryButton,"",3000)
+    If objSwitchQueryButton.title = "Switch to RealTime Search" Then
+       objSwitchQueryButton.Click () 
+       Sys.Refresh
+       objSwitchQueryButton.Refresh
+       Call objSwitchQueryButton.WaitProperty("title","Switch to Indexed Search",7000) 
+       If objSwitchQueryButton.title = "Switch to RealTime Search" Then
+            Call Err.raise(63002,"EnoviaSearch_GeneralTC18_Step1","Real Time Search not changed to Indexed Search")
+       End If
+    End If
+    Set objSwitchQueryButton = Nothing
+    
+    'create object for search button
+    Set SearchButton = objGetObject(OR_EnoviaSearch_TC17_Search,"",7000)
+    SearchButton.click()
+    aqUtils.Delay 40000,"waiting for the page refresh after search"
+    
+    'Function to handle alert message
+    Call EnoviaSearch_AlertWindow("")
+
+End Function 
+
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_GeneralTC18_Step2
+'Description                  : The search result can be max to 10000.There is a warning message to show 'Please enter a valid limit query.'
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_GeneralTC18_Step2()
+  
+    'Create object of Limit text box
+    Set objLimitNumber = objGetObject(OR_EnoviaSearch_SearchLimitToChk,"","")
+    LimitRecord = EnoviaSearch_ReadTestCasesData("TC-18_Named Search_MaxLimit_10000","UpperLimit")
+    objLimitNumber.SetText(LimitRecord)
+    Set objLimitNumber = nothing
+    
+    'Create object of Limit Search buttton
+    Set objLimitSearchButton = objGetObject(OR_EnoviaSearch_SSearchRefreshCmd,"","")
+    objLimitSearchButton.Click()
+    Set objLimitSearchButton = nothing
+    
+    'Function to handle alert message
+     Call EnoviaSearch_AlertWindow("")
+     
+     Set objLimitNumber = objGetObject(OR_EnoviaSearch_SearchLimitToChk,"","")
+     objLimitNumber.SetText("100")
+     Set objLimitNumber = nothing
+      
+End Function 

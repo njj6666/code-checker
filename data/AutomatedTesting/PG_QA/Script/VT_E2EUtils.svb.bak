@@ -1,0 +1,294 @@
+﻿'USEUNIT EnoviaUtils
+'USEUNIT ExcelLib
+'USEUNIT GlobalVars
+'USEUNIT WebKeywords
+'USEUNIT WebObjectLib
+'USEUNIT WindowsUtility
+'USEUNIT OR_Enovia
+'USEUNIT StringLib
+
+Function CreateProjFromTemp(tempName,name)
+  Dim objCurrentExe
+  Dim arrGetObj
+  '***Click ...
+  arrGetObj = arrGetObjInfoFromXL("VT_CreationExcutionPage","ProjTemp")
+  Set objCurrentExe = objGetObject(arrGetObj,g_CreatePage_URL,30000)
+  objCurrentExe.ClickButton()
+  Call Enovia_SearchAndSelectByName(tempName)
+  '****Set Name
+  arrGetObj = arrGetObjInfoFromXL("VT_CreationExcutionPage","Name")
+  Set objCurrentExe = objGetObject(arrGetObj,g_CreatePage_URL,30000)
+  objCurrentExe.SetText(name)
+  '***Click Done
+  arrGetObj = arrGetObjInfoFromXL("VT_CreationExcutionPage","PTCreateDone")
+  Set objCurrentExe = objGetObject(arrGetObj,g_CreatePage_URL,30000)
+  objCurrentExe.Click
+  Set objCurrentExe = Nothing
+End Function
+
+Sub ClickCategoryImage
+  Dim objCurrentExe
+  Dim arrGetObj
+  '***Click Folders
+  arrGetObj = arrGetObjInfoFromXL("VT_CreationExcutionPage","Image")
+  Set objCurrentExe = objGetObject(arrGetObj,"",30000)
+  objCurrentExe.Click
+  Set objCurrentExe = Nothing
+End Sub 
+
+Sub ClickFolders
+  Dim objCurrentExe
+  Dim arrGetObj
+  '***Click Folders
+  arrGetObj = arrGetObjInfoFromXL("VT_CreationExcutionPage","Folders")
+  Set objCurrentExe = objGetObject(arrGetObj,"",30000)
+  objCurrentExe.Click
+  Set objCurrentExe = Nothing
+End Sub 
+
+Sub ClickSchedule
+  Dim objCurrentExe
+  Dim arrGetObj
+  '***Click Schedule
+  arrGetObj = arrGetObjInfoFromXL("VT_CreationExcutionPage","Schedule")
+  Set objCurrentExe = objGetObject(arrGetObj,"",30000)
+  objCurrentExe.Click
+  Set objCurrentExe = Nothing
+End Sub 
+
+Sub ClickExpandImage
+  Dim objCurrentExe
+  Dim arrGetObj
+  '***Click Expandimage
+  arrGetObj = arrGetObjInfoFromXL("VT_ProjectPage","ExpandImage")
+  Set objCurrentExe = objGetObject(arrGetObj,"",30000)
+  objCurrentExe.Click
+  Set objCurrentExe = Nothing
+End Sub
+ 
+Function ClickProject(inputTxt)
+  SearchProps = Array("WEBOBJECT", "contentText~ObjectType", inputTxt&"~Link", "")
+  Call Click(SearchProps, "","")
+End Function 
+
+Sub ClickAssignees
+  Dim objCurrentExe
+  Dim arrGetObj
+  '***Click Assignees
+  arrGetObj = arrGetObjInfoFromXL("VT_ProjectPage","Assignees")
+  Set objCurrentExe = objGetObject(arrGetObj,g_EnoviaHomePagePopUp_URL,30000)
+  objCurrentExe.Click
+  Set objCurrentExe = Nothing
+End Sub 
+
+Sub ClickAssigneeAdd
+  Dim objCurrentExe
+  Dim arrGetObj
+  '***Click Assignees
+  arrGetObj = arrGetObjInfoFromXL("VT_ProjectPage","AssigneesAdd")
+  Set objCurrentExe = objGetObject(arrGetObj,g_EnoviaHomePagePopUp_URL,30000)
+  objCurrentExe.Click
+  Set objCurrentExe = Nothing
+End Sub 
+
+Function AsignGate(Username)
+  Call ClickAssignees
+  Call ClickAssigneeAdd
+  Call Enovia_SearchAndSelectByName(Username)
+  AqUtils.Delay(10000)
+  Call CloseNewWindow
+End Function 
+
+
+
+'##################################################################################################################
+'Function Name                : VT_FindCellAndClick
+'Description                  : To locate the right cell object according to the left tree table and click 
+'Arguments                    : strSearchFram, both table's parent frame object's attribute
+'                               strSearchColumn, right table's column name
+'                               strSearchText, cell's value of left table
+'Return Value                 : Nothing
+'Author                       : Amanda Li
+'Creation Date                : 23 - Aug -2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function VT_FindCellAndClick(strSearchFram,strSeachColumn,strSearchText)
+  On Error Resume Next
+  Dim oSearchCell
+  Set oSearchCell = Enovia_GridFindCell(strSearchFram,strSeachColumn,strSearchText)
+  oSearchCell.Click
+End Function
+
+Sub ClickExpandAll
+  On Error Resume Next
+  Call Click(OR_EnoviaExpandAll,"","")
+End Sub 
+
+
+Sub BeforeCreateDoc
+  On Error Resume Next
+  Dim arrGetObj,objCurrentExe,objMenu,objSubMenu
+  arrGetObj = arrGetObjInfoFromXL("VT_ProjectPage","Actions")
+  Set objCurrentExe = objGetObject(arrGetObj,"",30000)
+  objCurrentExe.Click
+  Set objCurrentExe = Nothing
+  arrGetObj = arrGetObjInfoFromXL("VT_ProjectPage","Document")
+  Set objMenu = objGetObject(arrGetObj,"",30000)
+  arrGetObj = arrGetObjInfoFromXL("VT_ProjectPage","CreatNew")
+  Set objSubMenu = objGetObject(arrGetObj,"",30000)
+  If objSubMenu.VisibleOnScreen = True Then
+    objSubMenu.Click
+  Else
+    objMenu.Click
+    objSubMenu.Click
+  End If 
+End Sub 
+
+
+Function VT_SelectType(strType)
+On Error Resume Next
+  Dim arrGetObj,objCurrentExe
+  'Set Type
+  arrGetObj = arrGetObjInfoFromXL("DocumentCreatePage","TypeName")
+  Set objCurrentExe = objGetObject(arrGetObj,g_ChooseTypePage_URL,30000)
+  objCurrentExe.SetText(strType)
+  Set objCurrentExe = Nothing
+  'Uncheck checkbox
+  arrGetObj = arrGetObjInfoFromXL("DocumentCreatePage","chkTopLevelOnly")
+  Set objCurrentExe = objGetObject(arrGetObj,g_ChooseTypePage_URL,"")
+  If objCurrentExe.checked = True Then
+  objCurrentExe.Click
+  End If
+  'Click Filter
+  arrGetObj = arrGetObjInfoFromXL("DocumentCreatePage","Filter")
+  Call Click(arrGetObj,g_ChooseTypePage_URL,"")
+  AqUtils.Delay(5000)
+  'Select result
+  'Call ClickImageBeforeLnk("DI Platform",g_ChooseTypePage_URL)
+  'Click Select
+  arrGetObj = arrGetObjInfoFromXL("DocumentCreatePage","SelectButton")
+  Call Click(arrGetObj,g_ChooseTypePage_URL,"")
+End Function
+
+Sub ClickReferenceDoc
+On Error Resume Next
+  Dim arrGetObj
+  arrGetObj = arrGetObjInfoFromXL("VT_DocumentPage","RefDoc")
+  Call Click(arrGetObj,g_EnoviaHomePagePopUp_URL,"")
+  
+End Sub 
+
+Sub ClickAddExisting
+On Error Resume Next
+  Dim arrGetObj
+  
+  arrGetObj = arrGetObjInfoFromXL("VT_DocumentPage","AddExisting")
+  Call Click(arrGetObj,g_EnoviaHomePagePopUp_URL,"")
+  
+End Sub 
+
+'##################################################################################################################
+'Function Name                : VT_ClickActionAndSubMenu
+'Description                  : To click "Action" button and sub menu on righ page 
+'Arguments                    : arr1stlevelSubMenu, the first level sub menu's attribute, Request
+'                             : arr2ndlevelSubMenu, the second level sub menu's attribute, Option
+'Return Value                 : Nothing
+'Author                       : Amanda Li
+'Creation Date                : 25 - Aug -2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function VT_ClickActionAndSubMenu(arr1stlevelSubMenu,arr2ndlevelSubMenu)
+  On Error Resume Next
+  Dim oSubMenu2
+  'for debug
+    'strURL = g_EnoviaHomePagePopUp_URL & "*"
+  Call Click(OR_EnoviaVT_MTActionBtn,g_EnoviaHomePage_URL,"")
+  If IsNull(arr2ndlevelSubMenu) Then
+    ' click one sub menu
+    Call Click(arr1stlevelSubMenu,g_EnoviaHomePage_URL,"")
+    else
+    'clici two sub menus
+    Set oSubMenu2 = objGetObject(arr2ndlevelSubMenu,g_EnoviaHomePage_URL,"")
+    If oSubMenu2.VisibleOnScreen = True Then
+      oSubMenu2.Click
+    else
+      Call Click(arr1stlevelSubMenu,g_EnoviaHomePage_URL,"")
+      oSubMenu2.Click
+    End if
+    Set oSubMenu2 = Nothing
+  End If
+End Function
+
+'##################################################################################################################
+'Function Name                : VT_AddMember
+'Description                  : To add member on people page
+'Arguments                    : strSheetName, the sheet name of excel file "inputparameter"
+'                               strKeyWord, the keyword name in excel sheet for member value
+'Return Value                 : Nothing
+'Author                       : Amanda Li
+'Creation Date                : 23 - Aug -2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function VT_AddMember(strSheetName,strKeyWord)
+  On Error Resume Next
+  Dim arrMember,objCurOperation
+  'strSheetName = "001_004"
+  'strKeyWord = "Set1002_AddPeople"
+  strMember = Excel_SearchValue(g_strInputDataFilePath,strSheetName,strKeyWord)
+  arrMember = String_Split(strMember,":",-1)
+  For Each strPeople in arrMember
+    'Click Actions button on people page
+    Set frame = Aliases.browser.page3dexperiencePlatform_new.frameContent
+    Call frame.frameDetailsdisplay.formEmxtableform.panelDivtoolbarcontainer.panelToolbar.table.cellActions.Click(60, 15)
+    Call Click(OR_EnoviaVT_MTAddMember,g_EnoviaHomePage_URL,"")
+    Delay(10000)
+    Call Enovia_SearchAndSelectByName(strPeople)
+    Delay(10000)
+  Next
+  
+  Set frame = Nothing
+  Erase arrMember 
+End Function
+
+
+
+'Function AddOrRemoveRoleToProjectTemp added as Marvin
+'***Add Role
+Function Enovia_AddOrRemoveRole(Role)
+  Dim objCurrentExe
+  Dim arrGetObj
+  '***Select Role
+  'log.Message(Role)
+  arrGetObj = arrGetObjInfoFromXL("VT_ProjectTemPage",Role)
+  Set objCurrentExe = objGetObject(arrGetObj,g_EnoviaAddRolePage_URL,30000)
+  objCurrentExe.ClickChecked(true)
+  '***Click DoneButton
+  arrGetObj = arrGetObjInfoFromXL("VT_ProjectTemPage","Select_Done")
+  Set objCurrentExe = objGetObject(arrGetObj,g_EnoviaAddRolePage_URL,30000)
+  objCurrentExe.Click
+  
+  set objCurrentExe = Nothing
+End Function
+
+'***Remove Role
+Function Enovia_RemoveRole(RoleSelect,Role)
+  Dim objCurrentExe
+  Dim arrGetObj
+  '***Select Role
+  arrGetObj = arrGetObjInfoFromXL("VT_ProjectTemPage",RoleSelect)
+  'log.Message("hello")
+  Set objCurrentExe = objGetObject(arrGetObj,g_EnoviaHomePage_URL,30000)
+  objCurrentExe.ClickItem(Role)
+  '***Click Remove
+  arrGetObj = arrGetObjInfoFromXL("VT_ProjectTemPage","RemoveDone")
+  Set objCurrentExe = objGetObject(arrGetObj,g_EnoviaHomePage_URL,30000)
+  objCurrentExe.Click
+  
+  set objCurrentExe = Nothing
+End Function

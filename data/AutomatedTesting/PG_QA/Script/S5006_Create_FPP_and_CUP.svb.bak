@@ -1,0 +1,36 @@
+﻿'USEUNIT DSM_E2EUtility
+'USEUNIT DSM_PDTUtility
+'USEUNIT EnoviaUtils
+'USEUNIT LogLib
+'USEUNIT S5006S_Create_FPP_and_CUP
+'USEUNIT WebObjectLib
+'USEUNIT WindowsUtility
+
+Sub EnoviaDSM_S05006_CreateFPPandCUP(sEnv,sUser)
+  On Error Resume Next  
+  
+  'Step1-----Login Enovia
+  If Log_UpdateIsBlocked() = False Then      
+      Call Enovia_LaunchEnovia( sEnv )
+  End If
+  If Log_UpdateIsBlocked() = False Then
+    If Not Enovia_Login(sUser) Then
+      Log.Error("Cannot login into Enovia!")
+      Runner.Stop
+    End If
+  End If
+    
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_clickOK()
+  End If
+  'Step1-----end
+  
+'  'step2-----create FPP 
+'  Call EnoviaDSM_S05006_S_CreateFPP()
+'  
+'  'step3-----Edit FPP Attribute
+'  Call EnoviaDSM_S05006_S_EditFPPAttribute()
+'  
+'  Call LogTestCase("Create FPP and Edit Attributes", "DSMS5006_Create_FPP_and_EditAttribute","DSM_E2E_S5006")
+  
+End Sub 

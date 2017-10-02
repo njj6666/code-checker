@@ -1,0 +1,58 @@
+﻿'USEUNIT DSM_E2EUtility
+'USEUNIT DSM_PDTUtility
+'USEUNIT EnoviaUtils
+'USEUNIT LogLib
+'USEUNIT S5001S_Create_MPMP_in_ArtiosCAD
+'USEUNIT WebObjectLib
+'USEUNIT WindowsUtility
+
+
+Sub EnoviaDSM_S05001_CreateArtiosMPMP(sEnv,sUser)
+  On Error Resume Next  
+  
+  'Step1-----Login Enovia
+  If Log_UpdateIsBlocked() = False Then      
+      Call Enovia_LaunchEnovia( sEnv )
+  End If
+  If Log_UpdateIsBlocked() = False Then
+    If Not Enovia_Login(sUser) Then
+      Log.Error("Cannot login into Enovia!")
+      Runner.Stop
+    End If
+  End If
+    
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_clickOK()
+  End If
+  'Step1-----end
+  
+  'step2-----open Artios
+  Call EnoviaDSM_S05001_S_OpenArtiosCADPart()
+  
+  'step3-----Edit Artios part Attribute
+  Call EnoviaDSM_S05001_S_EditArtiosPartAttributes()
+  
+  'step4-----Get ArtiosMPMPNumber
+  Call EnoviaDSM_S05001_S_GetArtiosMPMP()
+  
+  'step5-----Open ArtiosMPMP
+  Call EnoviaDSM_S05001_S_OpenArtiosMPMP()
+  
+  'step6-----Apply template
+  Call EnoviaDSM_S05001_S_ApplyTemplateToArtiosMPMP()
+  
+  'step7-----Edit MPMP attribute
+  Call EnoviaDSM_S05001_S_EditArtiosMPMPAttribute()
+  
+  'step8-----Add part
+  Call EnoviaDSM_S05001_S_AddPartToPartFamily()
+  
+  'step9-----Assign as master
+  Call EnoviaDSM_S05001_S_AssignAsMaster()
+  
+  'Step10----Logout Enovia
+  Call EnoviaDSM_S05001_S_Logout()
+  
+  Call LogTestCase("Create ArtiosMPMP", "DSMS500_Create_ArtiosMPMP","DSM_E2E_S5001")
+  
+End Sub

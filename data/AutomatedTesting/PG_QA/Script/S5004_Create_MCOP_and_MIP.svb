@@ -1,0 +1,41 @@
+﻿'USEUNIT S5004S_Create_MCOP_and_MIP
+'USEUNIT LogLib
+'USEUNIT DSM_E2EUtility
+'USEUNIT DSM_PDTUtility
+'USEUNIT EnoviaUtils
+'USEUNIT WebObjectLib
+'USEUNIT WindowsUtility
+
+Sub EnoviaDSM_S05004_CreateMIPandMCOP(sUser)
+  On Error Resume Next  
+  
+  'Step1-----Login Enovia
+  Call EnoviaDSM_S05004_S_Login(sUser)
+  
+  'step2-----create MIP 
+  Call EnoviaDSM_S05004_S_CreateMIP()
+  
+  'step3-----Edit MIP Attribute
+  Call EnoviaDSM_S05004_S_EditMIPAttribute()
+  
+  'step4----Add MIP to part family
+  Call EnoviaDSM_S05004_S_AddMIPToPartFamily()
+  
+  'step5----Assign MIP as master
+  Call EnoviaDSM_S05004_S_AssignMIPAsMaster()
+  
+  'step6----create MCOP 
+  Call EnoviaDSM_S05004_S_CreateMCOP()
+  
+  'step7----Edit MCOP Attribute
+  Call EnoviaDSM_S05004_S_EditMCOPAttribute()
+  
+  'step8----Add MCOP to part family
+  Call EnoviaDSM_S05004_S_AddMCOPToPartFamily()
+  
+  'step9----Assign MCOP as master
+  Call EnoviaDSM_S05004_S_AssignMCOPAsMaster()
+  
+  Call LogTestCase("Create MIP and MCOP Then Add them to part family", "DSMS5004_Create_MIP_and_MCOP","DSM_E2E_S5004")
+  
+End Sub 

@@ -1,0 +1,31 @@
+﻿'##################################################################################################################
+'Script/Function/Sub Name     : objGetRecordSet
+'Description                  : To Return a recordset based on the query passed
+'Arguments                    : m_objConn: Connection Object of the Excel Workbook
+'                             : strSql: The SQL query to execute
+'Return Value                 : Recordset Object - Returns the Recordset Object
+'Author                       : Pramod Rao
+'Creation Date                : 25 -March- 2014
+'Special Conditions           : NA
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+Function objGetRecordSet(m_objConn, m_strSql)
+    'On Error Resume Next
+
+    Dim objRs   'Declaraton of the variable
+    
+    'Create the record set object
+    Set objRs = CreateObject("ADODB.Recordset")
+    'objRs.CursorLocation  = 3
+    
+    'Open the record set
+    objRs.Open m_strSql, m_objConn, 3, 4
+
+    'Pass the object record set into the function
+    Set objGetRecordSet = objRs
+    
+'    'Release memory from the objects
+    Set objRs = Nothing
+    
+End Function

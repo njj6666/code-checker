@@ -1,0 +1,192 @@
+﻿'USEUNIT GlobalVars	
+'USEUNIT LogLib	
+'USEUNIT OR_Enovia	
+'USEUNIT WindowsUtility	
+'USEUNIT EnoviaUtils	
+'USEUNIT WebObjectLib	
+'USEUNIT EnoviaSearch_PopulateSearchModel	
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC22_Steps
+'Description                  : Search with Page Size (If you have too many Search Results with the same Name(s)/Phrase(s).)
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC22_Steps()	
+	
+	Call LogStep("EnoviaSearch_PeripheralTC22_Step1", "A dropdown with various commands(Like-Named Search, My Favourite Searches, Full Text Search..etc) should appear","")
+	Call LogStep("EnoviaSearch_PeripheralTC22_Step2", "A new window with 'Search Refinement Pane' and 'Search Results Pane' should pop up","")
+	Call LogStep("EnoviaSearch_PeripheralTC22_Step3", "The 'Search Results Pane' should refresh and all the objects which contain the Name(s)/Phrase(s) that was typed will be displayed. Ex:  All the Objects which contain the Phrase Test in their Specification/Attributes/Docs should be displayed.","")
+  Call LogStep("EnoviaSearch_PeripheralTC22_Step4", "The Page Size Textbox has the default value 100","")
+	Call LogStep("EnoviaSearch_PeripheralTC22_Step5", "A Message from the Webpage dialogue box should appear which says -Maximum allowed page size is : 10000.","")
+	
+	Call LogTestCase("Promoting/Demoting your Search Results", "TC-22_Find Product Data_Refinement_Page_Size","47714")
+	
+End Function	
+	
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC22_Step1
+'Description                  : Click on the dropdown beside the textbox(default value:Named Search),In the Global Search Bar
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+
+Function EnoviaSearch_PeripheralTC22_Step1()
+	
+    'Create object for delete saved name
+    Set objDeleteSaved = objGetObject(OR_EnoviaSearch_TC19_DeleteSavedName,"","")
+    objDeleteSaved.Click()
+    Set objDeleteSaved = nothing
+    
+    'Create object for Search product spec
+    Set objEnoviaSearchProductSpec = objGetObject(OR_EnoviaSearchProductSpec_SearchDrp,"",3000)
+    If objEnoviaSearchProductSpec.VisibleOnScreen = False Then
+      Call Err.raise(65000,"EnoviaSearch_PeripheralTC122_Step1","A dropdown with various commands shown")
+    End If
+    Set objEnoviaSearchProductSpec = nothing
+    
+End Function	
+	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC22_Step2
+'Description                  : Purpose is to Click on the 'Find Product Data' Command
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC22_Step2()	
+
+    'create object for EnoviaSearchFindProdData
+    Set objEnoviaSearchFindProdData = objGetObject(OR_EnoviaSearchFindProdData_SearchDrop,"",3000)
+    If objEnoviaSearchFindProdData.VisibleOnScreen = True Then
+      objEnoviaSearchFindProdData.Click()
+    Else    
+      'create object for SearchProductSpec
+      Set objEnoviaSearchProductSpec = objGetObject(OR_EnoviaSearchProductSpec_SearchDrp,"","")
+      objEnoviaSearchProductSpec.Click()
+      objEnoviaSearchFindProdData.Click()
+    End If
+    Set objEnoviaSearchProductSpec = nothing
+    Set objEnoviaSearchFindProdData = nothing
+    
+    'create object for search edit
+    Set objSearchEdtRecord = objGetObject(OR_EnoviaSearchFindProdData_SearchEdt,g_SearchPageURL,3000)
+    If objSearchEdtRecord.Exists = False Then
+      Call Err.raise (64981,"EnoviaSearch_PeripheralTC14_Step2","Fail-FindProdData NOT opened")
+    End If
+    Set objSearchEdtRecord = nothing
+    
+End Function	
+	
+	
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC22_Step4
+'Description                  : Checks whether The Page Size Textbox should have the default value 100
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC22_Step4()	
+ 
+    'Create object for page size
+    Set objPageSizeOfSearch = objGetObject(OR_EnoviaSearch_PageSize_TxtBox,g_SearchPageURL,3000)
+    objPageSizevalue=objPageSizeOfSearch.Text
+    If objPageSizevalue <> "100" Then
+      Call Err.raise(64982,"EnoviaSearch_PeripheralTC22_Step3","Default page size is NOT 100")
+    End If
+    Set objPageSizeOfSearch = nothing
+    
+End Function	
+	
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC22_Step3
+'Description                  : In the textbox under  Search Refinement  Pane', 
+'                               type the Name(s)/Phrase(s) you want to search and 
+'                               Click on the Search Icon next to the textbox
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC22_Step3()	
+   
+   'create object for search edit
+    Set objSearchEdtRecord = objGetObject(OR_EnoviaSearchFindProdData_SearchEdt,g_SearchPageURL,3000)
+    SearchRecord = EnoviaSearch_ReadTestCasesData("TC-22_Find Product Data_Refinement_Page_Size","Phrase")
+    objSearchEdtRecord.SetText(SearchRecord)
+    Set objSearchEdtRecord = nothing
+        
+    'Create object for search refresh command
+    Set objSearchRefreshCmd = objGetObject(OR_EnoviaSearch_SSearchRefreshCmd,g_SearchPageURL,"")
+    objSearchRefreshCmd.Click()
+    Set objSearchRefreshCmd = nothing 
+    
+    'Wait for complete loading of page
+    WaitPageLoad(g_SearchPageURL) 
+   
+End Function	
+	
+
+'##################################################################################################################
+'Function Name                : EnoviaSearch_PeripheralTC22_Step5
+'Description                  : Change the Value of the Page Size to 10001 and Click on Search Icon.
+'Arguments                    : NA
+'Return Value                 : NA
+'Author                       : Vamsi
+'Creation Date                : 8-6-2017
+'Special Conditions           : NA                                     
+'Revision History             : NA
+'Revision Date                : NA
+'##################################################################################################################
+
+Function EnoviaSearch_PeripheralTC22_Step5()	
+    
+    'Create object for page size
+    Set objPageSizeOfSearch = objGetObject(OR_EnoviaSearch_PageSize_TxtBox,g_SearchPageURL,3000)
+    SearchRecord = EnoviaSearch_ReadTestCasesData("TC-22_Find Product Data_Refinement_Page_Size","UpperLimit")
+    objPageSizeOfSearch.SetText(SearchRecord)
+    Set objPageSizeOfSearch = nothing
+    
+    'Wait for complete loading of page
+    WaitPageLoad(g_SearchPageURL) 
+
+    'Create object for Setting the Page Size
+    Set objSetPageSizeImg = objGetObject(OR_EnoviaSearch_SetPageSize_Img,g_SearchPageURL,"")
+    objSetPageSizeImg.Click()
+    Set objSetPageSizeImg = nothing
+    
+    'Function to handle pop up
+     Call EnoviaSearch_AlertWindow("Maximum allowed page size is : 10000")
+    
+End Function	
+	
+	

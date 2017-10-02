@@ -1,0 +1,127 @@
+﻿'USEUNIT DBLib
+'USEUNIT EnoviaSearch_PopulateSearchModel
+'USEUNIT EnoviaSearch_Scenarios
+'USEUNIT EnoviaSearch_ValidateResults
+'USEUNIT EnoviaUtils
+'USEUNIT GlobalVars
+'USEUNIT LogLib
+'USEUNIT FileLib
+'USEUNIT TimeLib
+'USEUNIT WindowsUtility
+'USEUNIT EnoviaSearch_ExecuteNamedSearch
+'USEUNIT EnoviaSearch_ExecuteFullTextSearch
+'USEUNIT EnoviaSearch_ExecuteFindProductData
+'USEUNIT EnoviaSearch_Utility
+
+Function Start_EnoviaSearch_Engine_Manual()
+  Call Start_EnoviaSearch_Engine("plmtest", 0)
+End Function
+
+Function Start_EnoviaSearch_Engine_Auto()
+  Set oParams = FileLib_GetTestCompleteAutoParams()
+  Call Start_EnoviaSearch_Engine(oParams.Environment, oParams.BuildNumber)
+End Function
+
+Function Start_EnoviaSearch_TestCases_Manual()
+  Call Start_EnoviaSearch_TestCases("plmtest", 0)
+End Function
+
+Function Start_EnoviaSearch_TestCases_Auto()
+  Set oParams = FileLib_GetTestCompleteAutoParams()
+  Call Start_EnoviaSearch_TestCases(oParams.Environment, oParams.BuildNumber)
+End Function
+
+'This is the start of the search engine
+Function Start_EnoviaSearch_Engine(sEnv, nBuildNumber)
+  
+  On Error Resume Next
+    
+  Call CreateEnvironment("Enovia Search Regression", sEnv, false, "Enovia Search Regression", false, "Regression")
+  
+  If Log_UpdateIsBlocked() = False Then
+    Set oTestCases = EnoviaSearch_CreateDictionaryModel(sEnv)
+    aTCItems = oTestCases.Items
+    aTCKeys = oTestCases.Keys  
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then      
+    g_strBrowserType = c_IExplorer
+    Call Enovia_LaunchEnovia(g_regLog.Environment)
+  End If    
+    
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_Login(g_SearchEngineUserName)
+    Set g_SearchEngineUserName = Nothing
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_clickOK()
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then
+    aqUtils.Delay 10000,"Waiting for the Main Search page to load."
+    For iRow = 0 to Ubound(aTCItems) 
+      g_isBlocked = false
+      
+      If aTCItems(iRow).Common.SearchType = "Named" Then
+        Call EnoviaSearch_StartNamedSearch(aTCItems(iRow))
+      ElseIf aTCItems(iRow).Common.SearchType = "Full Text" Then
+        Call EnoviaSearch_StartFullTextSearch(aTCItems(iRow))
+      ElseIf aTCItems(iRow).Common.SearchType = "Find Product Data" Then
+        Call EnoviaSearch_StartFindProductDataSearch(aTCItems(iRow))
+      End If
+      
+      Call LogTestCase(aTCItems(iRow).Common.Description, aTCItems(iRow).Common.TestCaseNumber, aTCItems(iRow).Common.ALM_ID)
+    Next
+  End If
+  
+  Call CloseAllBrowserProcesses()
+  
+  Call CloseEnvironment()
+  
+  If Err.Number <> 0 Then
+    Call MsgBox(Err.Description)
+  End If
+  
+End Function 
+
+'This is the starting point for the search test cases
+Function Start_EnoviaSearch_TestCases(sEnv, nBuildNumber)
+  
+  On Error Resume Next
+    
+  Call CreateEnvironment("Enovia Search Regression", sEnv, false, "Enovia Search Regression", false, "Regression")
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call EnoviaSearch_CreateDicObjTestCases()
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then      
+    g_strBrowserType = c_IExplorer
+    Call Enovia_LaunchEnovia(g_regLog.Environment)
+  End If    
+    
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_Login(g_SearchTestCasesUserName)
+    Set g_SearchTestCasesUserName = Nothing
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call Enovia_clickOK()
+  End If
+  
+  If Log_UpdateIsBlocked() = False Then
+    Call EnoviaSearch_StartScenarios()
+  End If
+      
+  Call CloseAllBrowserProcesses()
+  
+  Call CloseEnvironment()
+  
+  Set g_objTestObject = nothing
+  
+  If Err.Number <> 0 Then
+    Call MsgBox(Err.Description)
+  End If
+  
+End Function 

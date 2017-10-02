@@ -1,0 +1,30 @@
+﻿'Creates an instance of the Common Model Class
+Function GetTestCompleteAuto_ModelInstance
+  Set TestCompleteAuto_Model = New TestCompleteAuto_Model
+End Function
+
+Class TestCompleteAuto_Model
+
+  'A data member that holds the environment to be run on
+  Private m_sEnvironment
+  
+  'A data member that holds enovia build number
+  Private m_nBuildNumber
+  
+  Public Property Let Environment(value)
+    m_sEnvironment = value
+  End Property
+  
+  Public Property Get Environment()
+    Environment = m_sEnvironment
+  End Property
+  
+  Public Property Let BuildNumber(value)
+    m_nBuildNumber = value
+  End Property
+  
+  Public Property Get BuildNumber()
+    BuildNumber = m_nBuildNumber
+  End Property
+   
+End Class

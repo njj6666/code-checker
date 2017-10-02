@@ -1,0 +1,38 @@
+﻿'USEUNIT CSSUtils
+'USEUNIT CSS_SearchItem
+'USEUNIT CSS_CreateTS
+'USEUNIT ExcelLib
+Sub ENOVIADSM_Set6_001_OriginateTAMUandPROS(sEnv,sUser)
+  
+   On Error Resume Next  
+   'Step1-----Login CSS
+    If Log_UpdateIsBlocked() = False Then      
+      Call CSS_LaunchCSS(sEnv)
+    End If
+    If Log_UpdateIsBlocked() = False Then
+      If Not CSS_Login(sUser) Then
+         Log.Error("Cannot login into Enovia!")
+         Runner.Stop
+       End If
+     End If 
+     If Log_UpdateIsBlocked() = False Then
+       Call CSS_clickLogin()
+     End If
+  'Step2-----create new UN-FC
+   
+   'create new TS for PROS
+   Call CSS_CreateNew()
+   Call CSSCreate_ChooseStandardType("FC",false)
+   Call CSS_CreateProductData("PROS_IPM_RMP")
+   
+   'create new TS for TAMU
+   Call CSS_CreateNew()
+   Call CSSCreate_ChooseStandardType("TAMU (Target Acceptable Marginal Unacceptable)",false)
+   Call CSS_CreateProductData("TAMU_IPM_RMP_MRMP","6","Target Acceptable Marginal Unacceptable")
+   'logout css
+   Call CSS_Logout()
+  
+End Sub
+function test
+  Call ENOVIADSM_Set6_001_OriginateTAMUandPROS("csstest","ab7918test")
+End Function 
