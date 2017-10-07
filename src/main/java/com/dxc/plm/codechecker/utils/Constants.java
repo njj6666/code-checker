@@ -15,4 +15,9 @@ public class Constants {
 	public final static String LINE_TYPE_VAR = "variable";
 	public final static String LINE_TYPE_COMMENT = "comment";
 	public final static String LINE_TYPE_FUNCTION = "function";
+	
+	public final static String APPLICATIONS[] = {"Enovia"};
+	public final static String PROJECTS[] = {"PDT","DSM"};
+	public final static String UTILITY[] = {"Excel","DB"};
+
 }

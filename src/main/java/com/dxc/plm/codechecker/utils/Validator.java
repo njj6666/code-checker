@@ -29,7 +29,12 @@ public class Validator {
 			} else if (trimLine.startsWith("g_") || trimLine.startsWith("m_")) {
 				//var = trimLine.substring(0, trimLine.indexOf("=")).trim();
 				//checkGlobalVar(var);
+			} else if(lineType.equals(Constants.LINE_FUNCTION)) {
+				String functionName = getFunctionName(trimLine);
+				checkFunctionNaming(functionName);
+				
 			}
+
 		}
 		Main.lineNumber++;
 	}
@@ -109,5 +114,60 @@ public class Validator {
 		return type;
 
 	}
+	
+	public static void checkFunctionNaming(String functionName) {
+		boolean flag = true;
+		if(!Character.isUpperCase(functionName.charAt(0))) {
+			flag = false;
+		}else {
+			for(String util :Constants.UTILITY) {
+				if (!functionName.startsWith(util+"_")) {
+					flag = false;
+				}
+			}
+		}
+		
+		if(flag)
+			return;
+		
+		String app_prefix="";
+		for(String app :Constants.APPLICATIONS) {
+			if (functionName.startsWith(app)) {
+				app_prefix = app;
+			}else {
+				flag = false;
+			}
+		}
+		
+		String prj_prefix="";
+		if(flag) {
+			for(String project :Constants.PROJECTS) {
+				String funcNameWithoutApp = functionName.substring(app_prefix.length());
+				if (funcNameWithoutApp.startsWith(project+"_")) {
+					prj_prefix = project;
+				}else {
+					flag = false;
+				}
+			}	
+		}
+
+		if(flag) {
+			String prefix = app_prefix + prj_prefix + "_";
+			String functionNameWithoutPrefix = functionName.substring(prefix.length());
+			if(Character.isUpperCase(functionNameWithoutPrefix.charAt(0))) {
+				flag = false;
+			}
+		}
+		
+		if(!flag) {
+			Main.results.add(new Result(Main.lineNumber, "Function naming invalid", Main.targetFile, functionName));
+		}
+	}
+	
+	public static String getFunctionName(String line) {
+		return line.substring(line.indexOf(" "), line.indexOf("(")).trim();
+	}
+
+
 
 }
