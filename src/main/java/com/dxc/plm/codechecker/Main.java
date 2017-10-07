@@ -51,8 +51,7 @@ public class Main {
 		}
 
 		// Report the results
-		
-		File f = new File((new File("")).getAbsolutePath()+"\\check_output.csv");
+		File f = new File(System.getProperties().getProperty("user.home")+"\\check_output.csv");
 		System.out.println(f);
 		if (f.exists())
 			f.delete();
