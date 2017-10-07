@@ -65,7 +65,7 @@
 						<manifest>
 							<addClasspath>true</addClasspath>
 							<classpathPrefix>lib/</classpathPrefix>
-							<mainClass>com.dxc.dbe.tools.confluence.main.Main</mainClass>
+							<mainClass>com.dxc.plm.codechecker.Main</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

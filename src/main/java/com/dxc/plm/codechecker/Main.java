@@ -6,8 +6,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
-
 import com.dxc.plm.codechecker.config.CheckerConfiguration;
 import com.dxc.plm.codechecker.model.Result;
 import com.dxc.plm.codechecker.utils.Utils;
@@ -20,7 +18,7 @@ import com.dxc.plm.codechecker.utils.Utils;
  */
 public class Main {
 
-	static Logger log = Logger.getLogger(Main.class.getName());
+	//static Logger log = Logger.getLogger(Main.class.getName());
 	public static File targetFile;
 	public static int lineNumber;
 	public static List<Result> results = new ArrayList<Result>();
@@ -30,7 +28,7 @@ public class Main {
 		// load configuration
 		CheckerConfiguration config = new CheckerConfiguration();
 		Utils utils = new Utils();
-		String workDir = "C:\\Users\\niujij\\workspace\\svnWorkspace\\mainline\\developer\\scripts";
+		String workDir = "C:\\Users\\niujij\\workspace\\plm-code-checker\\data\\AutomatedTesting";
 		if(args.length>0) {
 			workDir = args[0];
 		}
@@ -53,7 +51,9 @@ public class Main {
 		}
 
 		// Report the results
-		File f = new File("C:\\Users\\niujij\\check_output.csv");
+		
+		File f = new File((new File("")).getAbsolutePath()+"\\check_output.csv");
+		System.out.println(f);
 		if (f.exists())
 			f.delete();
 		f.createNewFile();
