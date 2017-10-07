@@ -30,12 +30,17 @@ public class Main {
 		// load configuration
 		CheckerConfiguration config = new CheckerConfiguration();
 		Utils utils = new Utils();
-		// List<File> fileList = utils.getFileList(
-		// "C:\\Users\\niujij\\workspace\\svnWorkspace\\mainline\\developer\\scripts",
-		// config.getFileTypes());
+		String workDir = "C:\\Users\\niujij\\workspace\\svnWorkspace\\mainline\\developer\\scripts";
+		if(args.length>0) {
+			workDir = args[0];
+		}
+		
+		List<File> fileList = utils.getFileList(workDir, config.getFileTypes());
 
-		List<File> fileList = utils.getFileList("C:\\Users\\niujij\\workspace\\PG_Project\\trunk\\src",
-				config.getFileTypes());
+			// List<File> fileList =
+			// utils.getFileList("C:\\Users\\niujij\\workspace\\PG_Project\\trunk\\src",
+			// config.getFileTypes());
+	
 
 		CheckerFactory factory = new CheckerFactory();
 		for (File file : fileList) {
@@ -48,13 +53,13 @@ public class Main {
 		}
 
 		// Report the results
-		File f=new File("C:\\Users\\niujij\\check_output.csv");  
-		if(f.exists())
+		File f = new File("C:\\Users\\niujij\\check_output.csv");
+		if (f.exists())
 			f.delete();
-        f.createNewFile();  
-        FileOutputStream fileOutputStream = new FileOutputStream(f);  
-        PrintStream printStream = new PrintStream(fileOutputStream);  
-        System.setOut(printStream);  
+		f.createNewFile();
+		FileOutputStream fileOutputStream = new FileOutputStream(f);
+		PrintStream printStream = new PrintStream(fileOutputStream);
+		System.setOut(printStream);
 		for (Result result : results) {
 			System.out.println(result.toString());
 		}

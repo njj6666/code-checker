@@ -50,7 +50,7 @@ public class Result {
 
 	@Override
 	public String toString() {
-		return file + "\t" + lineNumber + "\t" + line + "\t" + message;
+		return file.getName() + "\t" + lineNumber + "\t" + message + "\t" + line;
 	}
 
 }

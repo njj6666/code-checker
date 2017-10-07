@@ -29,12 +29,12 @@ public class Validator {
 			} else if (trimLine.startsWith("g_") || trimLine.startsWith("m_")) {
 				//var = trimLine.substring(0, trimLine.indexOf("=")).trim();
 				//checkGlobalVar(var);
-			} else if(lineType.equals(Constants.LINE_FUNCTION)) {
-				String functionName = getFunctionName(trimLine);
-				checkFunctionNaming(functionName);
-				
-			}
+			} 
 
+		} else if(lineType.equals(Constants.LINE_TYPE_FUNCTION)) {
+			String functionName = getFunctionName(trimLine);
+			checkFunctionNaming(functionName);
+			
 		}
 		Main.lineNumber++;
 	}
@@ -106,9 +106,9 @@ public class Validator {
 				|| trimLine.startsWith("g_")
 				|| trimLine.startsWith("m_")) {
 			type = Constants.LINE_TYPE_VAR;
-		} else if (trimLine.toLowerCase().startsWith(Constants.LINE_COMMENT.toLowerCase())) {
+		} else if (trimLine.startsWith(Constants.LINE_COMMENT.toLowerCase())) {
 			type = Constants.LINE_TYPE_COMMENT;
-		} else if (trimLine.toLowerCase().startsWith(Constants.LINE_FUNCTION.toLowerCase())) {
+		} else if (trimLine.startsWith(Constants.LINE_FUNCTION.toLowerCase())) {
 			type = Constants.LINE_TYPE_FUNCTION;
 		}
 		return type;
@@ -165,9 +165,12 @@ public class Validator {
 	}
 	
 	public static String getFunctionName(String line) {
-		return line.substring(line.indexOf(" "), line.indexOf("(")).trim();
+		if(line.contains("(")) {
+			return line.substring(line.indexOf(" "), line.indexOf("(")).trim();
+		}else {
+			return line.substring(line.indexOf(" ")).trim();
+		}
+		
 	}
-
-
 
 }
