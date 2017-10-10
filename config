@@ -1,0 +1,4 @@
+#add you prefix separated by comma
+function.application.prefix = Enovia
+function.project.prefix = PDT,DSM
+function.utility.prefix = Excel,DB

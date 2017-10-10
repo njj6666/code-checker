@@ -1,6 +1,7 @@
 package com.dxc.plm.codechecker.utils;
 
 import com.dxc.plm.codechecker.Main;
+import com.dxc.plm.codechecker.config.CheckerConfiguration;
 import com.dxc.plm.codechecker.model.Result;
 
 public class Validator {
@@ -37,11 +38,6 @@ public class Validator {
 			
 		}
 		Main.lineNumber++;
-	}
-
-	public static void main(String[] args) throws Exception {
-		String var = "arrGetObj";
-		System.out.println(Character.isUpperCase(var.charAt(3)));
 	}
 
 	public static void checkOverviewComment(String line) {
@@ -116,24 +112,29 @@ public class Validator {
 	}
 	
 	public static void checkFunctionNaming(String functionName) {
+		CheckerConfiguration config = CheckerConfiguration.getInstance(null);
 		boolean flag = true;
 		if(!Character.isUpperCase(functionName.charAt(0))) {
 			flag = false;
 		}else {
-			for(String util :Constants.UTILITY) {
-				if (!functionName.startsWith(util+"_")) {
-					flag = false;
+			flag = false;
+			for(String util :config.getUtilities()) {
+				if (functionName.startsWith(util+"_")) {
+					flag = true;
+					break;
 				}
 			}
 		}
 		
 		if(flag)
-			return;
+			return;	
 		
 		String app_prefix="";
-		for(String app :Constants.APPLICATIONS) {
+		for(String app :config.getApplications()) {
 			if (functionName.startsWith(app)) {
 				app_prefix = app;
+				flag = true;
+				break;
 			}else {
 				flag = false;
 			}
@@ -141,10 +142,12 @@ public class Validator {
 		
 		String prj_prefix="";
 		if(flag) {
-			for(String project :Constants.PROJECTS) {
+			for(String project :config.getProjects()) {
 				String funcNameWithoutApp = functionName.substring(app_prefix.length());
 				if (funcNameWithoutApp.startsWith(project+"_")) {
 					prj_prefix = project;
+					flag = true;
+					break;
 				}else {
 					flag = false;
 				}
@@ -154,7 +157,7 @@ public class Validator {
 		if(flag) {
 			String prefix = app_prefix + prj_prefix + "_";
 			String functionNameWithoutPrefix = functionName.substring(prefix.length());
-			if(Character.isUpperCase(functionNameWithoutPrefix.charAt(0))) {
+			if(!Character.isUpperCase(functionNameWithoutPrefix.charAt(0))) {
 				flag = false;
 			}
 		}

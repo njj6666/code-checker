@@ -18,7 +18,7 @@
       <outputDirectory>/</outputDirectory>
       <includes>
         <include>${project.artifactId}.jar</include>
-        <include>lib/*</include>
+      <!--   <include>lib/*</include>  -->
       </includes>
     </fileSet> 
   </fileSets>

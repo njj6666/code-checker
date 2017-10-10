@@ -26,7 +26,8 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 
 		// load configuration
-		CheckerConfiguration config = new CheckerConfiguration();
+		CheckerConfiguration config = CheckerConfiguration.getInstance("./config");
+		
 		Utils utils = new Utils();
 		String workDir = "C:\\Users\\niujij\\workspace\\plm-code-checker\\data\\AutomatedTesting";
 		if(args.length>0) {
@@ -51,7 +52,8 @@ public class Main {
 		}
 
 		// Report the results
-		File f = new File("C:\\Users\\niujij\\check_output.csv");
+		//File f = new File("C:\\Users\\niujij\\check_output.csv");
+		File f = new File(System.getProperty("user.home")+"\\check_output.csv");
 		System.out.println("Report location:");
 		System.out.println(f);
 		if (f.exists())
