@@ -19,5 +19,7 @@ public class Constants {
 	public final static String APPLICATIONS[] = {"Enovia"};
 	public final static String PROJECTS[] = {"PDT","DSM"};
 	public final static String UTILITY[] = {"Excel","DB"};
+	
+	public final static String JENKINS = "jenkins";
 
 }

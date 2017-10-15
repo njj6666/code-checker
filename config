@@ -2,3 +2,5 @@
 function.application.prefix = Enovia
 function.project.prefix = PDT,DSM
 function.utility.prefix = Excel,DB
+
+jenkins.workspace.dir = C:\\Program Files (x86)\\Jenkins\\workspace\\svnTutorial

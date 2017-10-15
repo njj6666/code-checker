@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.dxc.plm.codechecker.config.CheckerConfiguration;
 import com.dxc.plm.codechecker.model.Result;
+import com.dxc.plm.codechecker.utils.Constants;
 import com.dxc.plm.codechecker.utils.Utils;
 
 /**
@@ -27,15 +28,19 @@ public class Main {
 
 		// load configuration
 		CheckerConfiguration config = CheckerConfiguration.getInstance("./config");
-		
 		Utils utils = new Utils();
+		//the initial workdir is for debug
 		String workDir = "C:\\Users\\niujij\\workspace\\plm-code-checker\\data\\AutomatedTesting";
 		if(args.length>0) {
 			workDir = args[0];
 		}
 		
 		List<File> fileList = utils.getFileList(workDir, config.getFileTypes());
-
+		
+		if(fileList.size()==0) {
+			System.exit(0);
+		}
+		
 			// List<File> fileList =
 			// utils.getFileList("C:\\Users\\niujij\\workspace\\PG_Project\\trunk\\src",
 			// config.getFileTypes());
@@ -53,7 +58,12 @@ public class Main {
 
 		// Report the results
 		//File f = new File("C:\\Users\\niujij\\check_output.csv");
-		File f = new File(System.getProperty("user.home")+"\\check_output.csv");
+		File f = null;
+		if(Constants.JENKINS.equals(workDir)) {
+			f = new File("check_output.csv");
+		}else {
+			f = new File(System.getProperty("user.home")+"\\check_output.csv");
+		}
 		System.out.println("Report location:");
 		System.out.println(f);
 		if (f.exists())

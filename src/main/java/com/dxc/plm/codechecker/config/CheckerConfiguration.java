@@ -19,6 +19,8 @@ public class CheckerConfiguration extends Properties{
 	
 	public List<String> rules;
 	
+	public String jenkins_workspace;
+	
 	static private CheckerConfiguration config;
 	
 	private CheckerConfiguration(){
@@ -96,5 +98,13 @@ public class CheckerConfiguration extends Properties{
 
 	public void setUtilities(String[] utilities) {
 		this.utilities = utilities;
+	}
+
+	public String getJenkins_workspace() {
+		return config.getProperty("jenkins.workspace.dir");
+	}
+
+	public void setJenkins_workspace(String jenkins_workspace) {
+		this.jenkins_workspace = jenkins_workspace;
 	}
 }

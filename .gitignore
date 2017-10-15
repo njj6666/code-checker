@@ -1,5 +1,6 @@
 target/
-
+jenkins/
+changelist.txt
 bin
 
 .project
