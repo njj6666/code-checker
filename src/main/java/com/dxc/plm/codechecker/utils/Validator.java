@@ -112,7 +112,7 @@ public class Validator {
 	}
 	
 	public static void checkFunctionNaming(String functionName) {
-		CheckerConfiguration config = CheckerConfiguration.getInstance(null);
+		CheckerConfiguration config = CheckerConfiguration.getInstance("./config");
 		boolean flag = true;
 		if(!Character.isUpperCase(functionName.charAt(0))) {
 			flag = false;
@@ -137,6 +137,17 @@ public class Validator {
 				break;
 			}else {
 				flag = false;
+			}
+		}
+		
+		String singleAppPrefix = app_prefix+"_";
+		if(flag && functionName.startsWith(singleAppPrefix)) {
+			String functionNameWithoutSingleAppPrefix = functionName.substring(singleAppPrefix.length());
+			if(!Character.isUpperCase(functionNameWithoutSingleAppPrefix.charAt(0))) {
+				flag = false;
+			}
+			if(flag) {
+				return;
 			}
 		}
 		
@@ -175,5 +186,6 @@ public class Validator {
 		}
 		
 	}
+	
 
 }

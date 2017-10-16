@@ -9,4 +9,7 @@
 ## 1.1.0
 1. Integrate with Jenkins.
 
+## 1.1.1
+1. Omit overview comment check.
+2. Add new rule for function naming - <App>_FuncName, eg. ENG_UpdateText
 

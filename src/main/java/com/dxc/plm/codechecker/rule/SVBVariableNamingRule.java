@@ -21,9 +21,9 @@ public class SVBVariableNamingRule implements Rule {
 			String lineTxt = null;
 
 			while ((lineTxt = br.readLine()) != null) {
-				if (Main.lineNumber == 1) {
-					Validator.checkOverviewComment(lineTxt);
-				}
+//				if (Main.lineNumber == 1) {
+//					Validator.checkOverviewComment(lineTxt);
+//				}
 				Validator.validateNaming(lineTxt);
 			}
 			br.close();
