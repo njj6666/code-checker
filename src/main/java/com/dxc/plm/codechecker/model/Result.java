@@ -50,7 +50,8 @@ public class Result {
 
 	@Override
 	public String toString() {
-		return file.getName() + "\t" + lineNumber + "\t" + message + "\t" + line;
+		//delimiter by 6 hyphens
+		return file.getName() + "------" + lineNumber + "------" + message + "------" + line;
 	}
 
 }

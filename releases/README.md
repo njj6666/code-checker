@@ -13,3 +13,5 @@
 1. Omit overview comment check.
 2. Add new rule for function naming - <App>_FuncName, eg. ENG_UpdateText
 
+## 1.1.2
+1. use "------" as new delimter
