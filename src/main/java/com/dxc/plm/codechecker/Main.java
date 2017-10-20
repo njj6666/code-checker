@@ -58,6 +58,10 @@ public class Main {
 
 		// Report the results
 		//File f = new File("C:\\Users\\niujij\\check_output.csv");
+		if(results.size()==0) {
+			System.out.println("Congrats! Your code style is cool!");
+			System.exit(0);
+		}
 		File f = null;
 		if(Constants.JENKINS.equals(workDir)) {
 			f = new File("check_output.csv");
