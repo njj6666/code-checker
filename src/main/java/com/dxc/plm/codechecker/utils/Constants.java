@@ -27,7 +27,7 @@ public class Constants {
 	public final static String JENKINS = "jenkins";
 	
 	public final static String CONFIG_FILE = "./config";
-	public final static String TEST_DATA = "testdata/AutomatedTesting";
+	public final static String TEST_DATA = "testdata/Script";
 	
 	public final static String MESSAGE_NO_FILE_TO_CHECK = "No applicatable files to check.";
 	public final static String MESSAGE_NO_ISSUE = "Congrats! Your code style is cool!";
