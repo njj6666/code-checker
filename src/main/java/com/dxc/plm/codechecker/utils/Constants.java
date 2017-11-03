@@ -2,6 +2,10 @@ package com.dxc.plm.codechecker.utils;
 
 public class Constants {
 	public final static String FILE_TYPE_SVB = "svb";
+	public final static int FIRST_LINE = 1;
+	public final static String DOT = ".";
+	public final static String REPORT = "check_output.csv";
+
 
 	public final static String RULE_FILE_NAME = "FileNameRule";
 	public final static String RULE_VARIABLE_NAMING = "VariableNaming";
@@ -21,5 +25,11 @@ public class Constants {
 	public final static String UTILITY[] = {"Excel","DB"};
 	
 	public final static String JENKINS = "jenkins";
-
+	
+	public final static String CONFIG_FILE = "./config";
+	public final static String TEST_DATA = "testdata/AutomatedTesting";
+	
+	public final static String MESSAGE_NO_FILE_TO_CHECK = "No applicatable files to check.";
+	public final static String MESSAGE_NO_ISSUE = "Congrats! Your code style is cool!";
+	
 }

@@ -1,5 +1,5 @@
 #add you prefix separated by comma
-function.application.prefix = Enovia,ENG
+function.application.prefix = Enovia,Eng
 function.project.prefix = PDT,DSM
 function.utility.prefix = Excel,DB
 

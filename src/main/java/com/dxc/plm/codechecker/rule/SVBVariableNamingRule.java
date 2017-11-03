@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
-import com.dxc.plm.codechecker.Main;
+import com.dxc.plm.codechecker.utils.ApplicationContext;
 import com.dxc.plm.codechecker.utils.Validator;
 
 public class SVBVariableNamingRule implements Rule {
@@ -17,7 +17,7 @@ public class SVBVariableNamingRule implements Rule {
 
 		BufferedReader br;
 		try {
-			br = new BufferedReader(new InputStreamReader(new FileInputStream(Main.targetFile), "UTF-8"));
+			br = new BufferedReader(new InputStreamReader(new FileInputStream(ApplicationContext.targetFile), "UTF-8"));
 			String lineTxt = null;
 
 			while ((lineTxt = br.readLine()) != null) {

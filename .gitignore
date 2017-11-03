@@ -13,3 +13,5 @@ bin
 del_or_nil_files.txt
 new_files.txt
 modified_files.txt
+
+.scannerwork/

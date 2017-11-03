@@ -65,7 +65,7 @@
 						<manifest>
 							<addClasspath>true</addClasspath>
 							<classpathPrefix>lib/</classpathPrefix>
-							<mainClass>com.dxc.plm.codechecker.Main</mainClass>
+							<mainClass>com.dxc.plm.codechecker.Application</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

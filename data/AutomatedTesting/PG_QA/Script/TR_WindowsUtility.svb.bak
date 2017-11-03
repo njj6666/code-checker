@@ -1,6 +1,0 @@
-﻿'USEUNIT GlobalVars
-
-Function TR_Windows_LaunchBrowser()
-  
-  'WaitFor Login Page 
-End Function 

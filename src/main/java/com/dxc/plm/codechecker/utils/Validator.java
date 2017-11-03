@@ -1,7 +1,10 @@
 package com.dxc.plm.codechecker.utils;
 
-import com.dxc.plm.codechecker.Main;
-import com.dxc.plm.codechecker.config.CheckerConfiguration;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import com.dxc.plm.codechecker.Application;
 import com.dxc.plm.codechecker.model.Result;
 
 public class Validator {
@@ -12,8 +15,8 @@ public class Validator {
 		if (lineType.equals(Constants.LINE_TYPE_VAR)) {
 			String var;
 			if (trimLine.startsWith("dim") || trimLine.startsWith("set") || trimLine.startsWith("public")) {
-				Main.results.add(
-						new Result(Main.lineNumber, "Using Dim/Set/Public, Not dim/set/public", Main.targetFile, line));
+				ApplicationContext.results.add(
+						new Result(ApplicationContext.lineNumber, "Using Dim/Set/Public, Not dim/set/public", ApplicationContext.targetFile, line));
 			}
 			if (trimLine.startsWith(Constants.LINE_SET)) {
 				checkInitial(trimLine);
@@ -37,18 +40,18 @@ public class Validator {
 			checkFunctionNaming(functionName);
 			
 		}
-		Main.lineNumber++;
+		ApplicationContext.lineNumber++;
 	}
 
 	public static void checkOverviewComment(String line) {
 		if (!line.startsWith("'#")) {
-			Main.results.add(new Result(Main.lineNumber, "No overview comments", Main.targetFile, line));
+			ApplicationContext.results.add(new Result(ApplicationContext.lineNumber, "No overview comments", ApplicationContext.targetFile, line));
 		}
 	}
 
 	public static void checkGlobalVar(String var) {
 		if (!var.startsWith("g_")) {
-			Main.results.add(new Result(Main.lineNumber, "Invalid global var name", Main.targetFile, var));
+			ApplicationContext.results.add(new Result(ApplicationContext.lineNumber, "Invalid global var name", ApplicationContext.targetFile, var));
 		} else {
 			if (!var.endsWith("Page_URL")) {
 				checkHungrian(var.substring(2));
@@ -58,7 +61,7 @@ public class Validator {
 
 	public static boolean checkVarsCount(String line) {
 		if (line.contains(",")) {
-			Main.results.add(new Result(Main.lineNumber, "Too many vars in a line", Main.targetFile, line));
+			ApplicationContext.results.add(new Result(ApplicationContext.lineNumber, "Too many vars in a line", ApplicationContext.targetFile, line));
 			return true;
 		}
 		return false;
@@ -66,7 +69,7 @@ public class Validator {
 
 	public static void checkInitial(String line) {
 		if (!line.contains("=")) {
-			Main.results.add(new Result(Main.lineNumber, "variable is not initial", Main.targetFile, line));
+			ApplicationContext.results.add(new Result(ApplicationContext.lineNumber, "variable is not initial", ApplicationContext.targetFile, line));
 		}
 	}
 
@@ -88,7 +91,7 @@ public class Validator {
 			flag = false;
 		}
 		if (!flag) {
-			Main.results.add(new Result(Main.lineNumber, "variable naming", Main.targetFile, var));
+			ApplicationContext.results.add(new Result(ApplicationContext.lineNumber, "variable naming", ApplicationContext.targetFile, var));
 		}
 
 	}
@@ -112,7 +115,7 @@ public class Validator {
 	}
 	
 	public static void checkFunctionNaming(String functionName) {
-		CheckerConfiguration config = CheckerConfiguration.getInstance("./config");
+		ApplicationConfiguration config = ApplicationConfiguration.getInstance();
 		boolean flag = true;
 		if(!Character.isUpperCase(functionName.charAt(0))) {
 			flag = false;
@@ -174,7 +177,7 @@ public class Validator {
 		}
 		
 		if(!flag) {
-			Main.results.add(new Result(Main.lineNumber, "Function naming invalid", Main.targetFile, functionName));
+			ApplicationContext.results.add(new Result(ApplicationContext.lineNumber, "Function naming invalid", ApplicationContext.targetFile, functionName));
 		}
 	}
 	
@@ -185,6 +188,12 @@ public class Validator {
 			return line.substring(line.indexOf(" ")).trim();
 		}
 		
+	}
+	
+	public static void main(String[] args) throws ParseException {
+		SimpleDateFormat originalFormat = new SimpleDateFormat("yyyyMMdd");
+		Date date = originalFormat.parse("1497435840730");
+		System.out.println(date);
 	}
 	
 

@@ -8,18 +8,16 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.dxc.plm.codechecker.config.CheckerConfiguration;
-
 public class Utils {
-	CheckerConfiguration config = CheckerConfiguration.getInstance(null);
-	
+	ApplicationConfiguration config = ApplicationConfiguration.getInstance();
+
 	public static void main(String args[]) {
 		Utils utils = new Utils();
 		List<File> fileList = utils.getFileListFromJenkins("C:\\Program Files (x86)\\Jenkins\\workspace\\svnTutorial");
 		System.out.println(fileList.size());
 	}
-	
-	public List<File> getFileListFromJenkins(String path){
+
+	public List<File> getFileListFromJenkins(String path) {
 		List<File> fileList = new ArrayList<File>();
 		try {
 			File file = new File("changelist.txt");
@@ -27,11 +25,11 @@ public class Utils {
 			BufferedReader bufferedReader = new BufferedReader(fileReader);
 			String line;
 			while ((line = bufferedReader.readLine()) != null) {
-				if(line.startsWith("D")) {
+				if (line.startsWith("D")) {
 					continue;
 				}
-				
-				line = path+"\\"+line.substring(1).trim();
+
+				line = path + "\\" + line.substring(1).trim();
 				File f = new File(line);
 				fileList.add(f);
 				System.out.println(line);
@@ -51,10 +49,8 @@ public class Utils {
 			File[] files = file.listFiles();
 			for (File file2 : files) {
 				if (file2.isDirectory()) {
-					// System.out.println("文件夹:" + file2.getAbsolutePath());
 					list.add(file2);
 				} else {
-					// System.out.println("文件:" + file2.getAbsolutePath());
 					fileList.add(file2);
 				}
 			}
@@ -64,38 +60,35 @@ public class Utils {
 				files = temp_file.listFiles();
 				for (File file2 : files) {
 					if (file2.isDirectory()) {
-						// System.out.println("文件夹:" + file2.getAbsolutePath());
 						list.add(file2);
 					} else {
-						// System.out.println("文件:" + file2.getAbsolutePath());
 						fileList.add(file2);
 					}
 				}
 			}
 		} else {
-			// System.out.println("文件不存在!");
+			System.out.println("file does not exist.");
 		}
 		return fileList;
 	}
 
 	public List<File> getFileList(String path, List<String> fileTypes) {
 		List<File> files = null;
-		if(path.equals(Constants.JENKINS)) {
+		if (path.equals(Constants.JENKINS)) {
 			files = getFileListFromJenkins(config.getJenkins_workspace());
-		}else {
+		} else {
 			files = getFileList(path);
 		}
-        	
-        	List<File> qFiles = new ArrayList<File>();
-        	for (File f : files) {
-        		String fileName = f.getName();
-        		String suffix=fileName.substring(fileName.lastIndexOf(".")+1);
-        		if(fileTypes.contains(suffix)) {
-        			qFiles.add(f);
-        		}
-        	}
-        	return qFiles;
-        }
-	
-	
+
+		List<File> qFiles = new ArrayList<File>();
+		for (File f : files) {
+			String fileName = f.getName();
+			String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
+			if (fileTypes.contains(suffix)) {
+				qFiles.add(f);
+			}
+		}
+		return qFiles;
+	}
+
 }
