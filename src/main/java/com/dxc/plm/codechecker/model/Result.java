@@ -2,6 +2,8 @@ package com.dxc.plm.codechecker.model;
 
 import java.io.File;
 
+import com.dxc.plm.codechecker.utils.Constants;
+
 public class Result {
 	private int lineNumber;
 	private String message;
@@ -50,8 +52,9 @@ public class Result {
 
 	@Override
 	public String toString() {
-		//delimiter by 6 hyphens
-		return file.getName() + "------" + lineNumber + "------" + message + "------" + line;
+		// delimiter by 6 hyphens
+		return file.getName() + Constants.RESULT_DELIMER + lineNumber + Constants.RESULT_DELIMER + message
+				+ Constants.RESULT_DELIMER + line;
 	}
 
 }

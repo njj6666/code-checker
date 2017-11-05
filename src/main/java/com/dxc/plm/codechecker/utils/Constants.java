@@ -1,35 +1,41 @@
 package com.dxc.plm.codechecker.utils;
 
 public class Constants {
-	public final static String FILE_TYPE_SVB = "svb";
-	public final static int FIRST_LINE = 1;
-	public final static String DOT = ".";
-	public final static String REPORT = "check_output.csv";
+	private Constants() {}
+	
+	public static final String APP_VERSION = "1.2.0";
+	
+	public static final String FILE_TYPE_SVB = "svb";
+	public static final int FIRST_LINE = 1;
+	public static final String DOT = ".";
+	public static final String DIRECTORY_DELIMER = "/";
+	public static final String RESULT_DELIMER = "------";
+	public static final String WHITESPACE = " ";
+	public static final String EQUAL_MARK = "=";
+	public static final String COMMA = ",";
+	public static final String UNDERSCORE = "_";
+	public static final String REPORT = "check_output.csv";
+	
+	public static final String OPTION_V = "-v";
 
-
-	public final static String RULE_FILE_NAME = "FileNameRule";
-	public final static String RULE_VARIABLE_NAMING = "VariableNaming";
+	public static final String RULE_FILE_NAME = "FileNameRule";
+	public static final String RULE_VARIABLE_NAMING = "VariableNaming";
 	
-	public final static String LINE_DIM = "Dim";
-	public final static String LINE_SET = "Set";
-	public final static String LINE_PUBLIC = "Public";
-	public final static String LINE_COMMENT = "'";
-	public final static String LINE_FUNCTION = "Function";
+	public static final String LINE_DIM = "Dim";
+	public static final String LINE_SET = "Set";
+	public static final String LINE_PUBLIC = "Public";
+	public static final String LINE_COMMENT = "'";
+	public static final String LINE_FUNCTION = "Function";
 	
-	public final static String LINE_TYPE_VAR = "variable";
-	public final static String LINE_TYPE_COMMENT = "comment";
-	public final static String LINE_TYPE_FUNCTION = "function";
+	public static final String LINE_TYPE_VAR = "variable";
+	public static final String LINE_TYPE_COMMENT = "comment";
+	public static final String LINE_TYPE_FUNCTION = "function";
 	
-	public final static String APPLICATIONS[] = {"Enovia"};
-	public final static String PROJECTS[] = {"PDT","DSM"};
-	public final static String UTILITY[] = {"Excel","DB"};
+	public static final String JENKINS = "jenkins";
 	
-	public final static String JENKINS = "jenkins";
+	public static final String CONFIG_FILE = "./config";
+	public static final String CHANGE_LIST_FILE ="changelist.txt";
+	public static final String TEST_DATA_DIR = "testdata/Script";
 	
-	public final static String CONFIG_FILE = "./config";
-	public final static String TEST_DATA = "testdata/Script";
-	
-	public final static String MESSAGE_NO_FILE_TO_CHECK = "No applicatable files to check.";
-	public final static String MESSAGE_NO_ISSUE = "Congrats! Your code style is cool!";
 	
 }

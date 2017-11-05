@@ -1,63 +1,69 @@
 package com.dxc.plm.codechecker.utils;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import javax.security.auth.login.Configuration;
+import org.apache.log4j.Logger;
 
-public class ApplicationConfiguration extends Properties{
-	public String applications[];
-	public String projects[];
-	public String utilities[];
-	
-	public List<String> fileTypes;
-	
-	public List<String> rules;
-	
-	public String jenkins_workspace;
-	
-	static private ApplicationConfiguration config;
-	
-	private ApplicationConfiguration(){
-		this.fileTypes = new ArrayList<String>();
+public class ApplicationConfiguration extends Properties {
+	static Logger log = Logger.getLogger(ApplicationConfiguration.class.getName());
+
+	private static final long serialVersionUID = 1L;
+
+	private Properties messages;
+
+	private List<String> fileTypes;
+
+	private List<String> rules;
+
+	private static ApplicationConfiguration config;
+
+	private ApplicationConfiguration() throws IOException {
+		this.fileTypes = new ArrayList<>();
 		this.fileTypes.add(Constants.FILE_TYPE_SVB);
-		
-		this.rules = new ArrayList<String>();
-	//	this.rules.add(Constants.RULE_FILE_NAME);
-		this.rules.add(Constants.RULE_VARIABLE_NAMING);
 
+		this.rules = new ArrayList<>();
+		this.rules.add(Constants.RULE_VARIABLE_NAMING);
+		
+		// load message from messages.properties 
+		this.messages = new Properties();
+		ClassLoader classLoader = getClass().getClassLoader();
+		File messageFile = new File(classLoader.getResource("messages.properties").getFile());
+		InputStream in = new FileInputStream(messageFile);
+		this.messages.load(in);
+		in.close();
 	}
-	
-	public static ApplicationConfiguration getInstance(){
-		if(config == null){
+
+	public Properties getMessages() {
+		return messages;
+	}
+
+	public void setMessages(Properties messages) {
+		this.messages = messages;
+	}
+
+	public static ApplicationConfiguration getInstance() {
+		if (config == null) {
 			try {
 				loadConf(Constants.CONFIG_FILE);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.error(e.getStackTrace());
 			}
 		}
 		return config;
 	}
-	
-	public static void loadConf(String path) throws Exception {
+
+	public static void loadConf(String path) throws IOException {
 		config = new ApplicationConfiguration();
 		InputStream in = new FileInputStream(path);
 		config.load(in);
 	}
 
-	
-//	public CheckerConfiguration() {
-//		this.fileTypes = new ArrayList<String>();
-//		this.fileTypes.add(Constants.FILE_TYPE_SVB);
-//		
-//		this.rules = new ArrayList<String>();
-//	//	this.rules.add(Constants.RULE_FILE_NAME);
-//		this.rules.add(Constants.RULE_VARIABLE_NAMING);
-//	}
 	public List<String> getFileTypes() {
 		return fileTypes;
 	}
@@ -78,31 +84,16 @@ public class ApplicationConfiguration extends Properties{
 		return config.getProperty("function.application.prefix").split(",");
 	}
 
-	public void setApplications(String[] applications) {
-		this.applications = applications;
-	}
-
 	public String[] getProjects() {
 		return config.getProperty("function.project.prefix").split(",");
-	}
-
-	public void setProjects(String[] projects) {
-		this.projects = projects;
 	}
 
 	public String[] getUtilities() {
 		return config.getProperty("function.utility.prefix").split(",");
 	}
 
-	public void setUtilities(String[] utilities) {
-		this.utilities = utilities;
-	}
-
-	public String getJenkins_workspace() {
+	public String getJenkinsWorkspace() {
 		return config.getProperty("jenkins.workspace.dir");
 	}
 
-	public void setJenkins_workspace(String jenkins_workspace) {
-		this.jenkins_workspace = jenkins_workspace;
-	}
 }

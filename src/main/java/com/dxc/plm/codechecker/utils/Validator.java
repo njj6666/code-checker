@@ -3,32 +3,37 @@ package com.dxc.plm.codechecker.utils;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Properties;
 
-import com.dxc.plm.codechecker.Application;
+import org.apache.log4j.Logger;
+
 import com.dxc.plm.codechecker.model.Result;
 
 public class Validator {
+	static ApplicationConfiguration config = ApplicationConfiguration.getInstance();
+	static Properties messages = config.getMessages();
+	static Logger log = Logger.getLogger(Validator.class.getName());
 
 	public static void validateNaming(String line) {
 		String lineType = checkLineType(line);
 		String trimLine = line.trim();
 		if (lineType.equals(Constants.LINE_TYPE_VAR)) {
 			String var;
-			if (trimLine.startsWith("dim") || trimLine.startsWith("set") || trimLine.startsWith("public")) {
-				ApplicationContext.results.add(
-						new Result(ApplicationContext.lineNumber, "Using Dim/Set/Public, Not dim/set/public", ApplicationContext.targetFile, line));
+			if (trimLine.startsWith(Constants.LINE_DIM.toLowerCase()) || trimLine.startsWith(Constants.LINE_SET.toLowerCase()) || trimLine.startsWith(Constants.LINE_PUBLIC.toLowerCase())) {
+				ApplicationContext.getResults().add(
+						new Result(ApplicationContext.getLineNumber(), messages.getProperty("rule.capModifier"), ApplicationContext.getTargetFile(), line));
 			}
 			if (trimLine.startsWith(Constants.LINE_SET)) {
 				checkInitial(trimLine);
-				var = trimLine.substring(trimLine.indexOf(" "), trimLine.indexOf("=")).trim();
+				var = trimLine.substring(trimLine.indexOf(Constants.WHITESPACE), trimLine.indexOf(Constants.EQUAL_MARK)).trim();
 				checkHungrian(var);
 			} else if (trimLine.startsWith(Constants.LINE_DIM)) {
 				if (!checkVarsCount(trimLine)) {
-					var = trimLine.substring(trimLine.indexOf(" ")).trim();
+					var = trimLine.substring(trimLine.indexOf(Constants.WHITESPACE)).trim();
 					checkHungrian(var);
 				}
 			} else if (trimLine.startsWith("Public g_")) {
-				var = trimLine.substring(trimLine.indexOf(" ")).trim();
+				var = trimLine.substring(trimLine.indexOf(Constants.WHITESPACE)).trim();
 				checkGlobalVar(var);
 			} else if (trimLine.startsWith("g_") || trimLine.startsWith("m_")) {
 				//var = trimLine.substring(0, trimLine.indexOf("=")).trim();
@@ -40,18 +45,18 @@ public class Validator {
 			checkFunctionNaming(functionName);
 			
 		}
-		ApplicationContext.lineNumber++;
+		ApplicationContext.setLineNumber(ApplicationContext.getLineNumber()+1);
 	}
 
 	public static void checkOverviewComment(String line) {
 		if (!line.startsWith("'#")) {
-			ApplicationContext.results.add(new Result(ApplicationContext.lineNumber, "No overview comments", ApplicationContext.targetFile, line));
+			ApplicationContext.getResults().add(new Result(ApplicationContext.getLineNumber(), "No overview comments", ApplicationContext.getTargetFile(), line));
 		}
 	}
 
 	public static void checkGlobalVar(String var) {
 		if (!var.startsWith("g_")) {
-			ApplicationContext.results.add(new Result(ApplicationContext.lineNumber, "Invalid global var name", ApplicationContext.targetFile, var));
+			ApplicationContext.getResults().add(new Result(ApplicationContext.getLineNumber(), messages.getProperty("rule.invalidGlobalVarName"), ApplicationContext.getTargetFile(), var));
 		} else {
 			if (!var.endsWith("Page_URL")) {
 				checkHungrian(var.substring(2));
@@ -60,16 +65,16 @@ public class Validator {
 	}
 
 	public static boolean checkVarsCount(String line) {
-		if (line.contains(",")) {
-			ApplicationContext.results.add(new Result(ApplicationContext.lineNumber, "Too many vars in a line", ApplicationContext.targetFile, line));
+		if (line.contains(Constants.COMMA)) {
+			ApplicationContext.getResults().add(new Result(ApplicationContext.getLineNumber(), messages.getProperty("rule.tooManyVars"), ApplicationContext.getTargetFile(), line));
 			return true;
 		}
 		return false;
 	}
 
 	public static void checkInitial(String line) {
-		if (!line.contains("=")) {
-			ApplicationContext.results.add(new Result(ApplicationContext.lineNumber, "variable is not initial", ApplicationContext.targetFile, line));
+		if (!line.contains(Constants.EQUAL_MARK)) {
+			ApplicationContext.getResults().add(new Result(ApplicationContext.getLineNumber(), messages.getProperty("rule.varIsNotInitial"), ApplicationContext.getTargetFile(), line));
 		}
 	}
 
@@ -91,7 +96,7 @@ public class Validator {
 			flag = false;
 		}
 		if (!flag) {
-			ApplicationContext.results.add(new Result(ApplicationContext.lineNumber, "variable naming", ApplicationContext.targetFile, var));
+			ApplicationContext.getResults().add(new Result(ApplicationContext.getLineNumber(), messages.getProperty("rule.varNaming"), ApplicationContext.getTargetFile(), var));
 		}
 
 	}
@@ -115,7 +120,6 @@ public class Validator {
 	}
 	
 	public static void checkFunctionNaming(String functionName) {
-		ApplicationConfiguration config = ApplicationConfiguration.getInstance();
 		boolean flag = true;
 		if(!Character.isUpperCase(functionName.charAt(0))) {
 			flag = false;
@@ -143,7 +147,7 @@ public class Validator {
 			}
 		}
 		
-		String singleAppPrefix = app_prefix+"_";
+		String singleAppPrefix = app_prefix+Constants.UNDERSCORE;
 		if(flag && functionName.startsWith(singleAppPrefix)) {
 			String functionNameWithoutSingleAppPrefix = functionName.substring(singleAppPrefix.length());
 			if(!Character.isUpperCase(functionNameWithoutSingleAppPrefix.charAt(0))) {
@@ -169,7 +173,7 @@ public class Validator {
 		}
 
 		if(flag) {
-			String prefix = app_prefix + prj_prefix + "_";
+			String prefix = app_prefix + prj_prefix + Constants.UNDERSCORE;
 			String functionNameWithoutPrefix = functionName.substring(prefix.length());
 			if(!Character.isUpperCase(functionNameWithoutPrefix.charAt(0))) {
 				flag = false;
@@ -177,15 +181,15 @@ public class Validator {
 		}
 		
 		if(!flag) {
-			ApplicationContext.results.add(new Result(ApplicationContext.lineNumber, "Function naming invalid", ApplicationContext.targetFile, functionName));
+			ApplicationContext.getResults().add(new Result(ApplicationContext.getLineNumber(), messages.getProperty("rule.functionNaming"), ApplicationContext.getTargetFile(), functionName));
 		}
 	}
 	
 	public static String getFunctionName(String line) {
 		if(line.contains("(")) {
-			return line.substring(line.indexOf(" "), line.indexOf("(")).trim();
+			return line.substring(line.indexOf(Constants.WHITESPACE), line.indexOf("(")).trim();
 		}else {
-			return line.substring(line.indexOf(" ")).trim();
+			return line.substring(line.indexOf(Constants.WHITESPACE)).trim();
 		}
 		
 	}
