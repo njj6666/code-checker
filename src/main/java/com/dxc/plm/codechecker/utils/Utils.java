@@ -38,11 +38,11 @@ public class Utils {
 				log.info(line);
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error(e.getStackTrace());
 		} finally {
-			if(bufferedReader != null)
+			if (bufferedReader != null)
 				bufferedReader.close();
-			if(fileReader != null)
+			if (fileReader != null)
 				fileReader.close();
 		}
 		return fileList;

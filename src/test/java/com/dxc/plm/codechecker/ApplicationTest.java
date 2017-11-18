@@ -27,5 +27,11 @@ public class ApplicationTest {
 		boolean exists = Files.exists(Paths.get(report_path));
 		assert(exists);
 	}
+	
+	@Test
+	public void testGetVersion() throws Exception {
+		String version = "1.2.0";
+		assert(version.equals(Constants.APP_VERSION));
+	}
 
 }
