@@ -1,4 +1,4 @@
-package com.dxc.plm.codechecker.utils;
+package com.dxc.plm.codechecker.configuration;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,8 +10,10 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 
-public class ApplicationConfiguration extends Properties {
-	static Logger log = Logger.getLogger(ApplicationConfiguration.class.getName());
+import com.dxc.plm.codechecker.utils.Constants;
+
+public class CodeCheckerConfiguration extends Properties {
+	static Logger log = Logger.getLogger(CodeCheckerConfiguration.class.getName());
 
 	private static final long serialVersionUID = 1L;
 
@@ -21,9 +23,9 @@ public class ApplicationConfiguration extends Properties {
 
 	private List<String> rules;
 
-	private static ApplicationConfiguration config;
+	private static CodeCheckerConfiguration config;
 
-	private ApplicationConfiguration() throws IOException {
+	private CodeCheckerConfiguration() throws IOException {
 		this.fileTypes = new ArrayList<>();
 		this.fileTypes.add(Constants.FILE_TYPE_SVB);
 
@@ -47,7 +49,7 @@ public class ApplicationConfiguration extends Properties {
 		this.messages = messages;
 	}
 
-	public static ApplicationConfiguration getInstance() {
+	public static CodeCheckerConfiguration getInstance() {
 		if (config == null) {
 			try {
 				loadConf(Constants.CONFIG_FILE);
@@ -59,7 +61,7 @@ public class ApplicationConfiguration extends Properties {
 	}
 
 	public static void loadConf(String path) throws IOException {
-		config = new ApplicationConfiguration();
+		config = new CodeCheckerConfiguration();
 		InputStream in = new FileInputStream(path);
 		config.load(in);
 	}

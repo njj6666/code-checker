@@ -4,21 +4,23 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.dxc.plm.codechecker.model.Result;
+import org.springframework.stereotype.Component;
 
-public class ApplicationContext {
+import com.dxc.plm.codechecker.model.Result;
+@Component
+public class GlobalVar {
 	private static File targetFile = null;
 	private static int lineNumber = 0;
 	private static List<Result> results = new ArrayList<>();
 	
-	private ApplicationContext() {}
+	private GlobalVar() {}
 
 	public static File getTargetFile() {
 		return targetFile;
 	}
 
 	public static void setTargetFile(File targetFile) {
-		ApplicationContext.targetFile = targetFile;
+		GlobalVar.targetFile = targetFile;
 	}
 
 	public static int getLineNumber() {
@@ -26,7 +28,7 @@ public class ApplicationContext {
 	}
 
 	public static void setLineNumber(int lineNumber) {
-		ApplicationContext.lineNumber = lineNumber;
+		GlobalVar.lineNumber = lineNumber;
 	}
 
 	public static List<Result> getResults() {
@@ -34,7 +36,7 @@ public class ApplicationContext {
 	}
 
 	public static void setResults(List<Result> results) {
-		ApplicationContext.results = results;
+		GlobalVar.results = results;
 	}
 
 }

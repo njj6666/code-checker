@@ -2,7 +2,7 @@ target/
 jenkins/
 changelist.txt
 bin
-application.log
+application.log*
 .project
 
 .classpath

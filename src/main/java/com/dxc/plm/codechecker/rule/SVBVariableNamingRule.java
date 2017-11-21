@@ -7,7 +7,7 @@ import java.io.InputStreamReader;
 
 import org.apache.log4j.Logger;
 
-import com.dxc.plm.codechecker.utils.ApplicationContext;
+import com.dxc.plm.codechecker.utils.GlobalVar;
 import com.dxc.plm.codechecker.utils.Validator;
 
 public class SVBVariableNamingRule implements Rule {
@@ -18,7 +18,7 @@ public class SVBVariableNamingRule implements Rule {
 
 		BufferedReader br = null;
 		try {
-			br = new BufferedReader(new InputStreamReader(new FileInputStream(ApplicationContext.getTargetFile()), "UTF-8"));
+			br = new BufferedReader(new InputStreamReader(new FileInputStream(GlobalVar.getTargetFile()), "UTF-8"));
 			String lineTxt = null;
 
 			while ((lineTxt = br.readLine()) != null) {

@@ -4,16 +4,22 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.chainsaw.Main;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.support.AbstractApplicationContext;
+import org.springframework.stereotype.Component;
 
+import com.dxc.plm.codechecker.configuration.AppConfig;
+import com.dxc.plm.codechecker.configuration.CodeCheckerConfiguration;
 import com.dxc.plm.codechecker.model.Result;
-import com.dxc.plm.codechecker.utils.ApplicationConfiguration;
-import com.dxc.plm.codechecker.utils.ApplicationContext;
 import com.dxc.plm.codechecker.utils.Constants;
+import com.dxc.plm.codechecker.utils.GlobalVar;
 import com.dxc.plm.codechecker.utils.Utils;
 
 /**
@@ -22,30 +28,44 @@ import com.dxc.plm.codechecker.utils.Utils;
  * @Company DXC
  * @date 01/10/2017
  */
+@Component
 public class Application {
-	static Logger log = Logger.getLogger(Main.class.getName());
-
+	static Logger log = Logger.getLogger(Application.class.getName());
+	@Autowired
+	private Utils utils;
+	
+	@Autowired
+	private CheckerFactory checkerFactory;
+	
 	public static void main(String[] args) throws Exception {
+		AbstractApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+		Application app = (Application)context.getBean("application");
+		List<String> arguments = Arrays.asList(args);
+		app.run(arguments);
+		
+		context.close();
+	}
+
+	public void run(List<String> arguments) throws Exception {
 		// load configuration
-		ApplicationConfiguration config = ApplicationConfiguration.getInstance();
+		CodeCheckerConfiguration config = CodeCheckerConfiguration.getInstance();
 		Properties messages = config.getMessages();
 
 		// the default workdir is to debug purpose
 		// if user pass the workdir from command line, overwrite the default workdir
 		// path.
 		String workDir = Constants.TEST_DATA_DIR;
-		if (args.length > 0) {
-			if(args[0].equalsIgnoreCase(Constants.OPTION_V)) {
+		if (arguments != null && arguments.size() > 0) {
+			if(arguments.get(0).equalsIgnoreCase(Constants.OPTION_V)) {
 				System.out.println(Constants.APP_VERSION);
 				System.exit(0);
 			}
-			workDir = args[0];
+			workDir = arguments.get(0);
 		}
 
 		// get a file list under workdir, which match the file type be configured.
 		// TODO - Low - currently file types are configured in ApplicationConfiguration,
 		// should be configured in external config file.
-		Utils utils = new Utils();
 		List<File> fileList = utils.getFileList(workDir, config.getFileTypes());
 
 		// if no files match the required file type, exit the application with code 0.
@@ -56,16 +76,15 @@ public class Application {
 
 		// analyze files one by one
 		// Any issue will be stored in ApplicationContext.results
-		CheckerFactory factory = new CheckerFactory();
 		String targetFileName = null;
 		String targetFileType = null;
 		for (File file : fileList) {
-			ApplicationContext.setTargetFile(file);
-			ApplicationContext.setLineNumber(Constants.FIRST_LINE);
+			GlobalVar.setTargetFile(file);
+			GlobalVar.setLineNumber(Constants.FIRST_LINE);
 			// parse fileName, get file extension as file type.
 			targetFileName = file.getName();
 			targetFileType = targetFileName.substring(targetFileName.indexOf(Constants.DOT) + 1);
-			Checker checker = factory.createChecker(targetFileType, config.getRules());
+			Checker checker = checkerFactory.createChecker(targetFileType, config.getRules());
 			if (checker != null) {
 				checker.analyze();
 			} else {
@@ -76,7 +95,7 @@ public class Application {
 
 		// Report the results
 		// If no issue, exit with code 0.
-		if (ApplicationContext.getResults().isEmpty()) {
+		if (GlobalVar.getResults().isEmpty()) {
 			log.info(messages.getProperty("message.noIssue"));
 			System.exit(0);
 		}
@@ -102,7 +121,7 @@ public class Application {
 
 		try (FileOutputStream fileOutputStream = new FileOutputStream(report);
 				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fileOutputStream));) {
-			for (Result result : ApplicationContext.getResults()) {
+			for (Result result : GlobalVar.getResults()) {
 				bw.write(result.toString());
 				bw.newLine();
 			}

@@ -7,10 +7,11 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 
+import com.dxc.plm.codechecker.configuration.CodeCheckerConfiguration;
 import com.dxc.plm.codechecker.model.Result;
 
 public class Validator {
-	static ApplicationConfiguration config = ApplicationConfiguration.getInstance();
+	static CodeCheckerConfiguration config = CodeCheckerConfiguration.getInstance();
 	static Properties messages = config.getMessages();
 	static Logger log = Logger.getLogger(Validator.class.getName());
 
@@ -20,8 +21,8 @@ public class Validator {
 		if (lineType.equals(Constants.LINE_TYPE_VAR)) {
 			String var;
 			if (trimLine.startsWith(Constants.LINE_DIM.toLowerCase()) || trimLine.startsWith(Constants.LINE_SET.toLowerCase()) || trimLine.startsWith(Constants.LINE_PUBLIC.toLowerCase())) {
-				ApplicationContext.getResults().add(
-						new Result(ApplicationContext.getLineNumber(), messages.getProperty("rule.capModifier"), ApplicationContext.getTargetFile(), line));
+				GlobalVar.getResults().add(
+						new Result(GlobalVar.getLineNumber(), messages.getProperty("rule.capModifier"), GlobalVar.getTargetFile(), line));
 			}
 			if (trimLine.startsWith(Constants.LINE_SET)) {
 				checkInitial(trimLine);
@@ -45,18 +46,18 @@ public class Validator {
 			checkFunctionNaming(functionName);
 			
 		}
-		ApplicationContext.setLineNumber(ApplicationContext.getLineNumber()+1);
+		GlobalVar.setLineNumber(GlobalVar.getLineNumber()+1);
 	}
 
 	public static void checkOverviewComment(String line) {
 		if (!line.startsWith("'#")) {
-			ApplicationContext.getResults().add(new Result(ApplicationContext.getLineNumber(), "No overview comments", ApplicationContext.getTargetFile(), line));
+			GlobalVar.getResults().add(new Result(GlobalVar.getLineNumber(), "No overview comments", GlobalVar.getTargetFile(), line));
 		}
 	}
 
 	public static void checkGlobalVar(String var) {
 		if (!var.startsWith("g_")) {
-			ApplicationContext.getResults().add(new Result(ApplicationContext.getLineNumber(), messages.getProperty("rule.invalidGlobalVarName"), ApplicationContext.getTargetFile(), var));
+			GlobalVar.getResults().add(new Result(GlobalVar.getLineNumber(), messages.getProperty("rule.invalidGlobalVarName"), GlobalVar.getTargetFile(), var));
 		} else {
 			if (!var.endsWith("Page_URL")) {
 				checkHungrian(var.substring(2));
@@ -66,7 +67,7 @@ public class Validator {
 
 	public static boolean checkVarsCount(String line) {
 		if (line.contains(Constants.COMMA)) {
-			ApplicationContext.getResults().add(new Result(ApplicationContext.getLineNumber(), messages.getProperty("rule.tooManyVars"), ApplicationContext.getTargetFile(), line));
+			GlobalVar.getResults().add(new Result(GlobalVar.getLineNumber(), messages.getProperty("rule.tooManyVars"), GlobalVar.getTargetFile(), line));
 			return true;
 		}
 		return false;
@@ -74,7 +75,7 @@ public class Validator {
 
 	public static void checkInitial(String line) {
 		if (!line.contains(Constants.EQUAL_MARK)) {
-			ApplicationContext.getResults().add(new Result(ApplicationContext.getLineNumber(), messages.getProperty("rule.varIsNotInitial"), ApplicationContext.getTargetFile(), line));
+			GlobalVar.getResults().add(new Result(GlobalVar.getLineNumber(), messages.getProperty("rule.varIsNotInitial"), GlobalVar.getTargetFile(), line));
 		}
 	}
 
@@ -96,7 +97,7 @@ public class Validator {
 			flag = false;
 		}
 		if (!flag) {
-			ApplicationContext.getResults().add(new Result(ApplicationContext.getLineNumber(), messages.getProperty("rule.varNaming"), ApplicationContext.getTargetFile(), var));
+			GlobalVar.getResults().add(new Result(GlobalVar.getLineNumber(), messages.getProperty("rule.varNaming"), GlobalVar.getTargetFile(), var));
 		}
 
 	}
@@ -181,7 +182,7 @@ public class Validator {
 		}
 		
 		if(!flag) {
-			ApplicationContext.getResults().add(new Result(ApplicationContext.getLineNumber(), messages.getProperty("rule.functionNaming"), ApplicationContext.getTargetFile(), functionName));
+			GlobalVar.getResults().add(new Result(GlobalVar.getLineNumber(), messages.getProperty("rule.functionNaming"), GlobalVar.getTargetFile(), functionName));
 		}
 	}
 	

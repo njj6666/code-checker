@@ -1,10 +1,10 @@
 package com.dxc.plm.codechecker.rule;
 
+import org.springframework.stereotype.Component;
 import com.dxc.plm.codechecker.utils.Constants;
 
+@Component
 public class RuleFactory {
-	public RuleFactory() {
-	}
 
 	public Rule createRule(String fileType, String ruleName) {
 		if (Constants.FILE_TYPE_SVB.equals(fileType)) {

@@ -10,12 +10,16 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
-
 import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
+import com.dxc.plm.codechecker.configuration.CodeCheckerConfiguration;
+
+@Component
+//@Named 微小差别，与Component 通用
 public class Utils {
 	static Logger log = Logger.getLogger(Utils.class.getName());
-	ApplicationConfiguration config = ApplicationConfiguration.getInstance();
+	CodeCheckerConfiguration config = CodeCheckerConfiguration.getInstance();
 	Properties messages = config.getMessages();
 
 	public List<File> getFileListFromJenkins(String path) throws IOException {
