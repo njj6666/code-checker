@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -19,35 +19,9 @@ public class CodeCheckerConfiguration extends Properties {
 
 	private Properties messages;
 
-	private List<String> fileTypes;
-
-	private List<String> rules;
-
 	private static CodeCheckerConfiguration config;
 
-	private CodeCheckerConfiguration() throws IOException {
-		this.fileTypes = new ArrayList<>();
-		this.fileTypes.add(Constants.FILE_TYPE_SVB);
-
-		this.rules = new ArrayList<>();
-		this.rules.add(Constants.RULE_VARIABLE_NAMING);
-		
-		// load message from messages.properties 
-		this.messages = new Properties();
-		ClassLoader classLoader = getClass().getClassLoader();
-		File messageFile = new File(classLoader.getResource("messages.properties").getFile());
-		InputStream in = new FileInputStream(messageFile);
-		this.messages.load(in);
-		in.close();
-	}
-
-	public Properties getMessages() {
-		return messages;
-	}
-
-	public void setMessages(Properties messages) {
-		this.messages = messages;
-	}
+	private CodeCheckerConfiguration(){}
 
 	public static CodeCheckerConfiguration getInstance() {
 		if (config == null) {
@@ -67,19 +41,11 @@ public class CodeCheckerConfiguration extends Properties {
 	}
 
 	public List<String> getFileTypes() {
-		return fileTypes;
-	}
-
-	public void setFileTypes(List<String> fileTypes) {
-		this.fileTypes = fileTypes;
+		return Arrays.asList(config.getProperty("file.type.to.check").split(","));
 	}
 
 	public List<String> getRules() {
-		return rules;
-	}
-
-	public void setRules(List<String> rules) {
-		this.rules = rules;
+		return Arrays.asList(config.getProperty("rules.to.validate").split(","));
 	}
 
 	public String[] getApplications() {
@@ -96,6 +62,25 @@ public class CodeCheckerConfiguration extends Properties {
 
 	public String getJenkinsWorkspace() {
 		return config.getProperty("jenkins.workspace.dir");
+	}
+	
+	public Properties getMessages(){
+		// load message from messages.properties
+		if(messages == null) {
+			messages = new Properties();
+			ClassLoader classLoader = getClass().getClassLoader();
+			File messageFile = new File(classLoader.getResource("messages.properties").getFile());
+			InputStream in;
+			try {
+				in = new FileInputStream(messageFile);
+				this.messages.load(in);
+				in.close();
+			} catch (IOException e) {
+				log.error(e.getStackTrace());
+			}
+			
+		}
+		return messages;
 	}
 
 }

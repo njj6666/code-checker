@@ -1,8 +1,5 @@
 package com.dxc.plm.codechecker;
 
-import java.util.List;
-
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import com.dxc.plm.codechecker.utils.Constants;
@@ -10,10 +7,10 @@ import com.dxc.plm.codechecker.utils.Constants;
 @Component
 public class CheckerFactory {
 
-	public Checker createChecker(String fileType, List<String> rules) {
+	public Checker createChecker(String fileType) {
 		Checker checker;
-		if (Constants.FILE_TYPE_SVB.equalsIgnoreCase(fileType)) {
-			checker = new SVBChecker(fileType, rules);
+		if (Constants.SVB.equalsIgnoreCase(fileType)) {
+			checker = new VBSChecker();
 		} else {
 			checker = null;
 		}

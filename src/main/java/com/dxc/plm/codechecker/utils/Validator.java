@@ -8,7 +8,8 @@ import java.util.Properties;
 import org.apache.log4j.Logger;
 
 import com.dxc.plm.codechecker.configuration.CodeCheckerConfiguration;
-import com.dxc.plm.codechecker.model.Result;
+import com.dxc.plm.codechecker.model.Report;
+import com.dxc.plm.codechecker.model.ReportItem;
 
 public class Validator {
 	static CodeCheckerConfiguration config = CodeCheckerConfiguration.getInstance();
@@ -21,8 +22,8 @@ public class Validator {
 		if (lineType.equals(Constants.LINE_TYPE_VAR)) {
 			String var;
 			if (trimLine.startsWith(Constants.LINE_DIM.toLowerCase()) || trimLine.startsWith(Constants.LINE_SET.toLowerCase()) || trimLine.startsWith(Constants.LINE_PUBLIC.toLowerCase())) {
-				GlobalVar.getResults().add(
-						new Result(GlobalVar.getLineNumber(), messages.getProperty("rule.capModifier"), GlobalVar.getTargetFile(), line));
+				Report.addReportItem(
+						new ReportItem(Report.getLineNumber(), messages.getProperty("rule.capModifier"), Report.getTargetFile(), line));
 			}
 			if (trimLine.startsWith(Constants.LINE_SET)) {
 				checkInitial(trimLine);
@@ -46,18 +47,18 @@ public class Validator {
 			checkFunctionNaming(functionName);
 			
 		}
-		GlobalVar.setLineNumber(GlobalVar.getLineNumber()+1);
+		Report.setLineNumber(Report.getLineNumber()+1);
 	}
 
 	public static void checkOverviewComment(String line) {
 		if (!line.startsWith("'#")) {
-			GlobalVar.getResults().add(new Result(GlobalVar.getLineNumber(), "No overview comments", GlobalVar.getTargetFile(), line));
+			Report.getReportItems().add(new ReportItem(Report.getLineNumber(), "No overview comments", Report.getTargetFile(), line));
 		}
 	}
 
 	public static void checkGlobalVar(String var) {
 		if (!var.startsWith("g_")) {
-			GlobalVar.getResults().add(new Result(GlobalVar.getLineNumber(), messages.getProperty("rule.invalidGlobalVarName"), GlobalVar.getTargetFile(), var));
+			Report.getReportItems().add(new ReportItem(Report.getLineNumber(), messages.getProperty("rule.invalidGlobalVarName"), Report.getTargetFile(), var));
 		} else {
 			if (!var.endsWith("Page_URL")) {
 				checkHungrian(var.substring(2));
@@ -67,7 +68,7 @@ public class Validator {
 
 	public static boolean checkVarsCount(String line) {
 		if (line.contains(Constants.COMMA)) {
-			GlobalVar.getResults().add(new Result(GlobalVar.getLineNumber(), messages.getProperty("rule.tooManyVars"), GlobalVar.getTargetFile(), line));
+			Report.getReportItems().add(new ReportItem(Report.getLineNumber(), messages.getProperty("rule.tooManyVars"), Report.getTargetFile(), line));
 			return true;
 		}
 		return false;
@@ -75,7 +76,7 @@ public class Validator {
 
 	public static void checkInitial(String line) {
 		if (!line.contains(Constants.EQUAL_MARK)) {
-			GlobalVar.getResults().add(new Result(GlobalVar.getLineNumber(), messages.getProperty("rule.varIsNotInitial"), GlobalVar.getTargetFile(), line));
+			Report.getReportItems().add(new ReportItem(Report.getLineNumber(), messages.getProperty("rule.varIsNotInitial"), Report.getTargetFile(), line));
 		}
 	}
 
@@ -97,7 +98,7 @@ public class Validator {
 			flag = false;
 		}
 		if (!flag) {
-			GlobalVar.getResults().add(new Result(GlobalVar.getLineNumber(), messages.getProperty("rule.varNaming"), GlobalVar.getTargetFile(), var));
+			Report.getReportItems().add(new ReportItem(Report.getLineNumber(), messages.getProperty("rule.varNaming"), Report.getTargetFile(), var));
 		}
 
 	}
@@ -117,7 +118,6 @@ public class Validator {
 			type = Constants.LINE_TYPE_FUNCTION;
 		}
 		return type;
-
 	}
 	
 	public static void checkFunctionNaming(String functionName) {
@@ -182,7 +182,7 @@ public class Validator {
 		}
 		
 		if(!flag) {
-			GlobalVar.getResults().add(new Result(GlobalVar.getLineNumber(), messages.getProperty("rule.functionNaming"), GlobalVar.getTargetFile(), functionName));
+			Report.getReportItems().add(new ReportItem(Report.getLineNumber(), messages.getProperty("rule.functionNaming"), Report.getTargetFile(), functionName));
 		}
 	}
 	

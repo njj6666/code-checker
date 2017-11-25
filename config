@@ -1,6 +1,12 @@
-#add you prefix separated by comma
+# add you prefix separated by comma
 function.application.prefix = Enovia,Eng
 function.project.prefix = PDT,DSM
 function.utility.prefix = Excel,DB
+
+# example: svb,java
+file.type.to.check = svb
+
+# values must be among :VariableNaming,FunctionNaming,FileNaming
+rules.to.validate = VariableNaming,FunctionNaming
 
 jenkins.workspace.dir = C:\\Program Files (x86)\\Jenkins\\workspace\\svnTutorial

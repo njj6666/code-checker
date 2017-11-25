@@ -5,7 +5,7 @@ public class Constants {
 	
 	public static final String APP_VERSION = "1.2.0";
 	
-	public static final String FILE_TYPE_SVB = "svb";
+	public static final String SVB = "svb";
 	public static final int FIRST_LINE = 1;
 	public static final String DOT = ".";
 	public static final String DIRECTORY_DELIMER = "/";
@@ -18,8 +18,9 @@ public class Constants {
 	
 	public static final String OPTION_V = "-v";
 
-	public static final String RULE_FILE_NAME = "FileNameRule";
+	public static final String RULE_FILE_NAMING = "FileNaming";
 	public static final String RULE_VARIABLE_NAMING = "VariableNaming";
+	public static final String RULE_Function_NAMING = "FunctionNaming";
 	
 	public static final String LINE_DIM = "Dim";
 	public static final String LINE_SET = "Set";

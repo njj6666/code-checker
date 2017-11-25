@@ -1,12 +1,42 @@
 package com.dxc.plm.codechecker.model;
 
+import java.util.List;
+
 public class SourceFile {
 	private String fileName;
 	private String filePath;
-	private int lineNumber;
+	private int countOfLines;
+	private String fileType;
+	private String fileExtension;
+	
+	public String getFileType() {
+		return fileType;
+	}
+
+	public void setFileType(String fileType) {
+		this.fileType = fileType;
+	}
+
+	public String getFileExtension() {
+		return fileExtension;
+	}
+
+	public void setFileExtension(String fileExtension) {
+		this.fileExtension = fileExtension;
+	}
+
+	private List<CodeLine> lines;
 
 	public String getFileName() {
 		return fileName;
+	}
+
+	public List<CodeLine> getLines() {
+		return lines;
+	}
+
+	public void setLines(List<CodeLine> lines) {
+		this.lines = lines;
 	}
 
 	public void setFileName(String fileName) {
@@ -22,11 +52,11 @@ public class SourceFile {
 	}
 
 	public int getLineNumber() {
-		return lineNumber;
+		return countOfLines;
 	}
 
 	public void setLineNumber(int lineNumber) {
-		this.lineNumber = lineNumber;
+		this.countOfLines = lineNumber;
 	}
 
 }

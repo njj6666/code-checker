@@ -4,7 +4,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -17,9 +16,9 @@ import org.springframework.stereotype.Component;
 
 import com.dxc.plm.codechecker.configuration.AppConfig;
 import com.dxc.plm.codechecker.configuration.CodeCheckerConfiguration;
-import com.dxc.plm.codechecker.model.Result;
+import com.dxc.plm.codechecker.model.Report;
+import com.dxc.plm.codechecker.model.ReportItem;
 import com.dxc.plm.codechecker.utils.Constants;
-import com.dxc.plm.codechecker.utils.GlobalVar;
 import com.dxc.plm.codechecker.utils.Utils;
 
 /**
@@ -52,8 +51,7 @@ public class Application {
 		Properties messages = config.getMessages();
 
 		// the default workdir is to debug purpose
-		// if user pass the workdir from command line, overwrite the default workdir
-		// path.
+		// if user pass the workdir from command line, overwrite the default workdir path.
 		String workDir = Constants.TEST_DATA_DIR;
 		if (arguments != null && arguments.size() > 0) {
 			if(arguments.get(0).equalsIgnoreCase(Constants.OPTION_V)) {
@@ -64,8 +62,6 @@ public class Application {
 		}
 
 		// get a file list under workdir, which match the file type be configured.
-		// TODO - Low - currently file types are configured in ApplicationConfiguration,
-		// should be configured in external config file.
 		List<File> fileList = utils.getFileList(workDir, config.getFileTypes());
 
 		// if no files match the required file type, exit the application with code 0.
@@ -75,18 +71,19 @@ public class Application {
 		}
 
 		// analyze files one by one
-		// Any issue will be stored in ApplicationContext.results
+		// Any issue will be stored in Report.results
 		String targetFileName = null;
 		String targetFileType = null;
 		for (File file : fileList) {
-			GlobalVar.setTargetFile(file);
-			GlobalVar.setLineNumber(Constants.FIRST_LINE);
+			Report.setTargetFile(file);
+			Report.setLineNumber(Constants.FIRST_LINE);
 			// parse fileName, get file extension as file type.
 			targetFileName = file.getName();
 			targetFileType = targetFileName.substring(targetFileName.indexOf(Constants.DOT) + 1);
-			Checker checker = checkerFactory.createChecker(targetFileType, config.getRules());
+			Checker checker = checkerFactory.createChecker(targetFileType);
 			if (checker != null) {
-				checker.analyze();
+				checker.registerRules(config.getRules());
+				checker.process();
 			} else {
 				log.error(messages.getProperty("error.noCheck"));
 				System.exit(1);
@@ -95,7 +92,7 @@ public class Application {
 
 		// Report the results
 		// If no issue, exit with code 0.
-		if (GlobalVar.getResults().isEmpty()) {
+		if (Report.getReportItems().isEmpty()) {
 			log.info(messages.getProperty("message.noIssue"));
 			System.exit(0);
 		}
@@ -121,7 +118,7 @@ public class Application {
 
 		try (FileOutputStream fileOutputStream = new FileOutputStream(report);
 				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fileOutputStream));) {
-			for (Result result : GlobalVar.getResults()) {
+			for (ReportItem result : Report.getReportItems()) {
 				bw.write(result.toString());
 				bw.newLine();
 			}

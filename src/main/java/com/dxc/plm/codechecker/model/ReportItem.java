@@ -4,13 +4,13 @@ import java.io.File;
 
 import com.dxc.plm.codechecker.utils.Constants;
 
-public class Result {
+public class ReportItem {
 	private int lineNumber;
 	private String message;
 	private File file;
 	private String line;
 
-	public Result(int lineNumber, String message, File file, String line) {
+	public ReportItem(int lineNumber, String message, File file, String line) {
 
 		this.lineNumber = lineNumber;
 		this.message = message;
