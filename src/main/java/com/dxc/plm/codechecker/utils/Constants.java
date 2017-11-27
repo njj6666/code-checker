@@ -3,7 +3,7 @@ package com.dxc.plm.codechecker.utils;
 public class Constants {
 	private Constants() {}
 	
-	public static final String APP_VERSION = "1.2.0";
+	public static final String APP_VERSION = "2.0";
 	
 	public static final String SVB = "svb";
 	public static final int FIRST_LINE = 1;

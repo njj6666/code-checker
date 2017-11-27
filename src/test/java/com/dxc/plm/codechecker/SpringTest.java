@@ -1,6 +1,6 @@
 package com.dxc.plm.codechecker;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,22 +14,13 @@ import com.dxc.plm.codechecker.configuration.AppConfig;
 @ContextConfiguration(classes = AppConfig.class)
 public class SpringTest {
 
-	// @Autowired //Spring专用
-	// //@Inject 微小差别，与@Autowired 通用
-	// private RuleFactory factory;
-	//
-	// @Autowired
-	// private VBSChecker checker;
-	//
-	// @Test
-	// public void ruleFactoryShouldNotBeNull() {
-	// assertNotNull(factory);
-	// }
-	//
-	// @Test
-	// public void svbCheckerShouldNotBeNull() {
-	// assertNotNull(checker);
-	// assertNotNull(checker.getFactory());
-	// }
+	 @Autowired //Spring专用
+	 //@Inject 微小差别，与@Autowired 通用
+	 private VBSChecker checker;
+	
+	 @Test
+	 public void svbCheckerShouldNotBeNull() {
+	 assertNotNull(checker);
+	 }
 
 }

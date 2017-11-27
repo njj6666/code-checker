@@ -11,7 +11,7 @@ public interface RuleService {
 	public String getFunctionName(String line);
 	
 	// 公用函数逻辑，在 GeneralRuleService中实现
-	public void checkInitCap(String line);
+	public void isInitilize(String line);
 	public void checkHungrian(String var);
 	public boolean checkVarsCount(String line);
 	

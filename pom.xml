@@ -57,6 +57,7 @@
 			<version>${spring-version}</version>
 		</dependency>
 	</dependencies>
+	
 	<build>
 		<finalName>${project.artifactId}</finalName>
 		<plugins>
@@ -123,5 +124,14 @@
 				</executions>
 			</plugin>
 		</plugins>
+		<resources>
+        <!-- regular resource processsing for everything except logback.xml -->
+        <resource>
+            <directory>src/main/resources</directory>
+            <excludes>
+                <exclude>logback.xml</exclude>
+            </excludes>
+        </resource>
+    </resources>
 	</build>
 </project>

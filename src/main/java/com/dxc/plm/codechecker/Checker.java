@@ -10,10 +10,9 @@ import org.apache.log4j.Logger;
 
 import com.dxc.plm.codechecker.model.Report;
 import com.dxc.plm.codechecker.rule.Rule;
-import com.dxc.plm.codechecker.utils.Validator;
 
 public abstract class Checker {
-	static Logger log = Logger.getLogger(Validator.class.getName());
+	static Logger log = Logger.getLogger(Checker.class.getName());
 	public List<Rule> rules;
 	
 	public List<Rule> getRules() {

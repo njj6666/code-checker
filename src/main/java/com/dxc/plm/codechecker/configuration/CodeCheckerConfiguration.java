@@ -21,7 +21,8 @@ public class CodeCheckerConfiguration extends Properties {
 
 	private static CodeCheckerConfiguration config;
 
-	private CodeCheckerConfiguration(){}
+	private CodeCheckerConfiguration() {
+	}
 
 	public static CodeCheckerConfiguration getInstance() {
 		if (config == null) {
@@ -63,22 +64,18 @@ public class CodeCheckerConfiguration extends Properties {
 	public String getJenkinsWorkspace() {
 		return config.getProperty("jenkins.workspace.dir");
 	}
-	
-	public Properties getMessages(){
+
+	public Properties getMessages() {
 		// load message from messages.properties
-		if(messages == null) {
+		if (messages == null) {
 			messages = new Properties();
 			ClassLoader classLoader = getClass().getClassLoader();
-			File messageFile = new File(classLoader.getResource("messages.properties").getFile());
-			InputStream in;
-			try {
-				in = new FileInputStream(messageFile);
-				this.messages.load(in);
-				in.close();
+			try (InputStream messageFile = classLoader.getResourceAsStream("messages.properties")) {
+				messages.load(messageFile);
 			} catch (IOException e) {
-				log.error(e.getStackTrace());
+				log.error(e.getMessage());
 			}
-			
+
 		}
 		return messages;
 	}

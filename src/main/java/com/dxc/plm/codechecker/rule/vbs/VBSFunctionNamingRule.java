@@ -13,12 +13,11 @@ import com.dxc.plm.codechecker.rule.Rule;
 import com.dxc.plm.codechecker.rule.service.RuleService;
 import com.dxc.plm.codechecker.rule.service.VBSRuleService;
 import com.dxc.plm.codechecker.utils.Constants;
-import com.dxc.plm.codechecker.utils.Validator;
 
 public class VBSFunctionNamingRule implements Rule {
 	static CodeCheckerConfiguration config = CodeCheckerConfiguration.getInstance();
 	static Properties messages = config.getMessages();
-	static Logger log = Logger.getLogger(Validator.class.getName());
+	static Logger log = Logger.getLogger(VBSFunctionNamingRule.class.getName());
 	
 	private RuleService behavior = new VBSRuleService();
 

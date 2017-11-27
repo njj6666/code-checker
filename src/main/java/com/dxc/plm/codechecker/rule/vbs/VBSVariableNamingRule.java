@@ -13,12 +13,11 @@ import com.dxc.plm.codechecker.rule.Rule;
 import com.dxc.plm.codechecker.rule.service.RuleService;
 import com.dxc.plm.codechecker.rule.service.VBSRuleService;
 import com.dxc.plm.codechecker.utils.Constants;
-import com.dxc.plm.codechecker.utils.Validator;
 
 public class VBSVariableNamingRule implements Rule {
 	static CodeCheckerConfiguration config = CodeCheckerConfiguration.getInstance();
 	static Properties messages = config.getMessages();
-	static Logger log = Logger.getLogger(Validator.class.getName());
+	static Logger log = Logger.getLogger(VBSVariableNamingRule.class.getName());
 	private RuleService service = new VBSRuleService();
 
 	@Override
@@ -35,7 +34,7 @@ public class VBSVariableNamingRule implements Rule {
 						Report.getTargetFile(), trimLine));
 			}
 			if (trimLine.startsWith(Constants.LINE_SET)) {
-				service.checkInitCap(trimLine);
+				service.isInitilize(trimLine);
 				var = trimLine.substring(trimLine.indexOf(Constants.WHITESPACE), trimLine.indexOf(Constants.EQUAL_MARK))
 						.trim();
 				service.checkHungrian(var);

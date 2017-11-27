@@ -56,7 +56,7 @@ public class Application {
 		if (arguments != null && arguments.size() > 0) {
 			if(arguments.get(0).equalsIgnoreCase(Constants.OPTION_V)) {
 				System.out.println(Constants.APP_VERSION);
-				System.exit(0);
+				return;
 			}
 			workDir = arguments.get(0);
 		}
@@ -67,7 +67,7 @@ public class Application {
 		// if no files match the required file type, exit the application with code 0.
 		if (fileList.isEmpty()) {
 			log.info(messages.getProperty("message.noFileToCheck"));
-			System.exit(0);
+			return;
 		}
 
 		// analyze files one by one
@@ -86,7 +86,7 @@ public class Application {
 				checker.process();
 			} else {
 				log.error(messages.getProperty("error.noCheck"));
-				System.exit(1);
+				return;
 			}
 		}
 
@@ -94,7 +94,7 @@ public class Application {
 		// If no issue, exit with code 0.
 		if (Report.getReportItems().isEmpty()) {
 			log.info(messages.getProperty("message.noIssue"));
-			System.exit(0);
+			return;
 		}
 
 		File report = null;
@@ -108,12 +108,12 @@ public class Application {
 
 		if (report.exists() && !report.delete()) {
 			log.error(messages.getProperty("error.reportDelete"));
-			System.exit(1);
+			return;
 		}
 
 		if (!report.createNewFile()) {
 			log.error(messages.getProperty("error.reportCreate"));
-			System.exit(1);
+			return;
 		}
 
 		try (FileOutputStream fileOutputStream = new FileOutputStream(report);
@@ -125,6 +125,6 @@ public class Application {
 		}
 		System.out.println("Report location:");
 		System.out.println(report);
-		System.out.println("More information see application.log please.");
+		System.out.println("More information see logs/application.log please.");
 	}
 }

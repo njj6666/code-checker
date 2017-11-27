@@ -3,20 +3,22 @@ package com.dxc.plm.codechecker.rule.service;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.springframework.stereotype.Service;
 
 import com.dxc.plm.codechecker.configuration.CodeCheckerConfiguration;
 import com.dxc.plm.codechecker.model.Report;
 import com.dxc.plm.codechecker.model.ReportItem;
 import com.dxc.plm.codechecker.utils.Constants;
 
+@Service
 public abstract class GeneralRuleService implements RuleService {
 	static Logger log = Logger.getLogger(GeneralRuleService.class.getName());
 	CodeCheckerConfiguration config = CodeCheckerConfiguration.getInstance();
 	Properties messages = config.getMessages();
 
-	// 首字母是否大写
+	// 变量是否初始化
 	@Override
-	public void checkInitCap(String line) {
+	public void isInitilize(String line) {
 		if (!line.contains(Constants.EQUAL_MARK)) {
 			Report.addReportItem(new ReportItem(Report.getLineNumber(), messages.getProperty("rule.varIsNotInitial"),
 					Report.getTargetFile(), line));
