@@ -6,9 +6,6 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 import com.dxc.plm.codechecker.rule.Rule;
-import com.dxc.plm.codechecker.rule.vbs.VBSFileNameRule;
-import com.dxc.plm.codechecker.rule.vbs.VBSFunctionNamingRule;
-import com.dxc.plm.codechecker.rule.vbs.VBSVariableNamingRule;
 import com.dxc.plm.codechecker.utils.Constants;
 
 @Component
@@ -23,13 +20,13 @@ public class VBSChecker extends Checker {
 		for (String ruleName : ruleNames) {
 			switch (ruleName) {
 			case Constants.RULE_FILE_NAMING:
-				this.rules.add(new VBSFileNameRule());
+				this.rules.add((Rule)Application.context.getBean("vbsFileNamingRule"));
 				break;
 			case Constants.RULE_VARIABLE_NAMING:
-				this.rules.add(new VBSVariableNamingRule());
+				this.rules.add((Rule)Application.context.getBean("vbsVariableNamingRule"));
 				break;
 			case Constants.RULE_Function_NAMING:
-				this.rules.add(new VBSFunctionNamingRule());
+				this.rules.add((Rule)Application.context.getBean("vbsFunctionNamingRule"));
 				break;
 			default:
 				break;

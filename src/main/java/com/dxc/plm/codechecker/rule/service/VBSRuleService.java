@@ -1,14 +1,16 @@
 package com.dxc.plm.codechecker.rule.service;
 
 import org.apache.log4j.Logger;
-import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import com.dxc.plm.codechecker.model.CodeLine;
 import com.dxc.plm.codechecker.model.Report;
 import com.dxc.plm.codechecker.model.ReportItem;
 import com.dxc.plm.codechecker.utils.Constants;
 
-@Service
+@Component("vbsRuleService")
+@Qualifier("vbsRuleService")
 public class VBSRuleService extends GeneralRuleService {
 	static Logger log = Logger.getLogger(VBSRuleService.class.getName());
 	

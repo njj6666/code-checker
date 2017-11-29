@@ -30,14 +30,16 @@ import com.dxc.plm.codechecker.utils.Utils;
 @Component
 public class Application {
 	static Logger log = Logger.getLogger(Application.class.getName());
+	public static AbstractApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
 	@Autowired
 	private Utils utils;
 	
 	@Autowired
 	private CheckerFactory checkerFactory;
 	
+	
+	
 	public static void main(String[] args) throws Exception {
-		AbstractApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
 		Application app = (Application)context.getBean("application");
 		List<String> arguments = Arrays.asList(args);
 		app.run(arguments);

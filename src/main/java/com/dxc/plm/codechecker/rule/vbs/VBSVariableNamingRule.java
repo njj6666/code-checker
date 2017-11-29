@@ -3,7 +3,10 @@ package com.dxc.plm.codechecker.rule.vbs;
 import java.io.IOException;
 import java.util.Properties;
 
+import javax.annotation.Resource;
+
 import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
 import com.dxc.plm.codechecker.configuration.CodeCheckerConfiguration;
 import com.dxc.plm.codechecker.model.CodeLine;
@@ -11,14 +14,16 @@ import com.dxc.plm.codechecker.model.Report;
 import com.dxc.plm.codechecker.model.ReportItem;
 import com.dxc.plm.codechecker.rule.Rule;
 import com.dxc.plm.codechecker.rule.service.RuleService;
-import com.dxc.plm.codechecker.rule.service.VBSRuleService;
 import com.dxc.plm.codechecker.utils.Constants;
 
+@Component("vbsVariableNamingRule")
 public class VBSVariableNamingRule implements Rule {
 	static CodeCheckerConfiguration config = CodeCheckerConfiguration.getInstance();
 	static Properties messages = config.getMessages();
 	static Logger log = Logger.getLogger(VBSVariableNamingRule.class.getName());
-	private RuleService service = new VBSRuleService();
+	
+	@Resource(name="vbsRuleService")
+	private RuleService service;
 
 	@Override
 	public void executeRule(String line) throws IOException {

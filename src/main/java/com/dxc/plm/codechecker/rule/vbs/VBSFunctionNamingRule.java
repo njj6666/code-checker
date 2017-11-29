@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import com.dxc.plm.codechecker.configuration.CodeCheckerConfiguration;
 import com.dxc.plm.codechecker.model.CodeLine;
@@ -11,23 +14,25 @@ import com.dxc.plm.codechecker.model.Report;
 import com.dxc.plm.codechecker.model.ReportItem;
 import com.dxc.plm.codechecker.rule.Rule;
 import com.dxc.plm.codechecker.rule.service.RuleService;
-import com.dxc.plm.codechecker.rule.service.VBSRuleService;
 import com.dxc.plm.codechecker.utils.Constants;
 
+@Component("vbsFunctionNamingRule")
 public class VBSFunctionNamingRule implements Rule {
 	static CodeCheckerConfiguration config = CodeCheckerConfiguration.getInstance();
 	static Properties messages = config.getMessages();
 	static Logger log = Logger.getLogger(VBSFunctionNamingRule.class.getName());
 	
-	private RuleService behavior = new VBSRuleService();
+	@Autowired
+	@Qualifier("vbsRuleService")
+	private RuleService service;
 
 	@Override
 	public void executeRule(String line) throws IOException {
-		CodeLine codeLine = behavior.parseLine(line);
+		CodeLine codeLine = service.parseLine(line);
 		String lineType = codeLine.getType();
 		String trimLine = codeLine.getContent().trim();
 		if (lineType.equals(Constants.LINE_TYPE_FUNCTION)) {
-			String functionName = behavior.getFunctionName(trimLine);
+			String functionName = service.getFunctionName(trimLine);
 			checkFunctionNaming(functionName);
 		}
 	}
